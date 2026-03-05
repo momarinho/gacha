@@ -23,6 +23,7 @@ interface Participant {
 }
 
 const STORAGE_KEY = 'sorteio_participantes';
+const STATE_KEY = 'sorteio_estado_completo';
 
 const DEFAULT_PARTICIPANTS: Participant[] = [
   { id: '1', name: 'Mateus', participatesInPao: true, participatesInAgua: true, participatesInBalde: true, participatesInMusica: true },
@@ -40,27 +41,71 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_PARTICIPANTS;
   });
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
-  }, [names]);
+  // Initialize other states from localStorage if available
+  const getInitialState = (key: string, defaultValue: any) => {
+    const saved = localStorage.getItem(STATE_KEY);
+    if (!saved) return defaultValue;
+    try {
+      const state = JSON.parse(saved);
+      return state[key] !== undefined ? state[key] : defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
+  };
+
   const [newName, setNewName] = useState('');
-  const [paoDeQueijoWinners, setPaoDeQueijoWinners] = useState<string[]>([]);
-  const [aguaWinners, setAguaWinners] = useState<string[]>([]);
-  const [baldeWinners, setBaldeWinners] = useState<string[]>([]);
-  const [musicaWinners, setMusicaWinners] = useState<string[]>([]);
+  const [paoDeQueijoWinners, setPaoDeQueijoWinners] = useState<string[]>(() => getInitialState('paoDeQueijoWinners', []));
+  const [aguaWinners, setAguaWinners] = useState<string[]>(() => getInitialState('aguaWinners', []));
+  const [baldeWinners, setBaldeWinners] = useState<string[]>(() => getInitialState('baldeWinners', []));
+  const [musicaWinners, setMusicaWinners] = useState<string[]>(() => getInitialState('musicaWinners', []));
+  
+  const [excludedIdsPao, setExcludedIdsPao] = useState<string[]>(() => getInitialState('excludedIdsPao', []));
+  const [excludedIdsAgua, setExcludedIdsAgua] = useState<string[]>(() => getInitialState('excludedIdsAgua', []));
+  const [excludedIdsBalde, setExcludedIdsBalde] = useState<string[]>(() => getInitialState('excludedIdsBalde', []));
+  const [excludedIdsMusica, setExcludedIdsMusica] = useState<string[]>(() => getInitialState('excludedIdsMusica', []));
+  
+  const [aguaMode, setAguaMode] = useState<'muita' | 'pouca'>(() => getInitialState('aguaMode', 'muita'));
+
   const [isDrawingPao, setIsDrawingPao] = useState(false);
   const [isDrawingAgua, setIsDrawingAgua] = useState(false);
   const [isDrawingBalde, setIsDrawingBalde] = useState(false);
   const [isDrawingMusica, setIsDrawingMusica] = useState(false);
+  
   const [cyclingNamePao, setCyclingNamePao] = useState<string>('');
   const [cyclingNameAgua, setCyclingNameAgua] = useState<string>('');
   const [cyclingNameBalde, setCyclingNameBalde] = useState<string>('');
   const [cyclingNameMusica, setCyclingNameMusica] = useState<string>('');
-  const [excludedIdsPao, setExcludedIdsPao] = useState<string[]>([]);
-  const [excludedIdsAgua, setExcludedIdsAgua] = useState<string[]>([]);
-  const [excludedIdsBalde, setExcludedIdsBalde] = useState<string[]>([]);
-  const [excludedIdsMusica, setExcludedIdsMusica] = useState<string[]>([]);
-  const [aguaMode, setAguaMode] = useState<'muita' | 'pouca'>('muita');
+
+  // Persist names
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
+  }, [names]);
+
+  // Persist all other state
+  useEffect(() => {
+    const stateToSave = {
+      paoDeQueijoWinners,
+      aguaWinners,
+      baldeWinners,
+      musicaWinners,
+      excludedIdsPao,
+      excludedIdsAgua,
+      excludedIdsBalde,
+      excludedIdsMusica,
+      aguaMode
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(stateToSave));
+  }, [
+    paoDeQueijoWinners, 
+    aguaWinners, 
+    baldeWinners, 
+    musicaWinners, 
+    excludedIdsPao, 
+    excludedIdsAgua, 
+    excludedIdsBalde, 
+    excludedIdsMusica, 
+    aguaMode
+  ]);
 
   const addName = (e: React.FormEvent) => {
     e.preventDefault();
