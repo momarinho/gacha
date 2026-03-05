@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
@@ -15,9 +14,8 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
 
-const dbPath = path.join(__dirname, "..", "raffle.db");
-let db: any = null;
 let supabase: any = null;
+let db: any = null;
 let dbInitialized = false;
 
 async function initDb() {
@@ -29,6 +27,7 @@ async function initDb() {
   } else if (process.env.VERCEL) {
     console.warn("Running on Vercel but no Supabase config found. Cloud sync will be offline.");
   } else {
+    const dbPath = path.join(__dirname, "..", "raffle.db");
     console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
     try {
       const { default: Database } = await import("better-sqlite3");
@@ -47,10 +46,12 @@ async function initDb() {
   dbInitialized = true;
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+let cachedApp: any = null;
 
+async function createExpressApp() {
+  if (cachedApp) return cachedApp;
+
+  const app = express();
   app.use(express.json());
 
   // Request logger
@@ -61,14 +62,19 @@ async function startServer() {
 
   // API Routes
   app.get("/api/health", async (req, res) => {
-    await initDb();
-    res.json({ 
-      status: "ok", 
-      provider: isSupabaseEnabled ? "supabase" : (db ? "sqlite" : "none"),
-      time: new Date().toISOString(),
-      env: process.env.NODE_ENV,
-      vercel: !!process.env.VERCEL
-    });
+    try {
+      await initDb();
+      res.json({ 
+        status: "ok", 
+        provider: isSupabaseEnabled ? "supabase" : (db ? "sqlite" : "none"),
+        time: new Date().toISOString(),
+        env: process.env.NODE_ENV,
+        vercel: !!process.env.VERCEL,
+        supabaseConfigured: isSupabaseEnabled
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Health check failed", details: String(err) });
+    }
   });
 
   app.get("/api/state", async (req, res) => {
@@ -82,6 +88,7 @@ async function startServer() {
           .single();
         
         if (error && error.code !== "PGRST116") { // PGRST116 is "no rows found"
+          console.error("Supabase error fetching state:", error);
           throw error;
         }
         res.json(data ? JSON.parse(data.data) : null);
@@ -93,7 +100,7 @@ async function startServer() {
       }
     } catch (error) {
       console.error("Error fetching state:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
@@ -107,7 +114,10 @@ async function startServer() {
           .from("raffle_state")
           .upsert({ id: 1, data: dataStr });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error saving state:", error);
+          throw error;
+        }
         res.json({ success: true });
       } else if (db) {
         db.prepare("INSERT OR REPLACE INTO raffle_state (id, data) VALUES (1, ?)").run(dataStr);
@@ -117,13 +127,12 @@ async function startServer() {
       }
     } catch (error) {
       console.error("Error saving state:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
   // Catch-all for API routes that don't exist
   app.all("/api/*", (req, res) => {
-    console.log(`404 API Route: ${req.method} ${req.url}`);
     res.status(404).json({ 
       error: "API Route Not Found",
       method: req.method,
@@ -133,11 +142,16 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (err) {
+      console.error("Failed to initialize Vite middleware:", err);
+    }
   } else if (!process.env.VERCEL) {
     // Only serve static files if NOT on Vercel (Vercel handles this via vercel.json)
     app.use(express.static(path.join(__dirname, "..", "dist")));
@@ -146,26 +160,37 @@ async function startServer() {
     });
   }
 
-  // Only listen if not on Vercel
-  if (!process.env.VERCEL) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  }
-
+  cachedApp = app;
   return app;
 }
 
+// For local development
+if (!process.env.VERCEL) {
+  const PORT = 3000;
+  createExpressApp().then(app => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  });
+}
+
+// Export for Vercel
 export default async (req: any, res: any) => {
+  // Simple raw health check to bypass Express if needed for debugging
+  if (req.url === "/api/raw-health") {
+    return res.status(200).json({ raw: "ok", vercel: !!process.env.VERCEL });
+  }
+
   try {
-    const app = await startServer();
+    const app = await createExpressApp();
     return app(req, res);
   } catch (err) {
-    console.error("SERVERLESS FUNCTION ERROR:", err);
-    res.status(500).json({ 
-      error: "Serverless function failed to initialize", 
+    console.error("CRITICAL SERVER ERROR:", err);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).send(JSON.stringify({ 
+      error: "Critical server error", 
       details: String(err),
       stack: process.env.NODE_ENV === "development" ? (err as Error).stack : undefined
-    });
+    }));
   }
 };

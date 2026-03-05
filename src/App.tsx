@@ -89,6 +89,11 @@ export default function App() {
     const fetchHealth = async () => {
       try {
         const response = await fetch('/api/health');
+        if (!response.ok) {
+          const text = await response.text();
+          console.error(`Health check failed (${response.status}):`, text);
+          return;
+        }
         const data = await response.json();
         if (data.provider) setDbProvider(data.provider);
       } catch (e) {
@@ -103,6 +108,13 @@ export default function App() {
           console.warn('API not found. If you are on Vercel, ensure your deployment is configured correctly.');
           return;
         }
+        
+        if (!response.ok) {
+          const text = await response.text();
+          console.error(`Fetch state failed (${response.status}):`, text);
+          return;
+        }
+
         const data = await response.json();
         if (data) {
           if (data.names) setNames(data.names);
