@@ -13,7 +13,8 @@ import {
   Music,
   Cloud,
   CloudOff,
-  RefreshCw
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react';
 
 interface Participant {
@@ -369,13 +370,36 @@ export default function App() {
     else setExcludedIdsMusica([]);
   };
 
+  const handleGeneralReset = () => {
+    if (window.confirm('Deseja realizar um reset geral? Isso limpará os vencedores atuais e reiniciará todos os ciclos (pools), mantendo os participantes e suas funções.')) {
+      setPaoDeQueijoWinners([]);
+      setAguaWinners([]);
+      setBaldeWinners([]);
+      setMusicaWinners([]);
+      setExcludedIdsPao([]);
+      setExcludedIdsAgua([]);
+      setExcludedIdsBalde([]);
+      setExcludedIdsMusica([]);
+      // aguaMode is maintained as requested ("funções escolhidas serão mantidas")
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 md:p-8 selection:bg-indigo-500/30">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
           <header className="mb-6 md:mb-8 text-center relative">
-            <div className="absolute top-0 right-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/50 border border-white/5 text-[10px] font-bold uppercase tracking-wider">
-              {isSyncing ? (
+            <div className="absolute top-0 right-0 flex items-center gap-3">
+              <button
+                onClick={handleGeneralReset}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-bold uppercase tracking-wider text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+                title="Reset Geral"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset Geral</span>
+              </button>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/50 border border-white/5 text-[10px] font-bold uppercase tracking-wider">
+                {isSyncing ? (
                 <>
                   <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin" />
                   <span className="text-indigo-400">Sincronizando...</span>
@@ -392,7 +416,8 @@ export default function App() {
                 </>
               )}
             </div>
-            <motion.h1 
+          </div>
+          <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl md:text-5xl font-black tracking-tighter mb-2 bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent"
