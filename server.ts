@@ -7,15 +7,22 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const db = new Database("raffle.db");
-
-// Initialize database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS raffle_state (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    data TEXT NOT NULL
-  )
-`);
+let db: Database.Database;
+try {
+  db = new Database("raffle.db");
+  // Initialize database
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS raffle_state (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      data TEXT NOT NULL
+    )
+  `);
+  console.log("Database initialized successfully");
+} catch (err) {
+  console.error("Failed to initialize database:", err);
+  // Fallback to in-memory or just exit
+  process.exit(1);
+}
 
 async function startServer() {
   const app = express();
@@ -23,7 +30,17 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Request logger
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+
   // API Routes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", time: new Date().toISOString() });
+  });
+
   app.get("/api/state", (req, res) => {
     const row = db.prepare("SELECT data FROM raffle_state WHERE id = 1").get() as { data: string } | undefined;
     if (row) {
