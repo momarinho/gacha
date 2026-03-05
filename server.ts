@@ -1,6 +1,5 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
@@ -17,26 +16,35 @@ const supabaseKey = process.env.SUPABASE_KEY;
 const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
 
 const dbPath = path.join(__dirname, "raffle.db");
-let db: Database.Database | null = null;
+let db: any = null;
 let supabase: any = null;
+let dbInitialized = false;
 
-if (isSupabaseEnabled) {
-  console.log("Supabase detected, using Supabase as database provider.");
-  supabase = createClient(supabaseUrl!, supabaseKey!);
-} else {
-  console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
-  try {
-    db = new Database(dbPath);
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS raffle_state (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        data TEXT NOT NULL
-      )
-    `);
-    console.log("SQLite initialized successfully");
-  } catch (err) {
-    console.error("Failed to initialize SQLite:", err);
+async function initDb() {
+  if (dbInitialized) return;
+  
+  if (isSupabaseEnabled) {
+    console.log("Supabase detected, using Supabase as database provider.");
+    supabase = createClient(supabaseUrl!, supabaseKey!);
+  } else if (process.env.VERCEL) {
+    console.warn("Running on Vercel but no Supabase config found. Cloud sync will be offline.");
+  } else {
+    console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
+    try {
+      const { default: Database } = await import("better-sqlite3");
+      db = new Database(dbPath);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS raffle_state (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          data TEXT NOT NULL
+        )
+      `);
+      console.log("SQLite initialized successfully");
+    } catch (err) {
+      console.error("Failed to initialize SQLite:", err);
+    }
   }
+  dbInitialized = true;
 }
 
 async function startServer() {
@@ -52,17 +60,20 @@ async function startServer() {
   });
 
   // API Routes
-  app.get("/api/health", (req, res) => {
+  app.get("/api/health", async (req, res) => {
+    await initDb();
     res.json({ 
       status: "ok", 
-      provider: isSupabaseEnabled ? "supabase" : "sqlite",
+      provider: isSupabaseEnabled ? "supabase" : (db ? "sqlite" : "none"),
       time: new Date().toISOString(),
-      env: process.env.NODE_ENV
+      env: process.env.NODE_ENV,
+      vercel: !!process.env.VERCEL
     });
   });
 
   app.get("/api/state", async (req, res) => {
     try {
+      await initDb();
       if (isSupabaseEnabled) {
         const { data, error } = await supabase
           .from("raffle_state")
@@ -88,6 +99,7 @@ async function startServer() {
 
   app.post("/api/state", async (req, res) => {
     try {
+      await initDb();
       const dataStr = JSON.stringify(req.body);
       
       if (isSupabaseEnabled) {
@@ -120,22 +132,40 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (!process.env.VERCEL) {
+    // Only serve static files if NOT on Vercel (Vercel handles this via vercel.json)
     app.use(express.static(path.join(__dirname, "dist")));
     app.get("*", (req, res) => {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  // Only listen if not on Vercel
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
+
+  return app;
 }
 
-startServer();
+export default async (req: any, res: any) => {
+  try {
+    const app = await startServer();
+    return app(req, res);
+  } catch (err) {
+    console.error("SERVERLESS FUNCTION ERROR:", err);
+    res.status(500).json({ 
+      error: "Serverless function failed to initialize", 
+      details: String(err),
+      stack: process.env.NODE_ENV === "development" ? (err as Error).stack : undefined
+    });
+  }
+};
