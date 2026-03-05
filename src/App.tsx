@@ -10,7 +10,10 @@ import {
   CheckCircle2,
   AlertCircle,
   PaintBucket,
-  Music
+  Music,
+  Cloud,
+  CloudOff,
+  RefreshCw
 } from 'lucide-react';
 
 interface Participant {
@@ -76,14 +79,43 @@ export default function App() {
   const [cyclingNameBalde, setCyclingNameBalde] = useState<string>('');
   const [cyclingNameMusica, setCyclingNameMusica] = useState<string>('');
 
-  // Persist names
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState(false);
+
+  // Initial fetch from server
+  useEffect(() => {
+    const fetchState = async () => {
+      try {
+        const response = await fetch('/api/state');
+        const data = await response.json();
+        if (data) {
+          if (data.names) setNames(data.names);
+          if (data.paoDeQueijoWinners) setPaoDeQueijoWinners(data.paoDeQueijoWinners);
+          if (data.aguaWinners) setAguaWinners(data.aguaWinners);
+          if (data.baldeWinners) setBaldeWinners(data.baldeWinners);
+          if (data.musicaWinners) setMusicaWinners(data.musicaWinners);
+          if (data.excludedIdsPao) setExcludedIdsPao(data.excludedIdsPao);
+          if (data.excludedIdsAgua) setExcludedIdsAgua(data.excludedIdsAgua);
+          if (data.excludedIdsBalde) setExcludedIdsBalde(data.excludedIdsBalde);
+          if (data.excludedIdsMusica) setExcludedIdsMusica(data.excludedIdsMusica);
+          if (data.aguaMode) setAguaMode(data.aguaMode);
+        }
+      } catch (error) {
+        console.error('Failed to fetch state from server:', error);
+      }
+    };
+    fetchState();
+  }, []);
+
+  // Persist names to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
   }, [names]);
 
-  // Persist all other state
+  // Persist all other state to localStorage and Server
   useEffect(() => {
     const stateToSave = {
+      names,
       paoDeQueijoWinners,
       aguaWinners,
       baldeWinners,
@@ -94,8 +126,33 @@ export default function App() {
       excludedIdsMusica,
       aguaMode
     };
+    
+    // Local storage persistence
     localStorage.setItem(STATE_KEY, JSON.stringify(stateToSave));
+
+    // Server persistence with debounce
+    const saveToServer = async () => {
+      setIsSyncing(true);
+      setSyncError(false);
+      try {
+        const response = await fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stateToSave),
+        });
+        if (!response.ok) throw new Error('Sync failed');
+      } catch (error) {
+        console.error('Failed to save state to server:', error);
+        setSyncError(true);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToServer, 1000);
+    return () => clearTimeout(timeoutId);
   }, [
+    names,
     paoDeQueijoWinners, 
     aguaWinners, 
     baldeWinners, 
@@ -316,8 +373,26 @@ export default function App() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 md:p-8 selection:bg-indigo-500/30">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <header className="mb-6 md:mb-8 text-center">
-          <motion.h1 
+          <header className="mb-6 md:mb-8 text-center relative">
+            <div className="absolute top-0 right-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/50 border border-white/5 text-[10px] font-bold uppercase tracking-wider">
+              {isSyncing ? (
+                <>
+                  <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin" />
+                  <span className="text-indigo-400">Sincronizando...</span>
+                </>
+              ) : syncError ? (
+                <>
+                  <CloudOff className="w-3 h-3 text-red-400" />
+                  <span className="text-red-400">Erro na Nuvem</span>
+                </>
+              ) : (
+                <>
+                  <Cloud className="w-3 h-3 text-emerald-400" />
+                  <span className="text-emerald-400">Nuvem Ativa</span>
+                </>
+              )}
+            </div>
+            <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl md:text-5xl font-black tracking-tighter mb-2 bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent"
