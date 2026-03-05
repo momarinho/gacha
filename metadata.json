@@ -1,0 +1,5 @@
+{
+  "name": "Sorteio do Pão de Queijo",
+  "description": "Um sistema simples para sortear quem vai comprar pão de queijo ou buscar água.",
+  "requestFramePermissions": []
+}
