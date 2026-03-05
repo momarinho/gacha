@@ -3,31 +3,40 @@ import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.join(__dirname, "raffle.db");
-console.log(`Initializing database at ${dbPath}`);
+// Supabase Configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
 
-let db: Database.Database;
-try {
-  db = new Database(dbPath);
-  // Initialize database
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS raffle_state (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      data TEXT NOT NULL
-    )
-  `);
-  console.log("Database initialized successfully");
-  
-  // Test query
-  const test = db.prepare("SELECT COUNT(*) as count FROM raffle_state").get() as { count: number };
-  console.log(`Database test query successful. Current rows: ${test.count}`);
-} catch (err) {
-  console.error("Failed to initialize database:", err);
-  process.exit(1);
+const dbPath = path.join(__dirname, "raffle.db");
+let db: Database.Database | null = null;
+let supabase: any = null;
+
+if (isSupabaseEnabled) {
+  console.log("Supabase detected, using Supabase as database provider.");
+  supabase = createClient(supabaseUrl!, supabaseKey!);
+} else {
+  console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
+  try {
+    db = new Database(dbPath);
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS raffle_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        data TEXT NOT NULL
+      )
+    `);
+    console.log("SQLite initialized successfully");
+  } catch (err) {
+    console.error("Failed to initialize SQLite:", err);
+  }
 }
 
 async function startServer() {
@@ -46,19 +55,30 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({ 
       status: "ok", 
+      provider: isSupabaseEnabled ? "supabase" : "sqlite",
       time: new Date().toISOString(),
-      dbPath: dbPath,
       env: process.env.NODE_ENV
     });
   });
 
-  app.get("/api/state", (req, res) => {
+  app.get("/api/state", async (req, res) => {
     try {
-      const row = db.prepare("SELECT data FROM raffle_state WHERE id = 1").get() as { data: string } | undefined;
-      if (row) {
-        res.json(JSON.parse(row.data));
+      if (isSupabaseEnabled) {
+        const { data, error } = await supabase
+          .from("raffle_state")
+          .select("data")
+          .eq("id", 1)
+          .single();
+        
+        if (error && error.code !== "PGRST116") { // PGRST116 is "no rows found"
+          throw error;
+        }
+        res.json(data ? JSON.parse(data.data) : null);
+      } else if (db) {
+        const row = db.prepare("SELECT data FROM raffle_state WHERE id = 1").get() as { data: string } | undefined;
+        res.json(row ? JSON.parse(row.data) : null);
       } else {
-        res.json(null);
+        res.status(500).json({ error: "No database provider available" });
       }
     } catch (error) {
       console.error("Error fetching state:", error);
@@ -66,11 +86,23 @@ async function startServer() {
     }
   });
 
-  app.post("/api/state", (req, res) => {
+  app.post("/api/state", async (req, res) => {
     try {
-      const data = JSON.stringify(req.body);
-      db.prepare("INSERT OR REPLACE INTO raffle_state (id, data) VALUES (1, ?)").run(data);
-      res.json({ success: true });
+      const dataStr = JSON.stringify(req.body);
+      
+      if (isSupabaseEnabled) {
+        const { error } = await supabase
+          .from("raffle_state")
+          .upsert({ id: 1, data: dataStr });
+        
+        if (error) throw error;
+        res.json({ success: true });
+      } else if (db) {
+        db.prepare("INSERT OR REPLACE INTO raffle_state (id, data) VALUES (1, ?)").run(dataStr);
+        res.json({ success: true });
+      } else {
+        res.status(500).json({ error: "No database provider available" });
+      }
     } catch (error) {
       console.error("Error saving state:", error);
       res.status(500).json({ error: "Internal Server Error" });

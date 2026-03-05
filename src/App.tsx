@@ -82,12 +82,27 @@ export default function App() {
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(false);
+  const [dbProvider, setDbProvider] = useState<'sqlite' | 'supabase' | null>(null);
 
   // Initial fetch from server
   useEffect(() => {
+    const fetchHealth = async () => {
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        if (data.provider) setDbProvider(data.provider);
+      } catch (e) {
+        console.error('Failed to fetch health:', e);
+      }
+    };
+    
     const fetchState = async () => {
       try {
         const response = await fetch('/api/state');
+        if (response.status === 404) {
+          console.warn('API not found. If you are on Vercel, ensure your deployment is configured correctly.');
+          return;
+        }
         const data = await response.json();
         if (data) {
           if (data.names) setNames(data.names);
@@ -105,6 +120,8 @@ export default function App() {
         console.error('Failed to fetch state from server:', error);
       }
     };
+    
+    fetchHealth();
     fetchState();
   }, []);
 
@@ -412,7 +429,9 @@ export default function App() {
               ) : (
                 <>
                   <Cloud className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400">Nuvem Ativa</span>
+                  <span className="text-emerald-400">
+                    Nuvem Ativa {dbProvider ? `(${dbProvider})` : ''}
+                  </span>
                 </>
               )}
             </div>
