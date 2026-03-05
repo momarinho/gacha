@@ -15,7 +15,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
 
-const dbPath = path.join(__dirname, "raffle.db");
+const dbPath = path.join(__dirname, "..", "raffle.db");
 let db: any = null;
 let supabase: any = null;
 let dbInitialized = false;
@@ -140,9 +140,9 @@ async function startServer() {
     app.use(vite.middlewares);
   } else if (!process.env.VERCEL) {
     // Only serve static files if NOT on Vercel (Vercel handles this via vercel.json)
-    app.use(express.static(path.join(__dirname, "dist")));
+    app.use(express.static(path.join(__dirname, "..", "dist")));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "dist", "index.html"));
+      res.sendFile(path.join(__dirname, "..", "dist", "index.html"));
     });
   }
 
