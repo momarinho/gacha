@@ -1,5 +1,5 @@
 {
   "name": "Sorteio do Pão de Queijo",
-  "description": "Um sistema simples para sortear quem vai comprar pão de queijo ou buscar água.",
+  "description": "Sistema premium de sorteios para pão de queijo, água, balde e música com histórico e sincronização em tempo real.",
   "requestFramePermissions": []
 }
