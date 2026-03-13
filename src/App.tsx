@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
+  Coins,
   Coffee,
   Droplets,
-  UserPlus,
-  Trash2,
   Shuffle,
+  Trash2,
   User,
+  UserPlus,
   CheckCircle2,
   AlertCircle,
   PaintBucket,
@@ -16,14 +17,11 @@ import {
   RefreshCw,
   RotateCcw,
   History,
-  Clock,
   Shield,
   Wand2,
   Crosshair,
   Heart,
-  Coins,
   ShoppingCart,
-  X,
   Package,
   Settings,
 } from "lucide-react";
@@ -36,6 +34,14 @@ import {
   MageInsights,
 } from "./types";
 import { api } from "./services/api";
+import { GuideSection } from "./components/app/GuideSection";
+import { HistorySection } from "./components/app/HistorySection";
+import { MageSection } from "./components/app/MageSection";
+import { ParticipantHomeSection } from "./components/app/ParticipantHomeSection";
+import { SettingsSection } from "./components/app/SettingsSection";
+import { ClassSelectionModal } from "./components/app/ClassSelectionModal";
+import { ShopModal } from "./components/app/ShopModal";
+import { InventoryModal } from "./components/app/InventoryModal";
 
 const STATE_KEY = "sorteio_estado_completo";
 const APPRENTICE_UNLOCK_LEVEL = 3;
@@ -1006,1039 +1012,91 @@ export default function App() {
   };
 
   const historySection = (
-    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
-      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            <History className="h-5 w-5 text-[var(--color-snes-gold)]" />
-          </div>
-          <div>
-            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-              HISTÓRICO DE SORTEIOS
-            </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
-              REGISTROS DAS ÚLTIMAS ATIVIDADES
-            </p>
-          </div>
-        </div>
-        {battleLogs.length > 0 && (
-          <button
-            onClick={async () => {
-              setBattleLogs([]);
-            }}
-            className="snes-ui-text border-2 border-white bg-black/35 px-3 py-2 text-white/70 hover:border-[var(--color-snes-gold)] hover:text-white"
-          >
-            Limpar
-          </button>
-        )}
-      </div>
-
-      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
-        <AnimatePresence mode="popLayout">
-          {battleLogs.map((entry) => (
-            <motion.div
-              key={entry.id}
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="history-log-entry"
-            >
-              <div
-                className={`flex h-11 w-11 items-center justify-center border-2 border-white ${
-                  entry.event_type === "draw_result"
-                    ? "bg-[var(--color-snes-gold)] text-slate-950"
-                    : entry.event_type === "level_up"
-                      ? "bg-emerald-600 text-white"
-                      : entry.event_type === "item_buy"
-                        ? "bg-blue-600 text-white"
-                        : "bg-black/40 text-white"
-                }`}
-              >
-                {entry.event_type === "draw_result" && (
-                  <Star className="h-4 w-4" />
-                )}
-                {entry.event_type === "level_up" && (
-                  <CheckCircle2 className="h-4 w-4" />
-                )}
-                {entry.event_type === "item_buy" && (
-                  <ShoppingCart className="h-4 w-4" />
-                )}
-                {!["draw_result", "level_up", "item_buy"].includes(
-                  entry.event_type,
-                ) && <History className="h-4 w-4" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="pixel-text mb-1 text-[8px] text-white">
-                  {entry.profiles?.name || "SISTEMA"}
-                </div>
-                <div className="pixel-text text-[7px] text-white/60">
-                  {entry.message}
-                </div>
-              </div>
-              <div className="pixel-text flex items-center gap-1 text-[7px] text-white/45">
-                <Clock className="h-3 w-3" />
-                {new Date(entry.created_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        {battleLogs.length === 0 && (
-          <div className="retro-empty-state mt-4">
-            <div className="retro-empty-icon">
-              <History className="h-7 w-7 text-white/25" />
-            </div>
-            <p className="pixel-text text-[8px] text-white/35">
-              FIM DOS REGISTROS
-            </p>
-          </div>
-        )}
-      </div>
-    </section>
+    <HistorySection battleLogs={battleLogs} onClear={() => setBattleLogs([])} />
   );
 
   const settingsSection = (
-    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
-      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            <Settings className="h-5 w-5 text-[var(--color-snes-gold)]" />
-          </div>
-          <div>
-            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-              CONFIGURAÇÕES
-            </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
-              STATUS DO SISTEMA E CONTROLES RÁPIDOS
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            STATUS
-          </h3>
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Banco ativo
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {dbProvider || "indefinido"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Sincronização
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {isSyncing ? "sincronizando" : syncError ? "offline" : "ok"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Participantes
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {profiles.length}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Logs na tela
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {battleLogs.length}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            AÇÕES
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            <button
-              type="button"
-              onClick={handleGeneralReset}
-              className="snes-ui-text border-2 border-white bg-red-900/80 px-4 py-3 text-white hover:bg-red-800"
-            >
-              LIMPAR SORTEIOS DA TELA
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.removeItem(STATE_KEY);
-                setPaoDeQueijoWinners([]);
-                setAguaWinners([]);
-                setBaldeWinners([]);
-                setGeralWinners([]);
-                setExcludedIdsPao([]);
-                setExcludedIdsAgua([]);
-                setExcludedIdsBalde([]);
-                setExcludedIdsGeral([]);
-                setAguaMode("muita");
-              }}
-              className="snes-ui-text border-2 border-white bg-slate-900 px-4 py-3 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-            >
-              LIMPAR ESTADO LOCAL
-            </button>
-            <button
-              type="button"
-              onClick={() => setBattleLogs([])}
-              className="snes-ui-text border-2 border-white bg-slate-900 px-4 py-3 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-            >
-              LIMPAR LOGS DA TELA
-            </button>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            NOTAS
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              Reset Geral limpa apenas vencedores visuais e o estado exibido dos
-              sorteios, sem remover participantes.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              Limpar estado local apaga apenas o cache visual salvo no
-              navegador.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              Para limpar dados reais, perfis e histórico do banco, continue
-              usando SQL no Supabase.
-            </p>
-          </div>
-        </section>
-      </div>
-    </section>
+    <SettingsSection
+      dbProvider={dbProvider}
+      isSyncing={isSyncing}
+      syncError={syncError}
+      profilesCount={profiles.length}
+      battleLogsCount={battleLogs.length}
+      onResetVisualState={handleGeneralReset}
+      onClearLocalState={() => {
+        localStorage.removeItem(STATE_KEY);
+        setPaoDeQueijoWinners([]);
+        setAguaWinners([]);
+        setBaldeWinners([]);
+        setGeralWinners([]);
+        setExcludedIdsPao([]);
+        setExcludedIdsAgua([]);
+        setExcludedIdsBalde([]);
+        setExcludedIdsGeral([]);
+        setAguaMode("muita");
+      }}
+      onClearScreenLogs={() => setBattleLogs([])}
+    />
   );
 
-  const guideSection = (
-    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
-      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            <AlertCircle className="h-5 w-5 text-[var(--color-snes-gold)]" />
-          </div>
-          <div>
-            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-              COMO JOGAR
-            </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
-              GUIA RÁPIDO DO SISTEMA, CLASSES E LOJA
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-2">
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            VISÃO GERAL
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              Cada participante acumula XP, nível, HP e SetorCoins conforme os
-              sorteios acontecem.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              O objetivo é evoluir a classe, sobreviver aos sorteios piores e
-              usar a loja para melhorar o desempenho diário.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              O HP também representa sanidade. Quando fica baixo demais, os
-              ganhos de moedas caem.
-            </p>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            PROGRESSÃO
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              Todo mundo começa como Novato.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              No nível 3, o jogador escolhe uma trilha de aprendiz.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              No nível 5, a classe final é liberada.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              Novato recebe +10% XP enquanto aprende o sistema.
-            </p>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            CLASSES
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="border-2 border-red-400/40 bg-red-950/20 p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <Shield className="h-4 w-4 text-red-300" />
-                <span className="pixel-text text-[7px] text-white">
-                  Guerreiro
-                </span>
-              </div>
-              <p className="pixel-text text-[7px] text-white/65">
-                Reduz dano ruim e ganha XP passivo em todo sorteio.
-              </p>
-            </div>
-            <div className="border-2 border-blue-400/40 bg-blue-950/20 p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <Wand2 className="h-4 w-4 text-blue-300" />
-                <span className="pixel-text text-[7px] text-white">Mago</span>
-              </div>
-              <p className="pixel-text text-[7px] text-white/65">
-                Recebe desconto na loja e acessa o Olhar Arcano.
-              </p>
-            </div>
-            <div className="border-2 border-emerald-400/40 bg-emerald-950/20 p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <Crosshair className="h-4 w-4 text-emerald-300" />
-                <span className="pixel-text text-[7px] text-white">Ladino</span>
-              </div>
-              <p className="pixel-text text-[7px] text-white/65">
-                Pode esquivar e ganha mais moedas quando escapa do sorteio.
-              </p>
-            </div>
-            <div className="border-2 border-pink-400/40 bg-pink-950/20 p-3">
-              <div className="mb-2 flex items-center gap-2">
-                <Heart className="h-4 w-4 text-pink-300" />
-                <span className="pixel-text text-[7px] text-white">
-                  Clérigo
-                </span>
-              </div>
-              <p className="pixel-text text-[7px] text-white/65">
-                Distribui moedas extras ao grupo e recupera melhor após Pão.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            CATEGORIAS
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="border-2 border-blue-400/40 bg-black/30 p-3">
-              <div className="pixel-text text-[7px] text-blue-300">ÁGUA</div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Tarefa diária, segura, com ganho leve de XP e moedas.
-              </p>
-            </div>
-            <div className="border-2 border-purple-400/40 bg-black/30 p-3">
-              <div className="pixel-text text-[7px] text-purple-300">BALDE</div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Desafio intermediário, dá mais XP e cobra HP.
-              </p>
-            </div>
-            <div className="border-2 border-orange-400/40 bg-black/30 p-3">
-              <div className="pixel-text text-[7px] text-orange-300">
-                PÃO DE QUEIJO
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Evento pesado; quem escapa recebe alívio e sorte temporária.
-              </p>
-            </div>
-            <div className="border-2 border-emerald-400/40 bg-black/30 p-3">
-              <div className="pixel-text text-[7px] text-emerald-300">
-                GERAL
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Evento neutro com moedas base para todos os envolvidos.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            EXAUSTÃO E FEITOS
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              Quando o HP fica abaixo do limite de exaustão, o jogador recebe
-              menos moedas.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              Os feitos aparecem conforme eventos reais do jogo, como vencer Pão
-              ou Balde.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              O título pessoal é separado dos feitos e pode ser definido pelo
-              próprio jogador.
-            </p>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            LOJA E ITENS
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="border-2 border-white/20 bg-black/35 p-3">
-              <div className="pixel-text text-[7px] text-[var(--color-snes-gold)]">
-                CAFÉ EXPRESSO
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Recupera 50% do HP instantaneamente.
-              </p>
-            </div>
-            <div className="border-2 border-white/20 bg-black/35 p-3">
-              <div className="pixel-text text-[7px] text-[var(--color-snes-gold)]">
-                RELATÓRIO FALSO
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Tira o jogador do próximo Balde.
-              </p>
-            </div>
-            <div className="border-2 border-white/20 bg-black/35 p-3">
-              <div className="pixel-text text-[7px] text-[var(--color-snes-gold)]">
-                IMÃ DE MOEDAS
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Aumenta ganhos por tempo limitado.
-              </p>
-            </div>
-            <div className="border-2 border-white/20 bg-black/35 p-3">
-              <div className="pixel-text text-[7px] text-[var(--color-snes-gold)]">
-                TERCEIRIZAÇÃO
-              </div>
-              <p className="pixel-text mt-2 text-[7px] text-white/65">
-                Terceiriza a próxima Água se o jogador for sorteado.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            FLUXO RECOMENDADO
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              1. Adicione os participantes e ajuste quem entra em cada
-              categoria.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              2. Deixe todos evoluírem como Novato até destravar a trilha.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              3. Abra a página Sorteios para executar o turno do setor.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              4. Use a loja para recuperar HP ou alterar o meta.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              5. O fluxo padrão usa participação contínua. O grupo não é
-              eliminado por ciclo.
-            </p>
-          </div>
-        </section>
-      </div>
-    </section>
-  );
-
-  const participantRosterSection = (
-    <section className="glass-card flex min-h-[0] flex-col p-5 xl:col-span-2">
-      <div className="mb-5 flex flex-col gap-4 border-b-2 border-white/20 pb-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            <User className="w-5 h-5 text-[var(--color-snes-gold)]" />
-          </div>
-          <div>
-            <h3 className="pixel-text text-[9px] text-[var(--color-snes-gold)]">
-              ELENCO DO SETOR
-            </h3>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
-              AJUSTE O GRUPO, OS PAPÉIS E A PARTICIPAÇÃO DE CADA UM
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="snes-chip">{profiles.length} TOTAL</span>
-          <button
-            type="button"
-            onClick={() => setCurrentPage("draws")}
-            className="snes-ui-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={profiles.length === 0}
-          >
-            ABRIR SORTEIOS
-          </button>
-        </div>
-      </div>
-
-      <form
-        onSubmit={addName}
-        className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]"
-      >
-        <div>
-          <label className="pixel-text mb-2 block text-[8px] text-white/70">
-            NOVO MEMBRO:
-          </label>
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="NOME..."
-            className="snes-input pixel-text w-full text-[9px] placeholder:text-white/35"
-          />
-        </div>
-        <button
-          type="submit"
-          className="snes-ui-text mt-[22px] flex h-10 items-center justify-center gap-2 border-2 border-white bg-[var(--color-snes-gold)] px-4 text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
-        >
-          <UserPlus className="h-4 w-4" />
-          ADICIONAR
-        </button>
-      </form>
-
-      <div className="custom-scrollbar min-h-[320px] flex-1 overflow-y-auto pr-1">
-        {profiles.length > 0 ? (
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {profiles.map((person) => {
-                const exhaustionState = getExhaustionState(person);
-                const recentClassEffect =
-                  recentClassEffectsByProfileId[person.id];
-                const achievementTitles = titlesByProfileId[person.id] || [];
-                const customTitle = getCustomTitle(person);
-                const isArcaneFocus =
-                  selectedMageId === person.id &&
-                  ["mago", "aprendiz_mago"].includes(person.class) &&
-                  Boolean(mageInsights);
-
-                return (
-                  <motion.div
-                    key={person.id}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className={`relative overflow-hidden border-2 bg-black/35 p-2.5 transition-none group snes-card-hover ${
-                      exhaustionState.tone === "critical"
-                        ? "border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.35)]"
-                        : exhaustionState.tone === "warning"
-                          ? "border-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.28)]"
-                          : "border-white"
-                    } ${recentClassEffect?.cardClassName || ""} ${
-                      isArcaneFocus
-                        ? "snes-arcane-glow border-blue-300 shadow-[0_0_18px_rgba(96,165,250,0.24)]"
-                        : ""
-                    }`}
-                  >
-                    <div className="absolute left-0 top-0 h-1 w-full border-b-2 border-white bg-black">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{
-                          width: `${(person.xp / (person.level * 100)) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="absolute bottom-0 left-0 h-1.5 w-full border-t-2 border-white bg-black">
-                      <div
-                        className="h-full bg-red-600"
-                        style={{
-                          width: `${(person.hp / person.max_hp) * 100}%`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="mt-1.5 flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedProfileId(person.id);
-                                setClassModalOpen(true);
-                              }}
-                              className="flex h-6 w-6 shrink-0 items-center justify-center border-2 border-white bg-black/60 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                              title="Mudar Classe"
-                            >
-                              {person.class === "guerreiro" && (
-                                <Shield className="w-3 h-3 text-red-400" />
-                              )}
-                              {person.class === "aprendiz_guerreiro" && (
-                                <Shield className="w-3 h-3 text-red-300" />
-                              )}
-                              {person.class === "mago" && (
-                                <Wand2 className="w-3 h-3 text-blue-400" />
-                              )}
-                              {person.class === "aprendiz_mago" && (
-                                <Wand2 className="w-3 h-3 text-blue-300" />
-                              )}
-                              {person.class === "ladino" && (
-                                <Crosshair className="w-3 h-3 text-emerald-400" />
-                              )}
-                              {person.class === "aprendiz_ladino" && (
-                                <Crosshair className="w-3 h-3 text-emerald-300" />
-                              )}
-                              {person.class === "clerigo" && (
-                                <Heart className="w-3 h-3 text-pink-400" />
-                              )}
-                              {person.class === "aprendiz_clerigo" && (
-                                <Heart className="w-3 h-3 text-pink-300" />
-                              )}
-                              {person.class === "novato" && (
-                                <User className="w-3 h-3 text-zinc-400" />
-                              )}
-                            </button>
-                            <div className="min-w-0">
-                              <div className="truncate text-[13px] font-semibold tracking-tight text-white">
-                                {person.name}
-                              </div>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                <span className="snes-chip">
-                                  LV.{person.level}
-                                </span>
-                                <span
-                                  className={`pixel-text px-1.5 py-0.5 text-[6px] border ${
-                                    exhaustionState.tone === "critical"
-                                      ? "border-red-300 bg-red-950/70 text-red-200"
-                                      : exhaustionState.tone === "warning"
-                                        ? "border-yellow-300 bg-yellow-950/50 text-yellow-200"
-                                        : "border-emerald-300/40 bg-emerald-950/30 text-emerald-200/80"
-                                  }`}
-                                >
-                                  {exhaustionState.label}
-                                </span>
-                                {recentClassEffect && (
-                                  <span
-                                    className={`pixel-text px-1.5 py-0.5 text-[6px] border ${recentClassEffect.badgeClassName}`}
-                                  >
-                                    {recentClassEffect.label}
-                                  </span>
-                                )}
-                                {isArcaneFocus && (
-                                  <span className="pixel-text border border-blue-300 bg-blue-950/55 px-1.5 py-0.5 text-[6px] text-blue-200">
-                                    Arcano
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-1">
-                          <div className="flex items-center gap-1 border-2 border-[var(--color-snes-gold)] bg-black px-2 py-1 text-[var(--color-snes-gold)]">
-                            <Coins className="w-3 h-3" />
-                            <span className="pixel-text text-[7px]">
-                              {person.coins}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedInventoryProfileId(person.id);
-                              setInventoryModalOpen(true);
-                            }}
-                            className="border-2 border-white bg-black p-1 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                            title="Inventário"
-                          >
-                            <Package className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-[1fr_auto] gap-2">
-                        <div className="space-y-1">
-                          <div className="pixel-text truncate text-[6px] text-white/60">
-                            {customTitle || getClassPowerText(person.class)}
-                          </div>
-                          {(person.passive_coin_multiplier > 1 ||
-                            person.temporary_coin_multiplier > 1 ||
-                            person.luck > 0) && (
-                            <div className="flex flex-wrap gap-1">
-                              {person.passive_coin_multiplier > 1 && (
-                                <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-[6px] text-yellow-200">
-                                  Eco x
-                                  {person.passive_coin_multiplier.toFixed(2)}
-                                </span>
-                              )}
-                              {person.temporary_coin_multiplier > 1 && (
-                                <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-[6px] text-cyan-200">
-                                  Boost x
-                                  {person.temporary_coin_multiplier.toFixed(2)}
-                                </span>
-                              )}
-                              {person.luck > 0 && (
-                                <span className="pixel-text border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-[6px] text-blue-200">
-                                  Sorte +{person.luck.toFixed(2)}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-1">
-                          <button
-                            onClick={() =>
-                              toggleParticipation(person.id, "pao")
-                            }
-                            className={`p-1 transition-none border-2 ${
-                              person.participates_in_pao
-                                ? "bg-orange-600 text-white border-white"
-                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                            }`}
-                            title="Participar do Pão de Queijo"
-                          >
-                            <Coffee className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              toggleParticipation(person.id, "agua")
-                            }
-                            className={`p-1 transition-none border-2 ${
-                              person.participates_in_agua
-                                ? "bg-blue-600 text-white border-white"
-                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                            }`}
-                            title="Participar da Água"
-                          >
-                            <Droplets className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              toggleParticipation(person.id, "balde")
-                            }
-                            className={`p-1 transition-none border-2 ${
-                              person.participates_in_balde
-                                ? "bg-purple-600 text-white border-white"
-                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                            }`}
-                            title="Participar do Balde"
-                          >
-                            <PaintBucket className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              toggleParticipation(person.id, "geral")
-                            }
-                            className={`p-1 transition-none border-2 ${
-                              person.participates_in_geral
-                                ? "bg-emerald-600 text-white border-white"
-                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                            }`}
-                            title="Participar do Geral"
-                          >
-                            <Star className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {!customTitle && (
-                        <div className="flex gap-1.5">
-                          <input
-                            type="text"
-                            value={titleDrafts[person.id] || ""}
-                            onChange={(e) =>
-                              setTitleDrafts((currentDrafts) => ({
-                                ...currentDrafts,
-                                [person.id]: e.target.value,
-                              }))
-                            }
-                            maxLength={40}
-                            placeholder="Titulo pessoal..."
-                            className="snes-input pixel-text h-7 flex-1 px-2 py-1 text-[6px] placeholder:text-white/30"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => saveCustomTitle(person)}
-                            className="snes-ui-text border-2 border-white bg-black px-2 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-                          >
-                            SALVAR
-                          </button>
-                        </div>
-                      )}
-
-                      {achievementTitles.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1">
-                          <span className="pixel-text text-[6px] text-white/45">
-                            FEITOS
-                          </span>
-                          {achievementTitles.map((title) => (
-                            <span
-                              key={`${person.id}-${title}`}
-                              className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[6px] text-[var(--color-snes-gold)]/90"
-                            >
-                              {title}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {recentClassEffect && (
-                        <div className="pixel-text text-[6px] text-white/70">
-                          {recentClassEffect.detail}
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => removeName(person.id)}
-                      className="absolute bottom-1.5 left-2 border-2 border-transparent p-1 text-zinc-500 opacity-0 transition-none group-hover:opacity-100 hover:border-red-500 hover:bg-black hover:text-red-400"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </AnimatePresence>
-        ) : (
-          <div className="retro-empty-state">
-            <div className="retro-empty-icon">
-              <User className="h-7 w-7 text-white/25" />
-            </div>
-            <p className="pixel-text text-[8px] text-white/50">
-              EQUIPE VAZIA.
-              <br />
-              ADICIONE NOMES PARA LUTAR!
-            </p>
-            <button
-              type="button"
-              className="snes-ui-text border-2 border-white bg-slate-700 px-3 py-2 text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
-            >
-              Importar Lista
-            </button>
-          </div>
-        )}
-      </div>
-    </section>
-  );
+  const guideSection = <GuideSection />;
 
   const participantHomeSection = (
-    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
-      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-            <User className="h-5 w-5 text-[var(--color-snes-gold)]" />
-          </div>
-          <div>
-            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-              CENTRAL DE PARTICIPANTES
-            </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
-              MONTE O GRUPO ANTES DE ABRIR OS SORTEIOS
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setCurrentPage("draws")}
-          className="snes-ui-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-black hover:bg-white"
-          disabled={profiles.length === 0}
-        >
-          ABRIR SORTEIOS
-        </button>
-      </div>
-
-      <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            RESUMO DO GRUPO
-          </h3>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="border-2 border-white/15 bg-black/35 p-3">
-              <div className="pixel-text text-[6px] text-white/50">TOTAL</div>
-              <div className="pixel-text mt-2 text-[10px] text-white">
-                {profiles.length}
-              </div>
-            </div>
-            <div className="border-2 border-white/15 bg-black/35 p-3">
-              <div className="pixel-text text-[6px] text-white/50">
-                NÍVEL MAIS ALTO
-              </div>
-              <div className="pixel-text mt-2 text-[10px] text-white">
-                {highestLevel}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            PARTICIPAÇÃO
-          </h3>
-          <div className="mt-4 space-y-3">
-            {[
-              ["Pão de Queijo", "pao"],
-              ["Água", "agua"],
-              ["Balde", "balde"],
-              ["Geral", "geral"],
-            ].map(([label, key]) => (
-              <div
-                key={key}
-                className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3"
-              >
-                <span className="pixel-text text-[7px] text-white/70">
-                  {label}
-                </span>
-                <span className="pixel-text text-[7px] text-white">
-                  {getParticipationCount(
-                    key as "pao" | "agua" | "balde" | "geral",
-                  )}
-                  /{profiles.length}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            NOVO FLUXO
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
-              1. Cadastre os participantes e ajuste quem participa de cada
-              categoria.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              2. Abra a página Sorteios para executar o turno do setor.
-            </p>
-            <p className="pixel-text text-[7px] text-white/65">
-              3. Os sorteios agora usam participação contínua. Não existe mais
-              exclusão por ciclo no fluxo padrão.
-            </p>
-          </div>
-        </section>
-
-        {participantRosterSection}
-
-        {profiles.length === 0 && (
-          <section className="retro-empty-state xl:col-span-2">
-            <div className="retro-empty-icon">
-              <User className="h-7 w-7 text-white/25" />
-            </div>
-            <p className="pixel-text text-[8px] text-white/50">
-              O SETOR AINDA ESTÁ VAZIO.
-              <br />
-              CADASTRE O GRUPO PARA LIBERAR OS SORTEIOS.
-            </p>
-            <button
-              type="button"
-              onClick={() => setCurrentPage("guide")}
-              className="snes-ui-text border-2 border-white bg-black px-3 py-2 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-            >
-              ABRIR GUIA
-            </button>
-          </section>
-        )}
-      </div>
-    </section>
+    <ParticipantHomeSection
+      profiles={profiles}
+      highestLevel={highestLevel}
+      newName={newName}
+      titleDrafts={titleDrafts}
+      titlesByProfileId={titlesByProfileId}
+      selectedMageId={selectedMageId}
+      mageInsights={mageInsights}
+      onOpenDraws={() => setCurrentPage("draws")}
+      onOpenGuide={() => setCurrentPage("guide")}
+      onAddName={addName}
+      onNewNameChange={setNewName}
+      onOpenClassSelection={(profileId) => {
+        setSelectedProfileId(profileId);
+        setClassModalOpen(true);
+      }}
+      onOpenInventory={(profileId) => {
+        setSelectedInventoryProfileId(profileId);
+        setInventoryModalOpen(true);
+      }}
+      onToggleParticipation={toggleParticipation}
+      onTitleDraftChange={(profileId, title) =>
+        setTitleDrafts((currentDrafts) => ({
+          ...currentDrafts,
+          [profileId]: title,
+        }))
+      }
+      onSaveCustomTitle={saveCustomTitle}
+      onRemoveProfile={removeName}
+      getParticipationCount={getParticipationCount}
+      getExhaustionState={getExhaustionState}
+      getCustomTitle={getCustomTitle}
+      getClassPowerText={getClassPowerText}
+      recentClassEffectsByProfileId={recentClassEffectsByProfileId}
+    />
   );
 
-  const mageSection =
-    mageProfiles.length > 0 ? (
-      <section
-        className={`glass-card p-5 ${
-          mageInsights && selectedMageId ? "snes-arcane-glow" : ""
-        }`}
-      >
-        <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
-          <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-            OLHAR ARCANO
-          </h2>
-          <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
-        </div>
+  const mageSection = (
+    <MageSection
+      mageProfiles={mageProfiles}
+      mageInsights={mageInsights}
+      selectedMageId={selectedMageId}
+      onSelectMage={setSelectedMageId}
+    />
+  );
 
-        <div className="mb-4">
-          <label className="pixel-text mb-2 block text-[8px] text-white/70">
-            MAGO ATIVO:
-          </label>
-          <select
-            className="snes-input pixel-text w-full text-[8px]"
-            value={selectedMageId || ""}
-            onChange={(e) => setSelectedMageId(e.target.value)}
-          >
-            {mageProfiles.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {mageInsights ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {mageInsights.queues.map((queue) => (
-                <div
-                  key={queue.key}
-                  className="border-2 border-white/20 bg-black/30 p-3"
-                >
-                  <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                    {queue.label}
-                  </div>
-                  <div className="mt-2 pixel-text text-[7px] text-white/65">
-                    FILA: {queue.excludedNames.length}
-                  </div>
-                  <div className="mt-2 min-h-9 space-y-1">
-                    {queue.excludedNames.length > 0 ? (
-                      queue.excludedNames.slice(0, 3).map((name) => (
-                        <div
-                          key={`${queue.key}-${name}`}
-                          className="pixel-text truncate text-[7px] text-white"
-                        >
-                          {name}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="pixel-text text-[7px] text-white/40">
-                        LIMPA
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-2 border-white/20 bg-black/30 p-3">
-              <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
-                LOG DETALHADO
-              </div>
-              <div className="space-y-2">
-                {mageInsights.recentLogs.slice(0, 4).map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
-                  >
-                    <div className="pixel-text text-[7px] text-white">
-                      {entry.profiles?.name || "SISTEMA"}
-                    </div>
-                    <div className="pixel-text mt-1 text-[7px] text-white/60">
-                      {entry.message}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-white/20 p-6 text-center">
-            <p className="pixel-text text-[8px] text-white/50">
-              SEM LEITURA ARCANA
-            </p>
-          </div>
-        )}
-      </section>
-    ) : null;
+  const selectedProfile =
+    selectedProfileId !== null
+      ? profiles.find((profile) => profile.id === selectedProfileId) || null
+      : null;
+  const selectedInventoryProfile =
+    selectedInventoryProfileId !== null
+      ? profiles.find((profile) => profile.id === selectedInventoryProfileId) ||
+        null
+      : null;
 
   return (
     <div className="min-h-screen px-0 py-0 font-sans text-zinc-100 lg:px-1 lg:py-1">
@@ -2119,7 +1177,7 @@ export default function App() {
         </header>
 
         <main className="grid min-h-[calc(100vh-82px)] grid-cols-1 gap-3 px-2 py-3 lg:grid-cols-12 lg:px-3 lg:py-3 xl:px-4">
-          <div className="flex flex-col gap-4 lg:col-span-3">
+          <div className="flex flex-col gap-4 lg:col-span-2">
             <section className="glass-card p-5">
               <h2 className="panel-title">MENU PRINCIPAL</h2>
               <ul className="space-y-2">
@@ -2185,358 +1243,10 @@ export default function App() {
                 </li>
               </ul>
             </section>
-            <section className="glass-card flex min-h-[0] flex-1 flex-col p-5">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <User className="w-5 h-5 text-[var(--color-snes-gold)]" />
-                  </div>
-                  <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                    PARTICIPANTES
-                  </h2>
-                </div>
-                <span className="snes-chip">{profiles.length} TOTAL</span>
-              </div>
-
-              <form onSubmit={addName} className="relative mb-6 group">
-                <label className="pixel-text mb-2 block text-[8px] text-white/70">
-                  NOVO MEMBRO:
-                </label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="NOME..."
-                  className="snes-input pixel-text w-full pr-14 text-[9px] placeholder:text-white/35"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-[30px] flex h-9 w-9 items-center justify-center border-2 border-white bg-[var(--color-snes-gold)] text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
-                >
-                  <UserPlus className="w-4 h-4" />
-                </button>
-              </form>
-
-              <div className="custom-scrollbar min-h-[260px] flex-1 space-y-3 overflow-y-auto pr-1 lg:min-h-0">
-                <AnimatePresence mode="popLayout">
-                  {profiles.map((person) =>
-                    (() => {
-                      const exhaustionState = getExhaustionState(person);
-                      const recentClassEffect =
-                        recentClassEffectsByProfileId[person.id];
-                      const achievementTitles =
-                        titlesByProfileId[person.id] || [];
-                      const customTitle = getCustomTitle(person);
-                      const isArcaneFocus =
-                        selectedMageId === person.id &&
-                        ["mago", "aprendiz_mago"].includes(person.class) &&
-                        Boolean(mageInsights);
-                      return (
-                        <motion.div
-                          key={person.id}
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className={`relative overflow-hidden border-2 bg-black/35 p-2.5 transition-none group snes-card-hover ${
-                            exhaustionState.tone === "critical"
-                              ? "border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.35)]"
-                              : exhaustionState.tone === "warning"
-                                ? "border-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.28)]"
-                                : "border-white"
-                          } ${recentClassEffect?.cardClassName || ""} ${
-                            isArcaneFocus
-                              ? "snes-arcane-glow border-blue-300 shadow-[0_0_18px_rgba(96,165,250,0.24)]"
-                              : ""
-                          }`}
-                        >
-                          <div className="absolute left-0 top-0 h-1 w-full border-b-2 border-white bg-black">
-                            <div
-                              className="h-full bg-blue-500"
-                              style={{
-                                width: `${(person.xp / (person.level * 100)) * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <div className="absolute bottom-0 left-0 h-1.5 w-full border-t-2 border-white bg-black">
-                            <div
-                              className="h-full bg-red-600"
-                              style={{
-                                width: `${(person.hp / person.max_hp) * 100}%`,
-                              }}
-                            />
-                          </div>
-
-                          <div className="mt-1.5 flex flex-col gap-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedProfileId(person.id);
-                                      setClassModalOpen(true);
-                                    }}
-                                    className="flex h-6 w-6 shrink-0 items-center justify-center border-2 border-white bg-black/60 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                                    title="Mudar Classe"
-                                  >
-                                    {person.class === "guerreiro" && (
-                                      <Shield className="w-3 h-3 text-red-400" />
-                                    )}
-                                    {person.class === "aprendiz_guerreiro" && (
-                                      <Shield className="w-3 h-3 text-red-300" />
-                                    )}
-                                    {person.class === "mago" && (
-                                      <Wand2 className="w-3 h-3 text-blue-400" />
-                                    )}
-                                    {person.class === "aprendiz_mago" && (
-                                      <Wand2 className="w-3 h-3 text-blue-300" />
-                                    )}
-                                    {person.class === "ladino" && (
-                                      <Crosshair className="w-3 h-3 text-emerald-400" />
-                                    )}
-                                    {person.class === "aprendiz_ladino" && (
-                                      <Crosshair className="w-3 h-3 text-emerald-300" />
-                                    )}
-                                    {person.class === "clerigo" && (
-                                      <Heart className="w-3 h-3 text-pink-400" />
-                                    )}
-                                    {person.class === "aprendiz_clerigo" && (
-                                      <Heart className="w-3 h-3 text-pink-300" />
-                                    )}
-                                    {person.class === "novato" && (
-                                      <User className="w-3 h-3 text-zinc-400" />
-                                    )}
-                                  </button>
-                                  <div className="min-w-0">
-                                    <div className="truncate text-[13px] font-semibold tracking-tight text-white">
-                                      {person.name}
-                                    </div>
-                                    <div className="mt-1 flex flex-wrap gap-1">
-                                      <span className="snes-chip">
-                                        LV.{person.level}
-                                      </span>
-                                      <span
-                                        className={`pixel-text px-1.5 py-0.5 text-[6px] border ${
-                                          exhaustionState.tone === "critical"
-                                            ? "border-red-300 bg-red-950/70 text-red-200"
-                                            : exhaustionState.tone === "warning"
-                                              ? "border-yellow-300 bg-yellow-950/50 text-yellow-200"
-                                              : "border-emerald-300/40 bg-emerald-950/30 text-emerald-200/80"
-                                        }`}
-                                      >
-                                        {exhaustionState.label}
-                                      </span>
-                                      {recentClassEffect && (
-                                        <span
-                                          className={`pixel-text px-1.5 py-0.5 text-[6px] border ${recentClassEffect.badgeClassName}`}
-                                        >
-                                          {recentClassEffect.label}
-                                        </span>
-                                      )}
-                                      {isArcaneFocus && (
-                                        <span className="pixel-text border border-blue-300 bg-blue-950/55 px-1.5 py-0.5 text-[6px] text-blue-200">
-                                          Arcano
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex shrink-0 items-center gap-1">
-                                <div className="flex items-center gap-1 border-2 border-[var(--color-snes-gold)] bg-black px-2 py-1 text-[var(--color-snes-gold)]">
-                                  <Coins className="w-3 h-3" />
-                                  <span className="pixel-text text-[7px]">
-                                    {person.coins}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setSelectedInventoryProfileId(person.id);
-                                    setInventoryModalOpen(true);
-                                  }}
-                                  className="border-2 border-white bg-black p-1 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                                  title="Inventário"
-                                >
-                                  <Package className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-[1fr_auto] gap-2">
-                              <div className="space-y-1">
-                                <div className="pixel-text truncate text-[6px] text-white/60">
-                                  {customTitle ||
-                                    getClassPowerText(person.class)}
-                                </div>
-                                {(person.passive_coin_multiplier > 1 ||
-                                  person.temporary_coin_multiplier > 1 ||
-                                  person.luck > 0) && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {person.passive_coin_multiplier > 1 && (
-                                      <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-[6px] text-yellow-200">
-                                        Eco x
-                                        {person.passive_coin_multiplier.toFixed(
-                                          2,
-                                        )}
-                                      </span>
-                                    )}
-                                    {person.temporary_coin_multiplier > 1 && (
-                                      <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-[6px] text-cyan-200">
-                                        Boost x
-                                        {person.temporary_coin_multiplier.toFixed(
-                                          2,
-                                        )}
-                                      </span>
-                                    )}
-                                    {person.luck > 0 && (
-                                      <span className="pixel-text border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-[6px] text-blue-200">
-                                        Sorte +{person.luck.toFixed(2)}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-1">
-                                <button
-                                  onClick={() =>
-                                    toggleParticipation(person.id, "pao")
-                                  }
-                                  className={`p-1 transition-none border-2 ${
-                                    person.participates_in_pao
-                                      ? "bg-orange-600 text-white border-white"
-                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                  }`}
-                                  title="Participar do Pão de Queijo"
-                                >
-                                  <Coffee className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    toggleParticipation(person.id, "agua")
-                                  }
-                                  className={`p-1 transition-none border-2 ${
-                                    person.participates_in_agua
-                                      ? "bg-blue-600 text-white border-white"
-                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                  }`}
-                                  title="Participar da Água"
-                                >
-                                  <Droplets className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    toggleParticipation(person.id, "balde")
-                                  }
-                                  className={`p-1 transition-none border-2 ${
-                                    person.participates_in_balde
-                                      ? "bg-purple-600 text-white border-white"
-                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                  }`}
-                                  title="Participar do Balde"
-                                >
-                                  <PaintBucket className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    toggleParticipation(person.id, "geral")
-                                  }
-                                  className={`p-1 transition-none border-2 ${
-                                    person.participates_in_geral
-                                      ? "bg-emerald-600 text-white border-white"
-                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                  }`}
-                                  title="Participar do Geral"
-                                >
-                                  <Star className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {!customTitle && (
-                              <div className="flex gap-1.5">
-                                <input
-                                  type="text"
-                                  value={titleDrafts[person.id] || ""}
-                                  onChange={(e) =>
-                                    setTitleDrafts((currentDrafts) => ({
-                                      ...currentDrafts,
-                                      [person.id]: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={40}
-                                  placeholder="Titulo pessoal..."
-                                  className="snes-input pixel-text h-7 flex-1 px-2 py-1 text-[6px] placeholder:text-white/30"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => saveCustomTitle(person)}
-                                  className="pixel-text border-2 border-white bg-black px-2 text-[6px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-                                >
-                                  SALVAR
-                                </button>
-                              </div>
-                            )}
-
-                            {achievementTitles.length > 0 && (
-                              <div className="flex flex-wrap items-center gap-1">
-                                <span className="pixel-text text-[6px] text-white/45">
-                                  FEITOS
-                                </span>
-                                {achievementTitles.map((title) => (
-                                  <span
-                                    key={`${person.id}-${title}`}
-                                    className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[6px] text-[var(--color-snes-gold)]/90"
-                                  >
-                                    {title}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {recentClassEffect && (
-                              <div className="pixel-text text-[6px] text-white/70">
-                                {recentClassEffect.detail}
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            onClick={() => removeName(person.id)}
-                            className="absolute bottom-1.5 left-2 border-2 border-transparent p-1 text-zinc-500 opacity-0 transition-none group-hover:opacity-100 hover:border-red-500 hover:bg-black hover:text-red-400"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </motion.div>
-                      );
-                    })(),
-                  )}
-                </AnimatePresence>
-                {profiles.length === 0 && (
-                  <div className="retro-empty-state">
-                    <div className="retro-empty-icon">
-                      <User className="h-7 w-7 text-white/25" />
-                    </div>
-                    <p className="pixel-text text-[8px] text-white/50">
-                      EQUIPE VAZIA.
-                      <br />
-                      ADICIONE NOMES PARA LUTAR!
-                    </p>
-                    <button
-                      type="button"
-                      className="pixel-text border-2 border-white bg-slate-700 px-3 py-2 text-[8px] text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
-                    >
-                      Importar Lista
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
           </div>
 
           {/* Main Content */}
-          <div className="flex min-h-0 flex-col gap-4 lg:col-span-9">
+          <div className="flex min-h-0 flex-col gap-4 lg:col-span-10">
             {currentPage === "home" ? (
               participantHomeSection
             ) : currentPage === "draws" ? (
@@ -3094,353 +1804,43 @@ export default function App() {
         </main>
       </div>
 
-      {/* Class Selection Modal */}
-      <AnimatePresence>
-        {classModalOpen &&
-          selectedProfileId &&
-          (() => {
-            const selectedProfile = profiles.find(
-              (profile: { id: any }) => profile.id === selectedProfileId,
-            );
-            if (!selectedProfile) return null;
+      <ClassSelectionModal
+        open={classModalOpen}
+        profile={selectedProfile}
+        apprenticeUnlockLevel={APPRENTICE_UNLOCK_LEVEL}
+        finalClassUnlockLevel={FINAL_CLASS_UNLOCK_LEVEL}
+        getClassLabel={getClassLabel}
+        getClassProgressionOptions={getClassProgressionOptions}
+        classOptionMeta={classOptionMeta}
+        onChangeClass={changeClass}
+        onClose={() => {
+          setClassModalOpen(false);
+          setSelectedProfileId(null);
+        }}
+      />
 
-            const classOptions = getClassProgressionOptions(selectedProfile);
-            const progressionMessage =
-              selectedProfile.class === "novato"
-                ? selectedProfile.level >= APPRENTICE_UNLOCK_LEVEL
-                  ? "Promovido. Escolha sua trilha de aprendiz."
-                  : `Alcance o nível ${APPRENTICE_UNLOCK_LEVEL} para escolher sua trilha.`
-                : selectedProfile.class.startsWith("aprendiz_")
-                  ? selectedProfile.level >= FINAL_CLASS_UNLOCK_LEVEL
-                    ? "Evolução liberada. Conclua sua classe final."
-                    : `Alcance o nível ${FINAL_CLASS_UNLOCK_LEVEL} para concluir sua classe final.`
-                  : "Classe final já definida.";
+      <ShopModal
+        open={shopModalOpen}
+        profiles={profiles}
+        shopItems={shopItems}
+        selectedProfileId={selectedProfileId}
+        getItemEffectText={getItemEffectText}
+        onClose={() => setShopModalOpen(false)}
+        onSelectProfile={setSelectedProfileId}
+        onBuyItem={buyItem}
+      />
 
-            return (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-                onClick={() => {
-                  setClassModalOpen(false);
-                  setSelectedProfileId(null);
-                }}
-              >
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-black border-4 border-white p-6 max-w-md w-full shadow-[8px_8px_0px_rgba(0,0,0,1)]"
-                >
-                  <h3 className="text-xl font-black text-white mb-2 text-center font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    Progresso de Classe
-                  </h3>
-                  <p className="text-zinc-400 text-[10px] uppercase tracking-widest text-center mb-6">
-                    {selectedProfile.name} está como{" "}
-                    {getClassLabel(selectedProfile.class)}. {progressionMessage}
-                  </p>
-
-                  {selectedProfile.class === "novato" && (
-                    <div className="mb-4 border-2 border-white/20 bg-black/30 p-3 text-center">
-                      <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                        PASSIVA DE NOVATO
-                      </div>
-                      <div className="pixel-text mt-2 text-[7px] text-white/65">
-                        +10% XP enquanto aprende o sistema
-                      </div>
-                    </div>
-                  )}
-
-                  {classOptions.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {classOptions.map((classOption) => {
-                        const meta = classOptionMeta[classOption];
-                        return (
-                          <button
-                            key={classOption}
-                            onClick={() =>
-                              changeClass(selectedProfileId, classOption)
-                            }
-                            className={`flex flex-col items-center gap-3 p-4 bg-black border-2 border-zinc-800 transition-none group ${meta.tone}`}
-                          >
-                            <div className="p-3 bg-black/30 border-2 border-transparent group-hover:border-white transition-none">
-                              {meta.icon}
-                            </div>
-                            <div className="text-center">
-                              <span className="block font-black text-white text-sm uppercase tracking-widest">
-                                {meta.label}
-                              </span>
-                              <span className="text-[8px] text-zinc-500 block mt-2 leading-tight uppercase tracking-wider">
-                                {meta.description}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-white/20 p-5 text-center">
-                      <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                        PROGRESSÃO BLOQUEADA
-                      </div>
-                      <div className="pixel-text mt-2 text-[7px] text-white/55">
-                        {progressionMessage}
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setClassModalOpen(false);
-                      setSelectedProfileId(null);
-                    }}
-                    className="w-full mt-6 py-3 bg-black border-2 border-zinc-800 font-black text-zinc-500 hover:text-white hover:border-white uppercase tracking-widest transition-none"
-                  >
-                    Cancelar
-                  </button>
-                </motion.div>
-              </motion.div>
-            );
-          })()}
-      </AnimatePresence>
-
-      {/* Shop Modal */}
-      <AnimatePresence>
-        {shopModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setShopModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-black border-4 border-white p-6 max-w-2xl w-full shadow-[8px_8px_0px_rgba(0,0,0,1)] max-h-[80vh] flex flex-col"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-2xl font-black text-white font-display flex items-center gap-3 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <ShoppingCart className="w-6 h-6 text-yellow-500" />
-                    Loja do Setor
-                  </h3>
-                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest mt-2">
-                    Gaste suas SetorCoins ($C) aqui.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShopModalOpen(false)}
-                  className="p-2 text-zinc-500 hover:text-white hover:bg-black border-2 border-transparent hover:border-white transition-none"
-                >
-                  <X className="w-5 h-5" />
-                  <span className="sr-only">Fechar</span>
-                </button>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">
-                  Comprador:
-                </label>
-                <select
-                  className="w-full bg-black border-2 border-zinc-800 px-4 py-3 text-white focus:outline-none focus:border-white transition-none appearance-none"
-                  value={selectedProfileId || ""}
-                  onChange={(e) => setSelectedProfileId(e.target.value)}
-                >
-                  <option value="" disabled>
-                    Selecione um participante
-                  </option>
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.coins} $C)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
-                {shopItems.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-zinc-800">
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-widest">
-                      A loja está vazia no momento.
-                    </p>
-                  </div>
-                ) : (
-                  shopItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-4 bg-black border-2 border-zinc-800 hover:border-white transition-none"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-black text-white uppercase tracking-wider">
-                            {item.name}
-                          </h4>
-                          <span className="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-zinc-900 border border-zinc-700 text-zinc-400">
-                            {item.type}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-wider">
-                          {item.description}
-                        </p>
-                        {getItemEffectText(item) && (
-                          <p className="pixel-text mt-2 text-[7px] text-cyan-300">
-                            {getItemEffectText(item)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-2 ml-4">
-                        <div className="flex items-center gap-1 text-yellow-500 bg-black border-2 border-yellow-500 px-3 py-1">
-                          <Coins className="w-4 h-4" />
-                          <span className="font-black">{item.price}</span>
-                        </div>
-                        <button
-                          disabled={
-                            !selectedProfileId ||
-                            (profiles.find((p) => p.id === selectedProfileId)
-                              ?.coins || 0) < item.price
-                          }
-                          onClick={() =>
-                            selectedProfileId &&
-                            buyItem(selectedProfileId, item.id)
-                          }
-                          className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 border-2 transition-none ${
-                            !selectedProfileId ||
-                            (profiles.find((p) => p.id === selectedProfileId)
-                              ?.coins || 0) < item.price
-                              ? "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed"
-                              : "bg-yellow-600 border-white text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 active:translate-y-[2px] active:shadow-none"
-                          }`}
-                        >
-                          Comprar
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Inventory Modal */}
-      <AnimatePresence>
-        {inventoryModalOpen && selectedInventoryProfileId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => {
-              setInventoryModalOpen(false);
-              setSelectedInventoryProfileId(null);
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-black border-4 border-white p-6 max-w-2xl w-full shadow-[8px_8px_0px_rgba(0,0,0,1)] max-h-[80vh] flex flex-col"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-2xl font-black text-white font-display flex items-center gap-3 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <Package className="w-6 h-6 text-emerald-500" />
-                    Inventário
-                  </h3>
-                  <p className="text-zinc-500 text-[10px] uppercase tracking-widest mt-2">
-                    {
-                      profiles.find((p) => p.id === selectedInventoryProfileId)
-                        ?.name
-                    }
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setInventoryModalOpen(false);
-                    setSelectedInventoryProfileId(null);
-                  }}
-                  className="p-2 text-zinc-500 hover:text-white hover:bg-black border-2 border-transparent hover:border-white transition-none"
-                >
-                  <X className="w-5 h-5" />
-                  <span className="sr-only">Fechar</span>
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
-                {(() => {
-                  const profile = profiles.find(
-                    (p) => p.id === selectedInventoryProfileId,
-                  );
-                  if (
-                    !profile ||
-                    !profile.inventory ||
-                    profile.inventory.length === 0
-                  ) {
-                    return (
-                      <div className="text-center py-12 border-2 border-dashed border-zinc-800">
-                        <p className="text-zinc-500 text-[10px] uppercase tracking-widest">
-                          O inventário está vazio.
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  return profile.inventory.map((invItem) => {
-                    const itemDetails = shopItems.find(
-                      (si) => si.id === invItem.item_id,
-                    );
-                    if (!itemDetails) return null;
-
-                    return (
-                      <div
-                        key={invItem.item_id}
-                        className="flex items-center justify-between p-4 bg-black border-2 border-zinc-800 hover:border-white transition-none"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-black text-white uppercase tracking-wider">
-                              {itemDetails.name}
-                            </h4>
-                            <span className="text-[8px] font-black uppercase tracking-widest px-2 py-1 bg-zinc-900 border border-zinc-700 text-zinc-400">
-                              {itemDetails.type}
-                            </span>
-                            <span className="text-[8px] font-black px-2 py-1 bg-indigo-900 border border-indigo-500 text-indigo-400">
-                              x{invItem.qty}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-wider">
-                            {itemDetails.description}
-                          </p>
-                          {getItemEffectText(itemDetails) && (
-                            <p className="pixel-text mt-2 text-[7px] text-cyan-300">
-                              {getItemEffectText(itemDetails)}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-2 ml-4">
-                          <button
-                            onClick={() => useItem(profile.id, itemDetails.id)}
-                            className="text-[10px] font-black uppercase tracking-widest px-4 py-2 border-2 bg-emerald-600 border-white text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-emerald-500 active:translate-y-[2px] active:shadow-none transition-none"
-                          >
-                            Usar
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <InventoryModal
+        open={inventoryModalOpen}
+        profile={selectedInventoryProfile}
+        shopItems={shopItems}
+        getItemEffectText={getItemEffectText}
+        onClose={() => {
+          setInventoryModalOpen(false);
+          setSelectedInventoryProfileId(null);
+        }}
+        onUseItem={useItem}
+      />
     </div>
   );
 }
