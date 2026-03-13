@@ -106,6 +106,26 @@ export function GuideSection() {
 
         <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            OLHAR ARCANO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              É o painel especial do Mago. Ele mostra leituras extras do
+              sistema.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Hoje o Mago enxerga as filas por categoria e um log mais detalhado
+              das ações recentes.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              O painel aparece quando existe um perfil Mago ou Aprendiz Mago
+              selecionado como foco arcano.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             CATEGORIAS
           </h3>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
