@@ -45,7 +45,7 @@ const CUSTOM_TITLE_PREFIX = "custom:";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<
-    "home" | "history" | "settings" | "guide"
+    "home" | "draws" | "history" | "settings" | "guide"
   >("home");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
@@ -792,12 +792,6 @@ export default function App() {
       const eligibleProfiles = profiles.filter((p) => p.participates_in_pao);
       if (eligibleProfiles.length === 0) return;
 
-      let pool = eligibleProfiles.filter((p) => !excludedIdsPao.includes(p.id));
-      if (pool.length === 0) {
-        pool = [...eligibleProfiles];
-        setExcludedIdsPao([]);
-      }
-
       setIsDrawingPao(true);
       setPaoDeQueijoWinners([]);
 
@@ -809,14 +803,10 @@ export default function App() {
         if (currentStep >= steps) {
           clearInterval(timer);
 
-          const winnerIndex = getSecureRandomInt(pool.length);
-          const winner = pool[winnerIndex];
+          const winnerIndex = getSecureRandomInt(eligibleProfiles.length);
+          const winner = eligibleProfiles[winnerIndex];
 
           setPaoDeQueijoWinners([winner.name]);
-          setExcludedIdsPao((prev) => {
-            const next = [...prev, winner.id];
-            return next.length >= eligibleProfiles.length ? [] : next;
-          });
           setIsDrawingPao(false);
 
           // Process RPG logic
@@ -830,14 +820,6 @@ export default function App() {
             setPaoDeQueijoWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
-            setExcludedIdsPao((prev) => {
-              const next = [
-                ...prev.filter((excludedId) => excludedId !== winner.id),
-                ...result.winnerIds,
-              ];
-              const unique = Array.from(new Set(next));
-              return unique.length >= eligibleProfiles.length ? [] : unique;
-            });
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -853,13 +835,6 @@ export default function App() {
       if (eligibleProfiles.length === 0) return;
 
       const winnerCount = aguaMode === "muita" ? 2 : 1;
-      let pool = eligibleProfiles.filter(
-        (p) => !excludedIdsAgua.includes(p.id),
-      );
-      if (pool.length < Math.min(winnerCount, eligibleProfiles.length)) {
-        pool = [...eligibleProfiles];
-        setExcludedIdsAgua([]);
-      }
 
       setIsDrawingAgua(true);
       setAguaWinners([]);
@@ -873,16 +848,16 @@ export default function App() {
           clearInterval(timer);
 
           const indices = new Set<number>();
-          while (indices.size < Math.min(winnerCount, pool.length)) {
-            indices.add(getSecureRandomInt(pool.length));
+          while (
+            indices.size < Math.min(winnerCount, eligibleProfiles.length)
+          ) {
+            indices.add(getSecureRandomInt(eligibleProfiles.length));
           }
 
-          const selectedWinners = Array.from(indices).map((i) => pool[i]);
+          const selectedWinners = Array.from(indices).map(
+            (i) => eligibleProfiles[i],
+          );
           setAguaWinners(selectedWinners.map((w) => w.name));
-          setExcludedIdsAgua((prev) => {
-            const next = [...prev, ...selectedWinners.map((w) => w.id)];
-            return next.length >= eligibleProfiles.length ? [] : next;
-          });
           setIsDrawingAgua(false);
 
           // Process RPG logic
@@ -896,17 +871,6 @@ export default function App() {
             setAguaWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
-            setExcludedIdsAgua((prev) => {
-              const requestedIds = new Set(
-                selectedWinners.map((selected) => selected.id),
-              );
-              const next = [
-                ...prev.filter((excludedId) => !requestedIds.has(excludedId)),
-                ...result.winnerIds,
-              ];
-              const unique = Array.from(new Set(next));
-              return unique.length >= eligibleProfiles.length ? [] : unique;
-            });
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -921,14 +885,6 @@ export default function App() {
       const eligibleProfiles = profiles.filter((p) => p.participates_in_balde);
       if (eligibleProfiles.length === 0) return;
 
-      let pool = eligibleProfiles.filter(
-        (p) => !excludedIdsBalde.includes(p.id),
-      );
-      if (pool.length === 0) {
-        pool = [...eligibleProfiles];
-        setExcludedIdsBalde([]);
-      }
-
       setIsDrawingBalde(true);
       setBaldeWinners([]);
 
@@ -940,14 +896,10 @@ export default function App() {
         if (currentStep >= steps) {
           clearInterval(timer);
 
-          const winnerIndex = getSecureRandomInt(pool.length);
-          const winner = pool[winnerIndex];
+          const winnerIndex = getSecureRandomInt(eligibleProfiles.length);
+          const winner = eligibleProfiles[winnerIndex];
 
           setBaldeWinners([winner.name]);
-          setExcludedIdsBalde((prev) => {
-            const next = [...prev, winner.id];
-            return next.length >= eligibleProfiles.length ? [] : next;
-          });
           setIsDrawingBalde(false);
 
           // Process RPG logic
@@ -961,14 +913,6 @@ export default function App() {
             setBaldeWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
-            setExcludedIdsBalde((prev) => {
-              const next = [
-                ...prev.filter((excludedId) => excludedId !== winner.id),
-                ...result.winnerIds,
-              ];
-              const unique = Array.from(new Set(next));
-              return unique.length >= eligibleProfiles.length ? [] : unique;
-            });
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -983,14 +927,6 @@ export default function App() {
       const eligibleProfiles = profiles.filter((p) => p.participates_in_geral);
       if (eligibleProfiles.length === 0) return;
 
-      let pool = eligibleProfiles.filter(
-        (p) => !excludedIdsGeral.includes(p.id),
-      );
-      if (pool.length === 0) {
-        pool = [...eligibleProfiles];
-        setExcludedIdsGeral([]);
-      }
-
       setIsDrawingGeral(true);
       setGeralWinners([]);
 
@@ -1002,14 +938,10 @@ export default function App() {
         if (currentStep >= steps) {
           clearInterval(timer);
 
-          const winnerIndex = getSecureRandomInt(pool.length);
-          const winner = pool[winnerIndex];
+          const winnerIndex = getSecureRandomInt(eligibleProfiles.length);
+          const winner = eligibleProfiles[winnerIndex];
 
           setGeralWinners([winner.name]);
-          setExcludedIdsGeral((prev) => {
-            const next = [...prev, winner.id];
-            return next.length >= eligibleProfiles.length ? [] : next;
-          });
           setIsDrawingGeral(false);
 
           // Process RPG logic
@@ -1023,14 +955,6 @@ export default function App() {
             setGeralWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
-            setExcludedIdsGeral((prev) => {
-              const next = [
-                ...prev.filter((excludedId) => excludedId !== winner.id),
-                ...result.winnerIds,
-              ];
-              const unique = Array.from(new Set(next));
-              return unique.length >= eligibleProfiles.length ? [] : unique;
-            });
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -1044,17 +968,10 @@ export default function App() {
     }
   };
 
-  const resetCycle = (type: "pao" | "agua" | "balde" | "geral") => {
-    if (type === "pao") setExcludedIdsPao([]);
-    else if (type === "agua") setExcludedIdsAgua([]);
-    else if (type === "balde") setExcludedIdsBalde([]);
-    else setExcludedIdsGeral([]);
-  };
-
   const handleGeneralReset = () => {
     if (
       window.confirm(
-        "Deseja realizar um reset geral? Isso limpará os vencedores atuais, o histórico e reiniciará todos os ciclos (pools), mantendo os participantes e suas funções.",
+        "Deseja realizar um reset geral? Isso limpará os vencedores atuais e o histórico visual, mantendo os participantes e suas funções.",
       )
     ) {
       setPaoDeQueijoWinners([]);
@@ -1067,6 +984,25 @@ export default function App() {
       setExcludedIdsGeral([]);
       // aguaMode is maintained as requested ("funções escolhidas serão mantidas")
     }
+  };
+
+  const getParticipationCount = (
+    category: "pao" | "agua" | "balde" | "geral",
+  ) => {
+    if (category === "pao")
+      return profiles.filter((profile) => profile.participates_in_pao).length;
+    if (category === "agua")
+      return profiles.filter((profile) => profile.participates_in_agua).length;
+    if (category === "balde")
+      return profiles.filter((profile) => profile.participates_in_balde).length;
+    return profiles.filter((profile) => profile.participates_in_geral).length;
+  };
+
+  const getParticipationRatio = (
+    category: "pao" | "agua" | "balde" | "geral",
+  ) => {
+    if (profiles.length === 0) return 0;
+    return (getParticipationCount(category) / profiles.length) * 100;
   };
 
   const historySection = (
@@ -1233,7 +1169,7 @@ export default function App() {
               onClick={handleGeneralReset}
               className="pixel-text border-2 border-white bg-red-900/80 px-4 py-3 text-[7px] text-white hover:bg-red-800"
             >
-              RESETAR CICLOS VISUAIS
+              LIMPAR SORTEIOS DA TELA
             </button>
             <button
               type="button"
@@ -1269,8 +1205,8 @@ export default function App() {
           </h3>
           <div className="mt-4 space-y-3">
             <p className="pixel-text text-[7px] text-white/65">
-              Reset Geral limpa vencedores visuais e reinicia ciclos, sem
-              remover participantes.
+              Reset Geral limpa apenas vencedores visuais e o estado exibido dos
+              sorteios, sem remover participantes.
             </p>
             <p className="pixel-text text-[7px] text-white/65">
               Limpar estado local apaga apenas o cache visual salvo no
@@ -1495,26 +1431,594 @@ export default function App() {
           </h3>
           <div className="mt-4 space-y-3">
             <p className="pixel-text text-[7px] text-white/65">
-              1. Adicione os participantes.
+              1. Adicione os participantes e ajuste quem entra em cada
+              categoria.
             </p>
             <p className="pixel-text text-[7px] text-white/65">
               2. Deixe todos evoluírem como Novato até destravar a trilha.
             </p>
             <p className="pixel-text text-[7px] text-white/65">
-              3. Faça os sorteios do dia e acompanhe HP, XP e moedas.
+              3. Abra a página Sorteios para executar o turno do setor.
             </p>
             <p className="pixel-text text-[7px] text-white/65">
               4. Use a loja para recuperar HP ou alterar o meta.
             </p>
             <p className="pixel-text text-[7px] text-white/65">
-              5. Consulte Histórico e Olhar Arcano para acompanhar o estado do
-              setor.
+              5. O fluxo padrão usa participação contínua. O grupo não é
+              eliminado por ciclo.
             </p>
           </div>
         </section>
       </div>
     </section>
   );
+
+  const participantRosterSection = (
+    <section className="glass-card flex min-h-[0] flex-col p-5 xl:col-span-2">
+      <div className="mb-5 flex flex-col gap-4 border-b-2 border-white/20 pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <User className="w-5 h-5 text-[var(--color-snes-gold)]" />
+          </div>
+          <div>
+            <h3 className="pixel-text text-[9px] text-[var(--color-snes-gold)]">
+              ELENCO DO SETOR
+            </h3>
+            <p className="pixel-text mt-2 text-[7px] text-white/55">
+              AJUSTE O GRUPO, OS PAPÉIS E A PARTICIPAÇÃO DE CADA UM
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="snes-chip">{profiles.length} TOTAL</span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage("draws")}
+            className="pixel-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-[7px] text-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={profiles.length === 0}
+          >
+            ABRIR SORTEIOS
+          </button>
+        </div>
+      </div>
+
+      <form
+        onSubmit={addName}
+        className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]"
+      >
+        <div>
+          <label className="pixel-text mb-2 block text-[8px] text-white/70">
+            NOVO MEMBRO:
+          </label>
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="NOME..."
+            className="snes-input pixel-text w-full text-[9px] placeholder:text-white/35"
+          />
+        </div>
+        <button
+          type="submit"
+          className="pixel-text mt-[22px] flex h-10 items-center justify-center gap-2 border-2 border-white bg-[var(--color-snes-gold)] px-4 text-[8px] text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
+        >
+          <UserPlus className="h-4 w-4" />
+          ADICIONAR
+        </button>
+      </form>
+
+      <div className="custom-scrollbar min-h-[320px] flex-1 overflow-y-auto pr-1">
+        {profiles.length > 0 ? (
+          <AnimatePresence mode="popLayout">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+              {profiles.map((person) => {
+                const exhaustionState = getExhaustionState(person);
+                const recentClassEffect =
+                  recentClassEffectsByProfileId[person.id];
+                const achievementTitles = titlesByProfileId[person.id] || [];
+                const customTitle = getCustomTitle(person);
+                const isArcaneFocus =
+                  selectedMageId === person.id &&
+                  ["mago", "aprendiz_mago"].includes(person.class) &&
+                  Boolean(mageInsights);
+
+                return (
+                  <motion.div
+                    key={person.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className={`relative overflow-hidden border-2 bg-black/35 p-2.5 transition-none group snes-card-hover ${
+                      exhaustionState.tone === "critical"
+                        ? "border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.35)]"
+                        : exhaustionState.tone === "warning"
+                          ? "border-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.28)]"
+                          : "border-white"
+                    } ${recentClassEffect?.cardClassName || ""} ${
+                      isArcaneFocus
+                        ? "snes-arcane-glow border-blue-300 shadow-[0_0_18px_rgba(96,165,250,0.24)]"
+                        : ""
+                    }`}
+                  >
+                    <div className="absolute left-0 top-0 h-1 w-full border-b-2 border-white bg-black">
+                      <div
+                        className="h-full bg-blue-500"
+                        style={{
+                          width: `${(person.xp / (person.level * 100)) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="absolute bottom-0 left-0 h-1.5 w-full border-t-2 border-white bg-black">
+                      <div
+                        className="h-full bg-red-600"
+                        style={{
+                          width: `${(person.hp / person.max_hp) * 100}%`,
+                        }}
+                      />
+                    </div>
+
+                    <div className="mt-1.5 flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedProfileId(person.id);
+                                setClassModalOpen(true);
+                              }}
+                              className="flex h-6 w-6 shrink-0 items-center justify-center border-2 border-white bg-black/60 text-zinc-300 hover:bg-white hover:text-black transition-none"
+                              title="Mudar Classe"
+                            >
+                              {person.class === "guerreiro" && (
+                                <Shield className="w-3 h-3 text-red-400" />
+                              )}
+                              {person.class === "aprendiz_guerreiro" && (
+                                <Shield className="w-3 h-3 text-red-300" />
+                              )}
+                              {person.class === "mago" && (
+                                <Wand2 className="w-3 h-3 text-blue-400" />
+                              )}
+                              {person.class === "aprendiz_mago" && (
+                                <Wand2 className="w-3 h-3 text-blue-300" />
+                              )}
+                              {person.class === "ladino" && (
+                                <Crosshair className="w-3 h-3 text-emerald-400" />
+                              )}
+                              {person.class === "aprendiz_ladino" && (
+                                <Crosshair className="w-3 h-3 text-emerald-300" />
+                              )}
+                              {person.class === "clerigo" && (
+                                <Heart className="w-3 h-3 text-pink-400" />
+                              )}
+                              {person.class === "aprendiz_clerigo" && (
+                                <Heart className="w-3 h-3 text-pink-300" />
+                              )}
+                              {person.class === "novato" && (
+                                <User className="w-3 h-3 text-zinc-400" />
+                              )}
+                            </button>
+                            <div className="min-w-0">
+                              <div className="truncate text-[13px] font-semibold tracking-tight text-white">
+                                {person.name}
+                              </div>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                <span className="snes-chip">
+                                  LV.{person.level}
+                                </span>
+                                <span
+                                  className={`pixel-text px-1.5 py-0.5 text-[6px] border ${
+                                    exhaustionState.tone === "critical"
+                                      ? "border-red-300 bg-red-950/70 text-red-200"
+                                      : exhaustionState.tone === "warning"
+                                        ? "border-yellow-300 bg-yellow-950/50 text-yellow-200"
+                                        : "border-emerald-300/40 bg-emerald-950/30 text-emerald-200/80"
+                                  }`}
+                                >
+                                  {exhaustionState.label}
+                                </span>
+                                {recentClassEffect && (
+                                  <span
+                                    className={`pixel-text px-1.5 py-0.5 text-[6px] border ${recentClassEffect.badgeClassName}`}
+                                  >
+                                    {recentClassEffect.label}
+                                  </span>
+                                )}
+                                {isArcaneFocus && (
+                                  <span className="pixel-text border border-blue-300 bg-blue-950/55 px-1.5 py-0.5 text-[6px] text-blue-200">
+                                    Arcano
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-1">
+                          <div className="flex items-center gap-1 border-2 border-[var(--color-snes-gold)] bg-black px-2 py-1 text-[var(--color-snes-gold)]">
+                            <Coins className="w-3 h-3" />
+                            <span className="pixel-text text-[7px]">
+                              {person.coins}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedInventoryProfileId(person.id);
+                              setInventoryModalOpen(true);
+                            }}
+                            className="border-2 border-white bg-black p-1 text-zinc-300 hover:bg-white hover:text-black transition-none"
+                            title="Inventário"
+                          >
+                            <Package className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-[1fr_auto] gap-2">
+                        <div className="space-y-1">
+                          <div className="pixel-text truncate text-[6px] text-white/60">
+                            {customTitle || getClassPowerText(person.class)}
+                          </div>
+                          {(person.passive_coin_multiplier > 1 ||
+                            person.temporary_coin_multiplier > 1 ||
+                            person.luck > 0) && (
+                            <div className="flex flex-wrap gap-1">
+                              {person.passive_coin_multiplier > 1 && (
+                                <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-[6px] text-yellow-200">
+                                  Eco x
+                                  {person.passive_coin_multiplier.toFixed(2)}
+                                </span>
+                              )}
+                              {person.temporary_coin_multiplier > 1 && (
+                                <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-[6px] text-cyan-200">
+                                  Boost x
+                                  {person.temporary_coin_multiplier.toFixed(2)}
+                                </span>
+                              )}
+                              {person.luck > 0 && (
+                                <span className="pixel-text border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-[6px] text-blue-200">
+                                  Sorte +{person.luck.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1">
+                          <button
+                            onClick={() =>
+                              toggleParticipation(person.id, "pao")
+                            }
+                            className={`p-1 transition-none border-2 ${
+                              person.participates_in_pao
+                                ? "bg-orange-600 text-white border-white"
+                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                            }`}
+                            title="Participar do Pão de Queijo"
+                          >
+                            <Coffee className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              toggleParticipation(person.id, "agua")
+                            }
+                            className={`p-1 transition-none border-2 ${
+                              person.participates_in_agua
+                                ? "bg-blue-600 text-white border-white"
+                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                            }`}
+                            title="Participar da Água"
+                          >
+                            <Droplets className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              toggleParticipation(person.id, "balde")
+                            }
+                            className={`p-1 transition-none border-2 ${
+                              person.participates_in_balde
+                                ? "bg-purple-600 text-white border-white"
+                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                            }`}
+                            title="Participar do Balde"
+                          >
+                            <PaintBucket className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              toggleParticipation(person.id, "geral")
+                            }
+                            className={`p-1 transition-none border-2 ${
+                              person.participates_in_geral
+                                ? "bg-emerald-600 text-white border-white"
+                                : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                            }`}
+                            title="Participar do Geral"
+                          >
+                            <Star className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {!customTitle && (
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            value={titleDrafts[person.id] || ""}
+                            onChange={(e) =>
+                              setTitleDrafts((currentDrafts) => ({
+                                ...currentDrafts,
+                                [person.id]: e.target.value,
+                              }))
+                            }
+                            maxLength={40}
+                            placeholder="Titulo pessoal..."
+                            className="snes-input pixel-text h-7 flex-1 px-2 py-1 text-[6px] placeholder:text-white/30"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => saveCustomTitle(person)}
+                            className="pixel-text border-2 border-white bg-black px-2 text-[6px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+                          >
+                            SALVAR
+                          </button>
+                        </div>
+                      )}
+
+                      {achievementTitles.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="pixel-text text-[6px] text-white/45">
+                            FEITOS
+                          </span>
+                          {achievementTitles.map((title) => (
+                            <span
+                              key={`${person.id}-${title}`}
+                              className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[6px] text-[var(--color-snes-gold)]/90"
+                            >
+                              {title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {recentClassEffect && (
+                        <div className="pixel-text text-[6px] text-white/70">
+                          {recentClassEffect.detail}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => removeName(person.id)}
+                      className="absolute bottom-1.5 left-2 border-2 border-transparent p-1 text-zinc-500 opacity-0 transition-none group-hover:opacity-100 hover:border-red-500 hover:bg-black hover:text-red-400"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </AnimatePresence>
+        ) : (
+          <div className="retro-empty-state">
+            <div className="retro-empty-icon">
+              <User className="h-7 w-7 text-white/25" />
+            </div>
+            <p className="pixel-text text-[8px] text-white/50">
+              EQUIPE VAZIA.
+              <br />
+              ADICIONE NOMES PARA LUTAR!
+            </p>
+            <button
+              type="button"
+              className="pixel-text border-2 border-white bg-slate-700 px-3 py-2 text-[8px] text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
+            >
+              Importar Lista
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
+  const participantHomeSection = (
+    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
+      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <User className="h-5 w-5 text-[var(--color-snes-gold)]" />
+          </div>
+          <div>
+            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+              CENTRAL DE PARTICIPANTES
+            </h2>
+            <p className="pixel-text mt-2 text-[7px] text-white/55">
+              MONTE O GRUPO ANTES DE ABRIR OS SORTEIOS
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCurrentPage("draws")}
+          className="pixel-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-[7px] text-black hover:bg-white"
+          disabled={profiles.length === 0}
+        >
+          ABRIR SORTEIOS
+        </button>
+      </div>
+
+      <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            RESUMO DO GRUPO
+          </h3>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="border-2 border-white/15 bg-black/35 p-3">
+              <div className="pixel-text text-[6px] text-white/50">TOTAL</div>
+              <div className="pixel-text mt-2 text-[10px] text-white">
+                {profiles.length}
+              </div>
+            </div>
+            <div className="border-2 border-white/15 bg-black/35 p-3">
+              <div className="pixel-text text-[6px] text-white/50">
+                NÍVEL MAIS ALTO
+              </div>
+              <div className="pixel-text mt-2 text-[10px] text-white">
+                {highestLevel}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            PARTICIPAÇÃO
+          </h3>
+          <div className="mt-4 space-y-3">
+            {[
+              ["Pão de Queijo", "pao"],
+              ["Água", "agua"],
+              ["Balde", "balde"],
+              ["Geral", "geral"],
+            ].map(([label, key]) => (
+              <div
+                key={key}
+                className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3"
+              >
+                <span className="pixel-text text-[7px] text-white/70">
+                  {label}
+                </span>
+                <span className="pixel-text text-[7px] text-white">
+                  {getParticipationCount(
+                    key as "pao" | "agua" | "balde" | "geral",
+                  )}
+                  /{profiles.length}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            NOVO FLUXO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              1. Cadastre os participantes e ajuste quem participa de cada
+              categoria.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              2. Abra a página Sorteios para executar o turno do setor.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              3. Os sorteios agora usam participação contínua. Não existe mais
+              exclusão por ciclo no fluxo padrão.
+            </p>
+          </div>
+        </section>
+
+        {participantRosterSection}
+      </div>
+    </section>
+  );
+
+  const mageSection =
+    mageProfiles.length > 0 ? (
+      <section
+        className={`glass-card p-5 ${
+          mageInsights && selectedMageId ? "snes-arcane-glow" : ""
+        }`}
+      >
+        <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
+          <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+            OLHAR ARCANO
+          </h2>
+          <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
+        </div>
+
+        <div className="mb-4">
+          <label className="pixel-text mb-2 block text-[8px] text-white/70">
+            MAGO ATIVO:
+          </label>
+          <select
+            className="snes-input pixel-text w-full text-[8px]"
+            value={selectedMageId || ""}
+            onChange={(e) => setSelectedMageId(e.target.value)}
+          >
+            {mageProfiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {mageInsights ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {mageInsights.queues.map((queue) => (
+                <div
+                  key={queue.key}
+                  className="border-2 border-white/20 bg-black/30 p-3"
+                >
+                  <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+                    {queue.label}
+                  </div>
+                  <div className="mt-2 pixel-text text-[7px] text-white/65">
+                    FILA: {queue.excludedNames.length}
+                  </div>
+                  <div className="mt-2 min-h-9 space-y-1">
+                    {queue.excludedNames.length > 0 ? (
+                      queue.excludedNames.slice(0, 3).map((name) => (
+                        <div
+                          key={`${queue.key}-${name}`}
+                          className="pixel-text truncate text-[7px] text-white"
+                        >
+                          {name}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="pixel-text text-[7px] text-white/40">
+                        LIMPA
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-2 border-white/20 bg-black/30 p-3">
+              <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
+                LOG DETALHADO
+              </div>
+              <div className="space-y-2">
+                {mageInsights.recentLogs.slice(0, 4).map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
+                  >
+                    <div className="pixel-text text-[7px] text-white">
+                      {entry.profiles?.name || "SISTEMA"}
+                    </div>
+                    <div className="pixel-text mt-1 text-[7px] text-white/60">
+                      {entry.message}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-white/20 p-6 text-center">
+            <p className="pixel-text text-[8px] text-white/50">
+              SEM LEITURA ARCANA
+            </p>
+          </div>
+        )}
+      </section>
+    ) : null;
 
   return (
     <div className="min-h-screen px-0 py-0 font-sans text-zinc-100 lg:px-1 lg:py-1">
@@ -1595,7 +2099,7 @@ export default function App() {
         </header>
 
         <main className="grid min-h-[calc(100vh-82px)] grid-cols-1 gap-3 px-2 py-3 lg:grid-cols-12 lg:px-3 lg:py-3 xl:px-4">
-          <div className="flex flex-col gap-4 lg:col-span-3">
+          <div className="flex flex-col gap-4 lg:col-span-2">
             <section className="glass-card p-5">
               <h2 className="panel-title">MENU PRINCIPAL</h2>
               <ul className="space-y-2">
@@ -1608,7 +2112,7 @@ export default function App() {
                     className="flex w-full items-center gap-3 text-left"
                   >
                     <User className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                    Início
+                    Participantes
                   </button>
                 </li>
                 <li
@@ -1649,359 +2153,64 @@ export default function App() {
                 </li>
               </ul>
             </section>
-            <section className="glass-card flex min-h-[0] flex-1 flex-col p-5">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <User className="w-5 h-5 text-[var(--color-snes-gold)]" />
-                  </div>
-                  <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                    PARTICIPANTES
-                  </h2>
+            <section className="glass-card p-5">
+              <h2 className="panel-title">STATUS</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+                  <span className="pixel-text text-[7px] text-white/60">
+                    Participantes
+                  </span>
+                  <span className="pixel-text text-[7px] text-white">
+                    {profiles.length}
+                  </span>
                 </div>
-                <span className="snes-chip">{profiles.length} TOTAL</span>
-              </div>
-
-              <form onSubmit={addName} className="relative mb-6 group">
-                <label className="pixel-text mb-2 block text-[8px] text-white/70">
-                  NOVO MEMBRO:
-                </label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="NOME..."
-                  className="snes-input pixel-text w-full pr-14 text-[9px] placeholder:text-white/35"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-[30px] flex h-9 w-9 items-center justify-center border-2 border-white bg-[var(--color-snes-gold)] text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
-                >
-                  <UserPlus className="w-4 h-4" />
-                </button>
-              </form>
-
-              <div className="custom-scrollbar min-h-[260px] flex-1 space-y-3 overflow-y-auto pr-1 lg:min-h-0">
-                <AnimatePresence mode="popLayout">
-                  {profiles.map((person) =>
-                    (() => {
-                      const exhaustionState = getExhaustionState(person);
-                      const recentClassEffect =
-                        recentClassEffectsByProfileId[person.id];
-                      const achievementTitles =
-                        titlesByProfileId[person.id] || [];
-                      const customTitle = getCustomTitle(person);
-                      const isArcaneFocus =
-                        selectedMageId === person.id &&
-                        ["mago", "aprendiz_mago"].includes(person.class) &&
-                        Boolean(mageInsights);
-                      return (
-                        <motion.div
-                          key={person.id}
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className={`relative overflow-hidden border-2 bg-black/35 p-3 transition-none group snes-card-hover ${
-                            exhaustionState.tone === "critical"
-                              ? "border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.35)]"
-                              : exhaustionState.tone === "warning"
-                                ? "border-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.28)]"
-                                : "border-white"
-                          } ${recentClassEffect?.cardClassName || ""} ${
-                            isArcaneFocus
-                              ? "snes-arcane-glow border-blue-300 shadow-[0_0_18px_rgba(96,165,250,0.24)]"
-                              : ""
-                          }`}
-                        >
-                          {/* HP Bar Background */}
-                          <div className="absolute bottom-0 left-0 h-2 bg-black w-full border-t-2 border-white">
-                            <div
-                              className="h-full bg-red-600"
-                              style={{
-                                width: `${(person.hp / person.max_hp) * 100}%`,
-                              }}
-                            />
-                          </div>
-                          {/* XP Bar Background */}
-                          <div className="absolute top-0 left-0 h-1 bg-black w-full border-b-2 border-white">
-                            <div
-                              className="h-full bg-blue-500"
-                              style={{
-                                width: `${(person.xp / (person.level * 100)) * 100}%`,
-                              }}
-                            />
-                          </div>
-
-                          <div className="mt-2 flex w-full flex-col gap-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedProfileId(person.id);
-                                      setClassModalOpen(true);
-                                    }}
-                                    className="flex h-7 w-7 items-center justify-center border-2 border-white bg-black/60 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                                    title="Mudar Classe"
-                                  >
-                                    {person.class === "guerreiro" && (
-                                      <Shield className="w-3 h-3 text-red-400" />
-                                    )}
-                                    {person.class === "aprendiz_guerreiro" && (
-                                      <Shield className="w-3 h-3 text-red-300" />
-                                    )}
-                                    {person.class === "mago" && (
-                                      <Wand2 className="w-3 h-3 text-blue-400" />
-                                    )}
-                                    {person.class === "aprendiz_mago" && (
-                                      <Wand2 className="w-3 h-3 text-blue-300" />
-                                    )}
-                                    {person.class === "ladino" && (
-                                      <Crosshair className="w-3 h-3 text-emerald-400" />
-                                    )}
-                                    {person.class === "aprendiz_ladino" && (
-                                      <Crosshair className="w-3 h-3 text-emerald-300" />
-                                    )}
-                                    {person.class === "clerigo" && (
-                                      <Heart className="w-3 h-3 text-pink-400" />
-                                    )}
-                                    {person.class === "aprendiz_clerigo" && (
-                                      <Heart className="w-3 h-3 text-pink-300" />
-                                    )}
-                                    {person.class === "novato" && (
-                                      <User className="w-3 h-3 text-zinc-400" />
-                                    )}
-                                  </button>
-                                  <div className="min-w-0">
-                                    <div className="truncate text-sm font-semibold tracking-tight text-white">
-                                      {person.name}
-                                    </div>
-                                    {customTitle && (
-                                      <div className="pixel-text mt-1 truncate text-[7px] text-cyan-200">
-                                        {customTitle}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                  <span className="snes-chip">
-                                    LV.{person.level}
-                                  </span>
-                                  <span
-                                    className={`pixel-text px-2 py-1 text-[7px] border ${
-                                      exhaustionState.tone === "critical"
-                                        ? "border-red-300 bg-red-950/70 text-red-200"
-                                        : exhaustionState.tone === "warning"
-                                          ? "border-yellow-300 bg-yellow-950/50 text-yellow-200"
-                                          : "border-emerald-300/40 bg-emerald-950/30 text-emerald-200/80"
-                                    }`}
-                                  >
-                                    {exhaustionState.label}
-                                  </span>
-                                  {recentClassEffect && (
-                                    <span
-                                      className={`pixel-text px-2 py-1 text-[7px] border ${recentClassEffect.badgeClassName}`}
-                                    >
-                                      {recentClassEffect.label}
-                                    </span>
-                                  )}
-                                  {isArcaneFocus && (
-                                    <span className="pixel-text border border-blue-300 bg-blue-950/55 px-2 py-1 text-[7px] text-blue-200">
-                                      Arcano ativo
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-1.5">
-                                <div className="flex items-center gap-1 border-2 border-[var(--color-snes-gold)] bg-black px-2 py-0.5 text-[var(--color-snes-gold)]">
-                                  <Coins className="w-3 h-3" />
-                                  <span className="text-[10px] font-bold">
-                                    {person.coins}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setSelectedInventoryProfileId(person.id);
-                                    setInventoryModalOpen(true);
-                                  }}
-                                  className="border-2 border-white bg-black p-1.5 text-zinc-300 hover:bg-white hover:text-black transition-none"
-                                  title="Inventário"
-                                >
-                                  <Package className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="pixel-text text-[7px] text-white/60">
-                              {getClassPowerText(person.class)}
-                            </div>
-
-                            {!customTitle && (
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={titleDrafts[person.id] || ""}
-                                  onChange={(e) =>
-                                    setTitleDrafts((currentDrafts) => ({
-                                      ...currentDrafts,
-                                      [person.id]: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={40}
-                                  placeholder="Titulo pessoal..."
-                                  className="snes-input pixel-text h-8 flex-1 px-2.5 py-1 text-[7px] placeholder:text-white/30"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => saveCustomTitle(person)}
-                                  className="pixel-text border-2 border-white bg-black px-2.5 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
-                                >
-                                  SALVAR
-                                </button>
-                              </div>
-                            )}
-
-                            {(person.passive_coin_multiplier > 1 ||
-                              person.temporary_coin_multiplier > 1 ||
-                              person.luck > 0) && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {person.passive_coin_multiplier > 1 && (
-                                  <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-2 py-1 text-[7px] text-yellow-200">
-                                    Economia x
-                                    {person.passive_coin_multiplier.toFixed(2)}
-                                  </span>
-                                )}
-                                {person.temporary_coin_multiplier > 1 && (
-                                  <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-2 py-1 text-[7px] text-cyan-200">
-                                    Boost x
-                                    {person.temporary_coin_multiplier.toFixed(
-                                      2,
-                                    )}
-                                  </span>
-                                )}
-                                {person.luck > 0 && (
-                                  <span className="pixel-text border border-blue-300 bg-blue-950/45 px-2 py-1 text-[7px] text-blue-200">
-                                    Sorte +{person.luck.toFixed(2)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            {recentClassEffect && (
-                              <div className="pixel-text text-[7px] text-white/75">
-                                {recentClassEffect.detail}
-                              </div>
-                            )}
-
-                            {achievementTitles.length > 0 && (
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="pixel-text text-[7px] text-white/45">
-                                  FEITOS:
-                                </span>
-                                {achievementTitles.map((title) => (
-                                  <span
-                                    key={`${person.id}-${title}`}
-                                    className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-2 py-1 text-[7px] text-[var(--color-snes-gold)]/90"
-                                  >
-                                    {title}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="mt-0.5 flex gap-1.5">
-                              <button
-                                onClick={() =>
-                                  toggleParticipation(person.id, "pao")
-                                }
-                                className={`p-1.5 transition-none border-2 ${
-                                  person.participates_in_pao
-                                    ? "bg-orange-600 text-white border-white"
-                                    : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                }`}
-                                title="Participar do Pão de Queijo"
-                              >
-                                <Coffee className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  toggleParticipation(person.id, "agua")
-                                }
-                                className={`p-1.5 transition-none border-2 ${
-                                  person.participates_in_agua
-                                    ? "bg-blue-600 text-white border-white"
-                                    : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                }`}
-                                title="Participar da Água"
-                              >
-                                <Droplets className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  toggleParticipation(person.id, "balde")
-                                }
-                                className={`p-1.5 transition-none border-2 ${
-                                  person.participates_in_balde
-                                    ? "bg-purple-600 text-white border-white"
-                                    : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                }`}
-                                title="Participar do Balde"
-                              >
-                                <PaintBucket className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  toggleParticipation(person.id, "geral")
-                                }
-                                className={`p-1.5 transition-none border-2 ${
-                                  person.participates_in_geral
-                                    ? "bg-emerald-600 text-white border-white"
-                                    : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
-                                }`}
-                                title="Participar do Geral"
-                              >
-                                <Star className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => removeName(person.id)}
-                            className="border-2 border-transparent p-2 text-zinc-500 opacity-0 transition-none group-hover:opacity-100 hover:border-red-500 hover:bg-black hover:text-red-400"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </motion.div>
-                      );
-                    })(),
-                  )}
-                </AnimatePresence>
-                {profiles.length === 0 && (
-                  <div className="retro-empty-state">
-                    <div className="retro-empty-icon">
-                      <User className="h-7 w-7 text-white/25" />
-                    </div>
-                    <p className="pixel-text text-[8px] text-white/50">
-                      EQUIPE VAZIA.
-                      <br />
-                      ADICIONE NOMES PARA LUTAR!
-                    </p>
-                    <button
-                      type="button"
-                      className="pixel-text border-2 border-white bg-slate-700 px-3 py-2 text-[8px] text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
-                    >
-                      Importar Lista
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+                  <span className="pixel-text text-[7px] text-white/60">
+                    Nível mais alto
+                  </span>
+                  <span className="pixel-text text-[7px] text-white">
+                    {highestLevel}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+                  <span className="pixel-text text-[7px] text-white/60">
+                    Logs
+                  </span>
+                  <span className="pixel-text text-[7px] text-white">
+                    {battleLogs.length}
+                  </span>
+                </div>
               </div>
             </section>
           </div>
 
-          {/* Draw Sections */}
-          <div className="flex min-h-0 flex-col gap-4 lg:col-span-9">
+          {/* Main Content */}
+          <div className="flex min-h-0 flex-col gap-4 lg:col-span-10">
             {currentPage === "home" ? (
+              participantHomeSection
+            ) : currentPage === "draws" ? (
               <>
+                <section className="glass-card p-5">
+                  <div className="flex flex-col gap-4 border-b-2 border-white/20 pb-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+                        MESA DE SORTEIOS
+                      </h2>
+                      <p className="pixel-text mt-2 text-[7px] text-white/55">
+                        EXECUTE O TURNO COM O GRUPO JÁ PREPARADO NA CENTRAL DE
+                        PARTICIPANTES
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage("home")}
+                      className="pixel-text border-2 border-white bg-black px-4 py-2 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+                    >
+                      VOLTAR PARA PARTICIPANTES
+                    </button>
+                  </div>
+                </section>
+
                 <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-2">
                   {/* Pão de Queijo Section */}
                   <section className="draw-card group">
@@ -2010,7 +2219,7 @@ export default function App() {
                         <div>
                           <h2 className="draw-card-title">Pão de Queijo</h2>
                           <div className="draw-card-meta">
-                            CICLO DO WORLD BOSS
+                            WORLD BOSS DO SETOR
                           </div>
                           <div className="mt-2 flex items-center gap-2">
                             <div className="draw-card-progress w-44">
@@ -2018,35 +2227,22 @@ export default function App() {
                                 className="h-full bg-orange-500"
                                 initial={{ width: 0 }}
                                 animate={{
-                                  width: `${((profiles.filter((n) => n.participates_in_pao).length - excludedIdsPao.length) / profiles.filter((n) => n.participates_in_pao).length) * 100}%`,
+                                  width: `${getParticipationRatio("pao")}%`,
                                 }}
                               />
                             </div>
                             <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                              {profiles.filter((n) => n.participates_in_pao)
-                                .length - excludedIdsPao.length}
-                              /
-                              {
-                                profiles.filter((n) => n.participates_in_pao)
-                                  .length
-                              }
+                              {getParticipationCount("pao")}/{profiles.length}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {excludedIdsPao.length > 0 && (
-                          <button
-                            onClick={() => resetCycle("pao")}
-                            className="draw-card-reset"
-                            title="Resetar ciclo"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
                           onClick={() => drawWinner("pao")}
-                          disabled={isDrawingPao || profiles.length === 0}
+                          disabled={
+                            isDrawingPao || getParticipationCount("pao") === 0
+                          }
                           className="draw-card-action disabled:rpg-button-disabled"
                         >
                           <Shuffle
@@ -2154,18 +2350,13 @@ export default function App() {
                                   className="h-full bg-blue-500"
                                   initial={{ width: 0 }}
                                   animate={{
-                                    width: `${((profiles.filter((n) => n.participates_in_agua).length - excludedIdsAgua.length) / profiles.filter((n) => n.participates_in_agua).length) * 100}%`,
+                                    width: `${getParticipationRatio("agua")}%`,
                                   }}
                                 />
                               </div>
                               <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                                {profiles.filter((n) => n.participates_in_agua)
-                                  .length - excludedIdsAgua.length}
-                                /
-                                {
-                                  profiles.filter((n) => n.participates_in_agua)
-                                    .length
-                                }
+                                {getParticipationCount("agua")}/
+                                {profiles.length}
                               </span>
                             </div>
                             <div className="flex gap-1.5">
@@ -2194,18 +2385,11 @@ export default function App() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {excludedIdsAgua.length > 0 && (
-                          <button
-                            onClick={() => resetCycle("agua")}
-                            className="draw-card-reset"
-                            title="Resetar ciclo"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
                           onClick={() => drawWinner("agua")}
-                          disabled={isDrawingAgua || profiles.length === 0}
+                          disabled={
+                            isDrawingAgua || getParticipationCount("agua") === 0
+                          }
                           className="draw-card-action disabled:rpg-button-disabled"
                         >
                           <Shuffle
@@ -2311,35 +2495,23 @@ export default function App() {
                                 className="h-full bg-purple-500"
                                 initial={{ width: 0 }}
                                 animate={{
-                                  width: `${((profiles.filter((n) => n.participates_in_balde).length - excludedIdsBalde.length) / profiles.filter((n) => n.participates_in_balde).length) * 100}%`,
+                                  width: `${getParticipationRatio("balde")}%`,
                                 }}
                               />
                             </div>
                             <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                              {profiles.filter((n) => n.participates_in_balde)
-                                .length - excludedIdsBalde.length}
-                              /
-                              {
-                                profiles.filter((n) => n.participates_in_balde)
-                                  .length
-                              }
+                              {getParticipationCount("balde")}/{profiles.length}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {excludedIdsBalde.length > 0 && (
-                          <button
-                            onClick={() => resetCycle("balde")}
-                            className="draw-card-reset"
-                            title="Resetar ciclo"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
                           onClick={() => drawWinner("balde")}
-                          disabled={isDrawingBalde || profiles.length === 0}
+                          disabled={
+                            isDrawingBalde ||
+                            getParticipationCount("balde") === 0
+                          }
                           className="draw-card-action disabled:rpg-button-disabled"
                         >
                           <Shuffle
@@ -2437,42 +2609,32 @@ export default function App() {
                       <div className="flex items-center gap-3">
                         <div>
                           <h2 className="draw-card-title">Geral</h2>
-                          <div className="draw-card-meta">EVENTO NEUTRO</div>
+                          <div className="draw-card-meta">
+                            RECOMPENSA BASE DO SETOR
+                          </div>
                           <div className="mt-2 flex items-center gap-2">
                             <div className="draw-card-progress w-44">
                               <motion.div
                                 className="h-full bg-emerald-500"
                                 initial={{ width: 0 }}
                                 animate={{
-                                  width: `${((profiles.filter((n) => n.participates_in_geral).length - excludedIdsGeral.length) / profiles.filter((n) => n.participates_in_geral).length) * 100}%`,
+                                  width: `${getParticipationRatio("geral")}%`,
                                 }}
                               />
                             </div>
                             <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                              {profiles.filter((n) => n.participates_in_geral)
-                                .length - excludedIdsGeral.length}
-                              /
-                              {
-                                profiles.filter((n) => n.participates_in_geral)
-                                  .length
-                              }
+                              {getParticipationCount("geral")}/{profiles.length}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {excludedIdsGeral.length > 0 && (
-                          <button
-                            onClick={() => resetCycle("geral")}
-                            className="draw-card-reset"
-                            title="Resetar ciclo"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
                           onClick={() => drawWinner("geral")}
-                          disabled={isDrawingGeral || profiles.length === 0}
+                          disabled={
+                            isDrawingGeral ||
+                            getParticipationCount("geral") === 0
+                          }
                           className="draw-card-action disabled:rpg-button-disabled"
                         >
                           <Shuffle
@@ -2565,206 +2727,12 @@ export default function App() {
                   </section>
                 </div>
 
-                {mageProfiles.length > 0 && (
-                  <section
-                    className={`glass-card p-5 ${
-                      mageInsights && selectedMageId ? "snes-arcane-glow" : ""
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
-                      <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                        OLHAR ARCANO
-                      </h2>
-                      <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="pixel-text mb-2 block text-[8px] text-white/70">
-                        MAGO ATIVO:
-                      </label>
-                      <select
-                        className="snes-input pixel-text w-full text-[8px]"
-                        value={selectedMageId || ""}
-                        onChange={(e) => setSelectedMageId(e.target.value)}
-                      >
-                        {mageProfiles.map((profile) => (
-                          <option key={profile.id} value={profile.id}>
-                            {profile.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {mageInsights ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                          {mageInsights.queues.map((queue) => (
-                            <div
-                              key={queue.key}
-                              className="border-2 border-white/20 bg-black/30 p-3"
-                            >
-                              <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                                {queue.label}
-                              </div>
-                              <div className="mt-2 pixel-text text-[7px] text-white/65">
-                                FILA: {queue.excludedNames.length}
-                              </div>
-                              <div className="mt-2 min-h-9 space-y-1">
-                                {queue.excludedNames.length > 0 ? (
-                                  queue.excludedNames
-                                    .slice(0, 3)
-                                    .map((name) => (
-                                      <div
-                                        key={`${queue.key}-${name}`}
-                                        className="pixel-text truncate text-[7px] text-white"
-                                      >
-                                        {name}
-                                      </div>
-                                    ))
-                                ) : (
-                                  <div className="pixel-text text-[7px] text-white/40">
-                                    LIMPA
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="border-2 border-white/20 bg-black/30 p-3">
-                          <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
-                            LOG DETALHADO
-                          </div>
-                          <div className="space-y-2">
-                            {mageInsights.recentLogs
-                              .slice(0, 4)
-                              .map((entry) => (
-                                <div
-                                  key={entry.id}
-                                  className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
-                                >
-                                  <div className="pixel-text text-[7px] text-white">
-                                    {entry.profiles?.name || "SISTEMA"}
-                                  </div>
-                                  <div className="pixel-text mt-1 text-[7px] text-white/60">
-                                    {entry.message}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-white/20 p-6 text-center">
-                        <p className="pixel-text text-[8px] text-white/50">
-                          SEM LEITURA ARCANA
-                        </p>
-                      </div>
-                    )}
-                  </section>
-                )}
+                {mageSection}
               </>
             ) : currentPage === "history" ? (
               <>
                 {historySection}
-                {mageProfiles.length > 0 && (
-                  <section
-                    className={`glass-card p-5 ${
-                      mageInsights && selectedMageId ? "snes-arcane-glow" : ""
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
-                      <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                        OLHAR ARCANO
-                      </h2>
-                      <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="pixel-text mb-2 block text-[8px] text-white/70">
-                        MAGO ATIVO:
-                      </label>
-                      <select
-                        className="snes-input pixel-text w-full text-[8px]"
-                        value={selectedMageId || ""}
-                        onChange={(e) => setSelectedMageId(e.target.value)}
-                      >
-                        {mageProfiles.map((profile) => (
-                          <option key={profile.id} value={profile.id}>
-                            {profile.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {mageInsights ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                          {mageInsights.queues.map((queue) => (
-                            <div
-                              key={queue.key}
-                              className="border-2 border-white/20 bg-black/30 p-3"
-                            >
-                              <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                                {queue.label}
-                              </div>
-                              <div className="mt-2 pixel-text text-[7px] text-white/65">
-                                FILA: {queue.excludedNames.length}
-                              </div>
-                              <div className="mt-2 min-h-9 space-y-1">
-                                {queue.excludedNames.length > 0 ? (
-                                  queue.excludedNames
-                                    .slice(0, 3)
-                                    .map((name) => (
-                                      <div
-                                        key={`${queue.key}-${name}`}
-                                        className="pixel-text truncate text-[7px] text-white"
-                                      >
-                                        {name}
-                                      </div>
-                                    ))
-                                ) : (
-                                  <div className="pixel-text text-[7px] text-white/40">
-                                    LIMPA
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="border-2 border-white/20 bg-black/30 p-3">
-                          <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
-                            LOG DETALHADO
-                          </div>
-                          <div className="space-y-2">
-                            {mageInsights.recentLogs
-                              .slice(0, 4)
-                              .map((entry) => (
-                                <div
-                                  key={entry.id}
-                                  className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
-                                >
-                                  <div className="pixel-text text-[7px] text-white">
-                                    {entry.profiles?.name || "SISTEMA"}
-                                  </div>
-                                  <div className="pixel-text mt-1 text-[7px] text-white/60">
-                                    {entry.message}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-white/20 p-6 text-center">
-                        <p className="pixel-text text-[8px] text-white/50">
-                          SEM LEITURA ARCANA
-                        </p>
-                      </div>
-                    )}
-                  </section>
-                )}
+                {mageSection}
               </>
             ) : currentPage === "guide" ? (
               guideSection
@@ -2781,7 +2749,7 @@ export default function App() {
           selectedProfileId &&
           (() => {
             const selectedProfile = profiles.find(
-              (profile) => profile.id === selectedProfileId,
+              (profile: { id: any }) => profile.id === selectedProfileId,
             );
             if (!selectedProfile) return null;
 
