@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import { Coffee, Droplets, PaintBucket, Star } from "lucide-react";
 
 import { DrawCategoryCard } from "./DrawCategoryCard";
+import type { DrawMode } from "../../app/constants";
 
 type DrawCategory = "pao" | "agua" | "balde" | "geral";
 
 type DrawsPageProps = {
   profilesCount: number;
+  drawMode: DrawMode;
   aguaMode: "muita" | "pouca";
   mageSection: ReactNode;
   paoDeQueijoWinners: string[];
@@ -24,6 +26,7 @@ type DrawsPageProps = {
   cyclingNameGeral: string;
   onBack: () => void;
   onSetAguaMode: (mode: "muita" | "pouca") => void;
+  onSetDrawMode: (mode: DrawMode) => void;
   onDraw: (category: DrawCategory) => void;
   getParticipationCount: (category: DrawCategory) => number;
   getParticipationRatio: (category: DrawCategory) => number;
@@ -44,6 +47,7 @@ function EmptyState({ icon }: { icon: ReactNode }) {
 
 export function DrawsPage({
   profilesCount,
+  drawMode,
   aguaMode,
   mageSection,
   paoDeQueijoWinners,
@@ -60,6 +64,7 @@ export function DrawsPage({
   cyclingNameGeral,
   onBack,
   onSetAguaMode,
+  onSetDrawMode,
   onDraw,
   getParticipationCount,
   getParticipationRatio,
@@ -76,6 +81,41 @@ export function DrawsPage({
               EXECUTE O TURNO COM O GRUPO JÁ PREPARADO NA CENTRAL DE
               PARTICIPANTES
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => onSetDrawMode("training")}
+                className={`retro-label border-2 px-3 py-1.5 ${
+                  drawMode === "training"
+                    ? "border-white bg-yellow-500 text-black shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                    : "border-white/40 bg-black text-white/70 hover:border-white hover:text-white"
+                }`}
+              >
+                Modo Treino
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetDrawMode("official")}
+                className={`retro-label border-2 px-3 py-1.5 ${
+                  drawMode === "official"
+                    ? "border-white bg-emerald-500 text-black shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                    : "border-white/40 bg-black text-white/70 hover:border-white hover:text-white"
+                }`}
+              >
+                Modo Oficial
+              </button>
+              <span
+                className={`retro-label border px-2 py-1 ${
+                  drawMode === "training"
+                    ? "border-yellow-300 bg-yellow-950/40 text-yellow-200"
+                    : "border-emerald-300 bg-emerald-950/40 text-emerald-200"
+                }`}
+              >
+                {drawMode === "training"
+                  ? "TREINO: sem progresso real"
+                  : "OFICIAL: grava progresso"}
+              </span>
+            </div>
           </div>
           <button
             type="button"

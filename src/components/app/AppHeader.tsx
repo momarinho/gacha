@@ -1,4 +1,12 @@
-import { Cloud, CloudOff, RefreshCw, RotateCcw, Settings, Shuffle, ShoppingCart } from "lucide-react";
+import {
+  Cloud,
+  CloudOff,
+  RefreshCw,
+  RotateCcw,
+  Settings,
+  Shuffle,
+  ShoppingCart,
+} from "lucide-react";
 
 type AppHeaderProps = {
   dbProvider: "sqlite" | "supabase" | null;
@@ -37,7 +45,9 @@ export function AppHeader({
             className="top-nav-button-neutral"
             title="Loja do Setor"
           >
-            <ShoppingCart className="w-3.5 h-3.5 text-white" />
+            <span className="top-nav-button-icon">
+              <ShoppingCart className="w-3.5 h-3.5 text-white" />
+            </span>
             <span>Loja</span>
           </button>
           <button
@@ -45,26 +55,34 @@ export function AppHeader({
             className="top-nav-button-danger"
             title="Reset Geral"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-white" />
+            <span className="top-nav-button-icon">
+              <RotateCcw className="w-3.5 h-3.5 text-white" />
+            </span>
             <span>Reset Geral</span>
           </button>
           <div className="top-nav-button-cloud">
             {isSyncing ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 text-yellow-400 animate-spin" />
+                <span className="top-nav-button-icon">
+                  <RefreshCw className="w-3.5 h-3.5 text-yellow-400 animate-spin" />
+                </span>
                 <span className="text-yellow-400">Sincronizando</span>
               </>
             ) : syncError ? (
               <>
-                <CloudOff className="w-3.5 h-3.5 text-red-500" />
+                <span className="top-nav-button-icon">
+                  <CloudOff className="w-3.5 h-3.5 text-red-500" />
+                </span>
                 <span className="text-red-500">Offline</span>
               </>
             ) : (
               <>
-                <div className="relative">
-                  <Cloud className="w-3.5 h-3.5 text-emerald-400" />
-                  <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-500 animate-pulse" />
-                </div>
+                <span className="top-nav-button-icon">
+                  <div className="relative">
+                    <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-500 animate-pulse" />
+                  </div>
+                </span>
                 <span className="text-emerald-400">
                   Nuvem {dbProvider ? `(${dbProvider})` : ""}
                 </span>

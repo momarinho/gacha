@@ -13,6 +13,8 @@ import {
   APPRENTICE_UNLOCK_LEVEL,
   AppPage,
   CUSTOM_TITLE_PREFIX,
+  DRAW_MODE_KEY,
+  DrawMode,
   FINAL_CLASS_UNLOCK_LEVEL,
   STATE_KEY,
 } from "./app/constants";
@@ -47,6 +49,10 @@ export default function App() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [battleLogs, setBattleLogs] = useState<BattleLog[]>([]);
+  const [drawMode, setDrawMode] = useState<DrawMode>(() => {
+    const savedMode = localStorage.getItem(DRAW_MODE_KEY);
+    return savedMode === "official" ? "official" : "training";
+  });
   const [accessReady, setAccessReady] = useState(false);
   const [accessEnabled, setAccessEnabled] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
@@ -152,6 +158,42 @@ export default function App() {
     }
   };
 
+  const loadOfficialState = async () => {
+    try {
+      const response = await fetch("/api/state");
+      if (response.status === 404) {
+        setPaoDeQueijoWinners([]);
+        setAguaWinners([]);
+        setBaldeWinners([]);
+        setGeralWinners([]);
+        setExcludedIdsPao([]);
+        setExcludedIdsAgua([]);
+        setExcludedIdsBalde([]);
+        setExcludedIdsGeral([]);
+        setAguaMode("muita");
+        return;
+      }
+      if (response.status === 401) {
+        setHasAccess(false);
+        return;
+      }
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setPaoDeQueijoWinners(data?.paoDeQueijoWinners || []);
+      setAguaWinners(data?.aguaWinners || []);
+      setBaldeWinners(data?.baldeWinners || []);
+      setGeralWinners(data?.geralWinners || []);
+      setExcludedIdsPao(data?.excludedIdsPao || []);
+      setExcludedIdsAgua(data?.excludedIdsAgua || []);
+      setExcludedIdsBalde(data?.excludedIdsBalde || []);
+      setExcludedIdsGeral(data?.excludedIdsGeral || []);
+      setAguaMode(data?.aguaMode || "muita");
+    } catch (error) {
+      console.error("Failed to fetch state from server:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchHealth = async () => {
       try {
@@ -207,37 +249,22 @@ export default function App() {
       }
     };
 
-    const fetchState = async () => {
-      try {
-        const response = await fetch("/api/state");
-        if (response.status === 404) return;
-        if (response.status === 401) {
-          setHasAccess(false);
-          return;
-        }
-        if (!response.ok) return;
-
-        const data = await response.json();
-        if (data) {
-          if (data.paoDeQueijoWinners)
-            setPaoDeQueijoWinners(data.paoDeQueijoWinners);
-          if (data.aguaWinners) setAguaWinners(data.aguaWinners);
-          if (data.baldeWinners) setBaldeWinners(data.baldeWinners);
-          if (data.geralWinners) setGeralWinners(data.geralWinners);
-          if (data.excludedIdsPao) setExcludedIdsPao(data.excludedIdsPao);
-          if (data.excludedIdsAgua) setExcludedIdsAgua(data.excludedIdsAgua);
-          if (data.excludedIdsBalde) setExcludedIdsBalde(data.excludedIdsBalde);
-          if (data.excludedIdsGeral) setExcludedIdsGeral(data.excludedIdsGeral);
-          if (data.aguaMode) setAguaMode(data.aguaMode);
-        }
-      } catch (error) {
-        console.error("Failed to fetch state from server:", error);
-      }
-    };
-
     fetchData();
-    fetchState();
+    loadOfficialState();
   }, [accessReady, hasAccess]);
+
+  useEffect(() => {
+    localStorage.setItem(DRAW_MODE_KEY, drawMode);
+    if (drawMode === "official" && accessReady && hasAccess) {
+      loadOfficialState();
+      api
+        .getLogs()
+        .then((logs) => setBattleLogs(logs))
+        .catch((error) =>
+          console.error("Failed to refresh official logs:", error),
+        );
+    }
+  }, [drawMode, accessReady, hasAccess]);
 
   // Persist all other state to localStorage and Server
   useEffect(() => {
@@ -257,6 +284,8 @@ export default function App() {
 
     // Local storage persistence
     localStorage.setItem(STATE_KEY, JSON.stringify(stateToSave));
+
+    if (drawMode === "training") return;
 
     // Server persistence with debounce
     const saveToServer = async () => {
@@ -291,6 +320,7 @@ export default function App() {
     excludedIdsBalde,
     excludedIdsGeral,
     aguaMode,
+    drawMode,
   ]);
 
   useEffect(() => {
@@ -548,6 +578,33 @@ export default function App() {
     battleLogs,
   );
 
+  const appendTrainingLog = (
+    category: "pao" | "agua" | "balde" | "geral",
+    winners: Profile[],
+  ) => {
+    const names = winners.map((winner) => winner.name).join(", ");
+    const newLog: BattleLog = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      event_type: "training_draw",
+      category,
+      message: `[TREINO] Sorteio de ${category.toUpperCase()} executado para ${names}`,
+      primary_actor_id: winners[0]?.id || "",
+      metadata: {
+        mode: "training",
+        winnerIds: winners.map((winner) => winner.id),
+      },
+      profiles: winners[0]
+        ? {
+            name: winners[0].name,
+            class: winners[0].class,
+          }
+        : undefined,
+    };
+
+    setBattleLogs((currentLogs) => [newLog, ...currentLogs]);
+  };
+
   const drawWinner = (type: "pao" | "agua" | "balde" | "geral") => {
     if (profiles.length === 0) return;
 
@@ -576,6 +633,11 @@ export default function App() {
 
           setPaoDeQueijoWinners([winner.name]);
           setIsDrawingPao(false);
+
+          if (drawMode === "training") {
+            appendTrainingLog("pao", [winner]);
+            return;
+          }
 
           // Process RPG logic
           try {
@@ -628,6 +690,11 @@ export default function App() {
           setAguaWinners(selectedWinners.map((w) => w.name));
           setIsDrawingAgua(false);
 
+          if (drawMode === "training") {
+            appendTrainingLog("agua", selectedWinners);
+            return;
+          }
+
           // Process RPG logic
           try {
             const result = await api.processDraw(
@@ -670,6 +737,11 @@ export default function App() {
           setBaldeWinners([winner.name]);
           setIsDrawingBalde(false);
 
+          if (drawMode === "training") {
+            appendTrainingLog("balde", [winner]);
+            return;
+          }
+
           // Process RPG logic
           try {
             const result = await api.processDraw(
@@ -711,6 +783,11 @@ export default function App() {
 
           setGeralWinners([winner.name]);
           setIsDrawingGeral(false);
+
+          if (drawMode === "training") {
+            appendTrainingLog("geral", [winner]);
+            return;
+          }
 
           // Process RPG logic
           try {
@@ -912,6 +989,7 @@ export default function App() {
             ) : currentPage === "draws" ? (
               <DrawsPage
                 profilesCount={profiles.length}
+                drawMode={drawMode}
                 aguaMode={aguaMode}
                 mageSection={mageSection}
                 paoDeQueijoWinners={paoDeQueijoWinners}
@@ -928,6 +1006,16 @@ export default function App() {
                 cyclingNameGeral={cyclingNameGeral}
                 onBack={() => setCurrentPage("home")}
                 onSetAguaMode={setAguaMode}
+                onSetDrawMode={(mode) => {
+                  setDrawMode(mode);
+                  if (mode === "training") {
+                    setBattleLogs((currentLogs) =>
+                      currentLogs.filter(
+                        (entry) => entry.event_type !== "training_draw",
+                      ),
+                    );
+                  }
+                }}
                 onDraw={drawWinner}
                 getParticipationCount={getParticipationCount}
                 getParticipationRatio={getParticipationRatio}
