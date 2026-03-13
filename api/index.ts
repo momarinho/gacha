@@ -1310,10 +1310,10 @@ async function createExpressApp() {
         if (category === "balde" && isWinner) {
           titles = Array.from(new Set([...titles, "Sobrevivente do Balde"]));
         }
-        if (newLevel >= 5) {
+        if (p.level < 5 && newLevel >= 5) {
           titles = Array.from(new Set([...titles, "Lenda do Setor"]));
         }
-        if (newCoins >= 100) {
+        if (p.coins < 100 && newCoins >= 100) {
           titles = Array.from(new Set([...titles, "Magnata das SetorCoins"]));
         }
 

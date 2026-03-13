@@ -165,14 +165,14 @@ Depois que a camada acima estiver estável.
 ## 5. Fechamento
 
 Checklist final de validação ponta a ponta:
-- [ ] Criar usuário
-- [ ] Escolher classe
-- [ ] Participar de sorteios
-- [ ] Ganhar/perder HP, XP e moedas
-- [ ] Comprar item
-- [ ] Usar item
-- [ ] Registrar log
-- [ ] Refletir ranking
-- [ ] Refletir títulos
-- [ ] Refletir exaustão
-- [ ] Refletir efeitos visuais de classe
+- [x] Criar usuário
+- [x] Escolher classe
+- [x] Participar de sorteios
+- [x] Ganhar/perder HP, XP e moedas
+- [x] Comprar item
+- [x] Usar item
+- [x] Registrar log
+- [x] Refletir ranking
+- [x] Refletir títulos
+- [x] Refletir exaustão
+- [x] Refletir efeitos visuais de classe

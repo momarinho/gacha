@@ -44,6 +44,7 @@ const RECENT_EFFECT_WINDOW_MS = 15 * 60 * 1000;
 const CUSTOM_TITLE_PREFIX = "custom:";
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState<"home" | "history">("home");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [battleLogs, setBattleLogs] = useState<BattleLog[]>([]);
@@ -1066,6 +1067,101 @@ export default function App() {
     }
   };
 
+  const historySection = (
+    <section className="glass-card min-h-[320px] p-5 lg:p-6">
+      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <History className="h-5 w-5 text-[var(--color-snes-gold)]" />
+          </div>
+          <div>
+            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+              HISTÓRICO DE SORTEIOS
+            </h2>
+            <p className="pixel-text mt-2 text-[7px] text-white/55">
+              REGISTROS DAS ÚLTIMAS ATIVIDADES
+            </p>
+          </div>
+        </div>
+        {battleLogs.length > 0 && (
+          <button
+            onClick={async () => {
+              setBattleLogs([]);
+            }}
+            className="pixel-text border-2 border-white bg-black/35 px-3 py-2 text-[8px] text-white/70 hover:border-[var(--color-snes-gold)] hover:text-white"
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <AnimatePresence mode="popLayout">
+          {battleLogs.map((entry) => (
+            <motion.div
+              key={entry.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="history-log-entry"
+            >
+              <div
+                className={`flex h-11 w-11 items-center justify-center border-2 border-white ${
+                  entry.event_type === "draw_result"
+                    ? "bg-[var(--color-snes-gold)] text-slate-950"
+                    : entry.event_type === "level_up"
+                      ? "bg-emerald-600 text-white"
+                      : entry.event_type === "item_buy"
+                        ? "bg-blue-600 text-white"
+                        : "bg-black/40 text-white"
+                }`}
+              >
+                {entry.event_type === "draw_result" && (
+                  <Star className="h-4 w-4" />
+                )}
+                {entry.event_type === "level_up" && (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                {entry.event_type === "item_buy" && (
+                  <ShoppingCart className="h-4 w-4" />
+                )}
+                {!["draw_result", "level_up", "item_buy"].includes(
+                  entry.event_type,
+                ) && <History className="h-4 w-4" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="pixel-text mb-1 text-[8px] text-white">
+                  {entry.profiles?.name || "SISTEMA"}
+                </div>
+                <div className="pixel-text text-[7px] text-white/60">
+                  {entry.message}
+                </div>
+              </div>
+              <div className="pixel-text flex items-center gap-1 text-[7px] text-white/45">
+                <Clock className="h-3 w-3" />
+                {new Date(entry.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {battleLogs.length === 0 && (
+          <div className="retro-empty-state mt-4">
+            <div className="retro-empty-icon">
+              <History className="h-7 w-7 text-white/25" />
+            </div>
+            <p className="pixel-text text-[8px] text-white/35">
+              FIM DOS REGISTROS
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
   return (
     <div className="min-h-screen px-0.5 py-0.5 font-sans text-zinc-100 lg:px-2 lg:py-2">
       <div className="app-shell mx-auto max-w-[1360px] overflow-hidden">
@@ -1148,13 +1244,29 @@ export default function App() {
             <section className="glass-card p-5">
               <h2 className="panel-title">MENU PRINCIPAL</h2>
               <ul className="space-y-2">
-                <li className="menu-entry menu-entry-active">
-                  <User className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                  Início
+                <li
+                  className={`menu-entry ${currentPage === "home" ? "menu-entry-active" : ""}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("home")}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <User className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    Início
+                  </button>
                 </li>
-                <li className="menu-entry">
-                  <Shuffle className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                  Sorteios
+                <li
+                  className={`menu-entry ${currentPage === "history" ? "menu-entry-active" : ""}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("history")}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <History className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    Histórico
+                  </button>
                 </li>
               </ul>
             </section>
@@ -1509,749 +1621,772 @@ export default function App() {
 
           {/* Draw Sections */}
           <div className="lg:col-span-9 space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 h-fit">
-              {/* Pão de Queijo Section */}
-              <section className="draw-card group">
-                <div className="draw-card-header">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h2 className="draw-card-title">Pão de Queijo</h2>
-                      <div className="draw-card-meta">CICLO DO WORLD BOSS</div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="draw-card-progress w-44">
-                          <motion.div
-                            className="h-full bg-orange-500"
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${((profiles.filter((n) => n.participates_in_pao).length - excludedIdsPao.length) / profiles.filter((n) => n.participates_in_pao).length) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                          {profiles.filter((n) => n.participates_in_pao)
-                            .length - excludedIdsPao.length}
-                          /
-                          {profiles.filter((n) => n.participates_in_pao).length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {excludedIdsPao.length > 0 && (
-                      <button
-                        onClick={() => resetCycle("pao")}
-                        className="draw-card-reset"
-                        title="Resetar ciclo"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => drawWinner("pao")}
-                      disabled={isDrawingPao || profiles.length === 0}
-                      className="draw-card-action disabled:rpg-button-disabled"
-                    >
-                      <Shuffle
-                        className={`w-5 h-5 ${isDrawingPao ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="draw-card-screen">
-                  <AnimatePresence mode="wait">
-                    {isDrawingPao ? (
-                      <motion.div
-                        key="drawing"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="flex flex-col items-center gap-4"
-                      >
-                        <div className="text-3xl md:text-4xl font-black text-orange-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                          {cyclingNamePao}
-                        </div>
-                        <div className="flex gap-2">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              animate={{
-                                opacity: [0.3, 1, 0.3],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{
-                                repeat: Infinity,
-                                duration: 0.8,
-                                delay: i * 0.2,
-                              }}
-                              className="w-2 h-2 bg-orange-500"
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : paoDeQueijoWinners.length > 0 ? (
-                      <motion.div
-                        key="winner"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-center"
-                      >
-                        <motion.div
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center justify-center gap-2 text-white mb-3"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                            O escolhido é
-                          </span>
-                        </motion.div>
-                        <div className="flex flex-col gap-2">
-                          {paoDeQueijoWinners.map((winner, idx) => (
-                            <motion.div
-                              key={winner}
-                              initial={{ y: 20, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              transition={{
-                                delay: 0.3 + idx * 0.1,
-                                type: "spring",
-                              }}
-                              className="text-3xl md:text-4xl font-black text-orange-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                            >
-                              {winner}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <div className="retro-empty-state w-full max-w-[240px]">
-                        <div className="retro-empty-icon">
-                          <Coffee className="h-7 w-7 text-white/20" />
-                        </div>
-                        <p className="pixel-text text-[8px] text-white/45">
-                          AGUARDANDO
-                          <br />
-                          SORTEIO
-                        </p>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </section>
-
-              {/* Água Section */}
-              <section className="draw-card group">
-                <div className="draw-card-header">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h2 className="draw-card-title">Água</h2>
-                      <div className="draw-card-meta">
-                        QUEST DIARIA DO SETOR
-                      </div>
-                      <div className="flex flex-col gap-2 mt-1">
-                        <div className="flex items-center gap-2">
-                          <div className="draw-card-progress w-44">
-                            <motion.div
-                              className="h-full bg-blue-500"
-                              initial={{ width: 0 }}
-                              animate={{
-                                width: `${((profiles.filter((n) => n.participates_in_agua).length - excludedIdsAgua.length) / profiles.filter((n) => n.participates_in_agua).length) * 100}%`,
-                              }}
-                            />
+            {currentPage === "home" ? (
+              <>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 h-fit">
+                  {/* Pão de Queijo Section */}
+                  <section className="draw-card group">
+                    <div className="draw-card-header">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h2 className="draw-card-title">Pão de Queijo</h2>
+                          <div className="draw-card-meta">
+                            CICLO DO WORLD BOSS
                           </div>
-                          <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                            {profiles.filter((n) => n.participates_in_agua)
-                              .length - excludedIdsAgua.length}
-                            /
-                            {
-                              profiles.filter((n) => n.participates_in_agua)
-                                .length
-                            }
-                          </span>
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="draw-card-progress w-44">
+                              <motion.div
+                                className="h-full bg-orange-500"
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${((profiles.filter((n) => n.participates_in_pao).length - excludedIdsPao.length) / profiles.filter((n) => n.participates_in_pao).length) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
+                              {profiles.filter((n) => n.participates_in_pao)
+                                .length - excludedIdsPao.length}
+                              /
+                              {
+                                profiles.filter((n) => n.participates_in_pao)
+                                  .length
+                              }
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex gap-1.5">
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {excludedIdsPao.length > 0 && (
                           <button
-                            onClick={() => setAguaMode("pouca")}
-                            className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
-                              aguaMode === "pouca"
-                                ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                                : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"
-                            }`}
+                            onClick={() => resetCycle("pao")}
+                            className="draw-card-reset"
+                            title="Resetar ciclo"
                           >
-                            Pouca (1)
+                            <RotateCcw className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => setAguaMode("muita")}
-                            className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
-                              aguaMode === "muita"
-                                ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                                : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"
-                            }`}
+                        )}
+                        <button
+                          onClick={() => drawWinner("pao")}
+                          disabled={isDrawingPao || profiles.length === 0}
+                          className="draw-card-action disabled:rpg-button-disabled"
+                        >
+                          <Shuffle
+                            className={`w-5 h-5 ${isDrawingPao ? "animate-spin" : ""}`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="draw-card-screen">
+                      <AnimatePresence mode="wait">
+                        {isDrawingPao ? (
+                          <motion.div
+                            key="drawing"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.1 }}
+                            className="flex flex-col items-center gap-4"
                           >
-                            Muita (2)
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {excludedIdsAgua.length > 0 && (
-                      <button
-                        onClick={() => resetCycle("agua")}
-                        className="draw-card-reset"
-                        title="Resetar ciclo"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => drawWinner("agua")}
-                      disabled={isDrawingAgua || profiles.length === 0}
-                      className="draw-card-action disabled:rpg-button-disabled"
-                    >
-                      <Shuffle
-                        className={`w-5 h-5 ${isDrawingAgua ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="draw-card-screen">
-                  <AnimatePresence mode="wait">
-                    {isDrawingAgua ? (
-                      <motion.div
-                        key="drawing-agua"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="flex flex-col items-center gap-4"
-                      >
-                        <div className="text-3xl md:text-4xl font-black text-blue-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                          {cyclingNameAgua}
-                        </div>
-                        <div className="flex gap-2">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              animate={{
-                                opacity: [0.3, 1, 0.3],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{
-                                repeat: Infinity,
-                                duration: 0.8,
-                                delay: i * 0.2,
-                              }}
-                              className="w-2 h-2 bg-blue-500"
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : aguaWinners.length > 0 ? (
-                      <motion.div
-                        key="winner-agua"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-center"
-                      >
-                        <motion.div
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center justify-center gap-2 text-white mb-3"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                            {aguaWinners.length > 1
-                              ? "Os escolhidos são"
-                              : "O escolhido é"}
-                          </span>
-                        </motion.div>
-                        <div className="flex flex-col gap-2">
-                          {aguaWinners.map((winner, idx) => (
-                            <motion.div
-                              key={winner}
-                              initial={{ x: -20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ delay: 0.3 + idx * 0.1 }}
-                              className="text-2xl md:text-3xl font-black text-blue-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                            >
-                              {winner}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <div className="retro-empty-state w-full max-w-[240px]">
-                        <div className="retro-empty-icon">
-                          <Droplets className="h-7 w-7 text-white/20" />
-                        </div>
-                        <p className="pixel-text text-[8px] text-white/45">
-                          AGUARDANDO
-                          <br />
-                          SORTEIO
-                        </p>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </section>
-
-              {/* Balde Section */}
-              <section className="draw-card group">
-                <div className="draw-card-header">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h2 className="draw-card-title">Balde</h2>
-                      <div className="draw-card-meta">
-                        DESAFIO INTERMEDIARIO
-                      </div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="draw-card-progress w-44">
+                            <div className="text-3xl md:text-4xl font-black text-orange-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                              {cyclingNamePao}
+                            </div>
+                            <div className="flex gap-2">
+                              {[0, 1, 2].map((i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{
+                                    opacity: [0.3, 1, 0.3],
+                                    scale: [1, 1.2, 1],
+                                  }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 0.8,
+                                    delay: i * 0.2,
+                                  }}
+                                  className="w-2 h-2 bg-orange-500"
+                                />
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : paoDeQueijoWinners.length > 0 ? (
                           <motion.div
-                            className="h-full bg-purple-500"
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${((profiles.filter((n) => n.participates_in_balde).length - excludedIdsBalde.length) / profiles.filter((n) => n.participates_in_balde).length) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                          {profiles.filter((n) => n.participates_in_balde)
-                            .length - excludedIdsBalde.length}
-                          /
-                          {
-                            profiles.filter((n) => n.participates_in_balde)
-                              .length
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {excludedIdsBalde.length > 0 && (
-                      <button
-                        onClick={() => resetCycle("balde")}
-                        className="draw-card-reset"
-                        title="Resetar ciclo"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => drawWinner("balde")}
-                      disabled={isDrawingBalde || profiles.length === 0}
-                      className="draw-card-action disabled:rpg-button-disabled"
-                    >
-                      <Shuffle
-                        className={`w-5 h-5 ${isDrawingBalde ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="draw-card-screen">
-                  <AnimatePresence mode="wait">
-                    {isDrawingBalde ? (
-                      <motion.div
-                        key="drawing-balde"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="flex flex-col items-center gap-4"
-                      >
-                        <div className="text-3xl md:text-4xl font-black text-purple-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                          {cyclingNameBalde}
-                        </div>
-                        <div className="flex gap-2">
-                          {[0, 1, 2].map((i) => (
+                            key="winner"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center"
+                          >
                             <motion.div
-                              key={i}
-                              animate={{
-                                opacity: [0.3, 1, 0.3],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{
-                                repeat: Infinity,
-                                duration: 0.8,
-                                delay: i * 0.2,
-                              }}
-                              className="w-2 h-2 bg-purple-500"
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : baldeWinners.length > 0 ? (
-                      <motion.div
-                        key="winner-balde"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-center"
-                      >
-                        <motion.div
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center justify-center gap-2 text-white mb-3"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                            O escolhido é
-                          </span>
-                        </motion.div>
-                        <div className="flex flex-col gap-2">
-                          {baldeWinners.map((winner, idx) => (
-                            <motion.div
-                              key={winner}
-                              initial={{ y: 20, opacity: 0 }}
+                              initial={{ y: 10, opacity: 0 }}
                               animate={{ y: 0, opacity: 1 }}
-                              transition={{
-                                delay: 0.3 + idx * 0.1,
-                                type: "spring",
-                              }}
-                              className="text-3xl md:text-4xl font-black text-purple-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                              transition={{ delay: 0.2 }}
+                              className="flex items-center justify-center gap-2 text-white mb-3"
                             >
-                              {winner}
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                                O escolhido é
+                              </span>
                             </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <div className="retro-empty-state w-full max-w-[240px]">
-                        <div className="retro-empty-icon">
-                          <PaintBucket className="h-7 w-7 text-white/20" />
-                        </div>
-                        <p className="pixel-text text-[8px] text-white/45">
-                          AGUARDANDO
-                          <br />
-                          SORTEIO
-                        </p>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </section>
-
-              {/* Geral Section */}
-              <section className="draw-card group">
-                <div className="draw-card-header">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <h2 className="draw-card-title">Geral</h2>
-                      <div className="draw-card-meta">EVENTO NEUTRO</div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <div className="draw-card-progress w-44">
-                          <motion.div
-                            className="h-full bg-emerald-500"
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `${((profiles.filter((n) => n.participates_in_geral).length - excludedIdsGeral.length) / profiles.filter((n) => n.participates_in_geral).length) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
-                          {profiles.filter((n) => n.participates_in_geral)
-                            .length - excludedIdsGeral.length}
-                          /
-                          {
-                            profiles.filter((n) => n.participates_in_geral)
-                              .length
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {excludedIdsGeral.length > 0 && (
-                      <button
-                        onClick={() => resetCycle("geral")}
-                        className="draw-card-reset"
-                        title="Resetar ciclo"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => drawWinner("geral")}
-                      disabled={isDrawingGeral || profiles.length === 0}
-                      className="draw-card-action disabled:rpg-button-disabled"
-                    >
-                      <Shuffle
-                        className={`w-5 h-5 ${isDrawingGeral ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="draw-card-screen">
-                  <AnimatePresence mode="wait">
-                    {isDrawingGeral ? (
-                      <motion.div
-                        key="drawing-geral"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="flex flex-col items-center gap-4"
-                      >
-                        <div className="text-3xl md:text-4xl font-black text-emerald-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                          {cyclingNameGeral}
-                        </div>
-                        <div className="flex gap-2">
-                          {[0, 1, 2].map((i) => (
-                            <motion.div
-                              key={i}
-                              animate={{
-                                opacity: [0.3, 1, 0.3],
-                                scale: [1, 1.2, 1],
-                              }}
-                              transition={{
-                                repeat: Infinity,
-                                duration: 0.8,
-                                delay: i * 0.2,
-                              }}
-                              className="w-2 h-2 bg-emerald-500"
-                            />
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : geralWinners.length > 0 ? (
-                      <motion.div
-                        key="winner-geral"
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-center"
-                      >
-                        <motion.div
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="flex items-center justify-center gap-2 text-white mb-3"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
-                            O escolhido é
-                          </span>
-                        </motion.div>
-                        <div className="flex flex-col gap-2">
-                          {geralWinners.map((winner, idx) => (
-                            <motion.div
-                              key={winner}
-                              initial={{ y: 20, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              transition={{
-                                delay: 0.3 + idx * 0.1,
-                                type: "spring",
-                              }}
-                              className="text-3xl md:text-4xl font-black text-emerald-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-                            >
-                              {winner}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <div className="retro-empty-state w-full max-w-[240px]">
-                        <div className="retro-empty-icon">
-                          <Star className="h-7 w-7 text-white/20" />
-                        </div>
-                        <p className="pixel-text text-[8px] text-white/45">
-                          AGUARDANDO
-                          <br />
-                          SORTEIO
-                        </p>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </section>
-            </div>
-            <section className="glass-card min-h-[320px] p-5 lg:p-6">
-              <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    <History className="h-5 w-5 text-[var(--color-snes-gold)]" />
-                  </div>
-                  <div>
-                    <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                      HISTÓRICO DE SORTEIOS
-                    </h2>
-                    <p className="pixel-text mt-2 text-[7px] text-white/55">
-                      REGISTROS DAS ÚLTIMAS ATIVIDADES
-                    </p>
-                  </div>
-                </div>
-                {battleLogs.length > 0 && (
-                  <button
-                    onClick={async () => {
-                      setBattleLogs([]);
-                    }}
-                    className="pixel-text border-2 border-white bg-black/35 px-3 py-2 text-[8px] text-white/70 hover:border-[var(--color-snes-gold)] hover:text-white"
-                  >
-                    Limpar
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                <AnimatePresence mode="popLayout">
-                  {battleLogs.map((entry) => (
-                    <motion.div
-                      key={entry.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="history-log-entry"
-                    >
-                      <div
-                        className={`flex h-11 w-11 items-center justify-center border-2 border-white ${
-                          entry.event_type === "draw_result"
-                            ? "bg-[var(--color-snes-gold)] text-slate-950"
-                            : entry.event_type === "level_up"
-                              ? "bg-emerald-600 text-white"
-                              : entry.event_type === "item_buy"
-                                ? "bg-blue-600 text-white"
-                                : "bg-black/40 text-white"
-                        }`}
-                      >
-                        {entry.event_type === "draw_result" && (
-                          <Star className="h-4 w-4" />
-                        )}
-                        {entry.event_type === "level_up" && (
-                          <CheckCircle2 className="h-4 w-4" />
-                        )}
-                        {entry.event_type === "item_buy" && (
-                          <ShoppingCart className="h-4 w-4" />
-                        )}
-                        {!["draw_result", "level_up", "item_buy"].includes(
-                          entry.event_type,
-                        ) && <History className="h-4 w-4" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="pixel-text mb-1 text-[8px] text-white">
-                          {entry.profiles?.name || "SISTEMA"}
-                        </div>
-                        <div className="pixel-text text-[7px] text-white/60">
-                          {entry.message}
-                        </div>
-                      </div>
-                      <div className="pixel-text flex items-center gap-1 text-[7px] text-white/45">
-                        <Clock className="h-3 w-3" />
-                        {new Date(entry.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {battleLogs.length === 0 && (
-                  <div className="retro-empty-state mt-4">
-                    <div className="retro-empty-icon">
-                      <History className="h-7 w-7 text-white/25" />
-                    </div>
-                    <p className="pixel-text text-[8px] text-white/35">
-                      FIM DOS REGISTROS
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {mageProfiles.length > 0 && (
-              <section
-                className={`glass-card p-5 ${
-                  mageInsights && selectedMageId ? "snes-arcane-glow" : ""
-                }`}
-              >
-                <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
-                  <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
-                    OLHAR ARCANO
-                  </h2>
-                  <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
-                </div>
-
-                <div className="mb-4">
-                  <label className="pixel-text mb-2 block text-[8px] text-white/70">
-                    MAGO ATIVO:
-                  </label>
-                  <select
-                    className="snes-input pixel-text w-full text-[8px]"
-                    value={selectedMageId || ""}
-                    onChange={(e) => setSelectedMageId(e.target.value)}
-                  >
-                    {mageProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {mageInsights ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      {mageInsights.queues.map((queue) => (
-                        <div
-                          key={queue.key}
-                          className="border-2 border-white/20 bg-black/30 p-3"
-                        >
-                          <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-                            {queue.label}
-                          </div>
-                          <div className="mt-2 pixel-text text-[7px] text-white/65">
-                            FILA: {queue.excludedNames.length}
-                          </div>
-                          <div className="mt-2 min-h-9 space-y-1">
-                            {queue.excludedNames.length > 0 ? (
-                              queue.excludedNames.slice(0, 3).map((name) => (
-                                <div
-                                  key={`${queue.key}-${name}`}
-                                  className="pixel-text truncate text-[7px] text-white"
+                            <div className="flex flex-col gap-2">
+                              {paoDeQueijoWinners.map((winner, idx) => (
+                                <motion.div
+                                  key={winner}
+                                  initial={{ y: 20, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  transition={{
+                                    delay: 0.3 + idx * 0.1,
+                                    type: "spring",
+                                  }}
+                                  className="text-3xl md:text-4xl font-black text-orange-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                                 >
-                                  {name}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="pixel-text text-[7px] text-white/40">
-                                LIMPA
+                                  {winner}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="retro-empty-state w-full max-w-[240px]">
+                            <div className="retro-empty-icon">
+                              <Coffee className="h-7 w-7 text-white/20" />
+                            </div>
+                            <p className="pixel-text text-[8px] text-white/45">
+                              AGUARDANDO
+                              <br />
+                              SORTEIO
+                            </p>
+                          </div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </section>
+
+                  {/* Água Section */}
+                  <section className="draw-card group">
+                    <div className="draw-card-header">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h2 className="draw-card-title">Água</h2>
+                          <div className="draw-card-meta">
+                            QUEST DIARIA DO SETOR
+                          </div>
+                          <div className="flex flex-col gap-2 mt-1">
+                            <div className="flex items-center gap-2">
+                              <div className="draw-card-progress w-44">
+                                <motion.div
+                                  className="h-full bg-blue-500"
+                                  initial={{ width: 0 }}
+                                  animate={{
+                                    width: `${((profiles.filter((n) => n.participates_in_agua).length - excludedIdsAgua.length) / profiles.filter((n) => n.participates_in_agua).length) * 100}%`,
+                                  }}
+                                />
                               </div>
-                            )}
+                              <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
+                                {profiles.filter((n) => n.participates_in_agua)
+                                  .length - excludedIdsAgua.length}
+                                /
+                                {
+                                  profiles.filter((n) => n.participates_in_agua)
+                                    .length
+                                }
+                              </span>
+                            </div>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => setAguaMode("pouca")}
+                                className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
+                                  aguaMode === "pouca"
+                                    ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                    : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"
+                                }`}
+                              >
+                                Pouca (1)
+                              </button>
+                              <button
+                                onClick={() => setAguaMode("muita")}
+                                className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
+                                  aguaMode === "muita"
+                                    ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                    : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"
+                                }`}
+                              >
+                                Muita (2)
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {excludedIdsAgua.length > 0 && (
+                          <button
+                            onClick={() => resetCycle("agua")}
+                            className="draw-card-reset"
+                            title="Resetar ciclo"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => drawWinner("agua")}
+                          disabled={isDrawingAgua || profiles.length === 0}
+                          className="draw-card-action disabled:rpg-button-disabled"
+                        >
+                          <Shuffle
+                            className={`w-5 h-5 ${isDrawingAgua ? "animate-spin" : ""}`}
+                          />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="border-2 border-white/20 bg-black/30 p-3">
-                      <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
-                        LOG DETALHADO
-                      </div>
-                      <div className="space-y-2">
-                        {mageInsights.recentLogs.slice(0, 4).map((entry) => (
-                          <div
-                            key={entry.id}
-                            className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
+                    <div className="draw-card-screen">
+                      <AnimatePresence mode="wait">
+                        {isDrawingAgua ? (
+                          <motion.div
+                            key="drawing-agua"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.1 }}
+                            className="flex flex-col items-center gap-4"
                           >
-                            <div className="pixel-text text-[7px] text-white">
-                              {entry.profiles?.name || "SISTEMA"}
+                            <div className="text-3xl md:text-4xl font-black text-blue-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                              {cyclingNameAgua}
                             </div>
-                            <div className="pixel-text mt-1 text-[7px] text-white/60">
-                              {entry.message}
+                            <div className="flex gap-2">
+                              {[0, 1, 2].map((i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{
+                                    opacity: [0.3, 1, 0.3],
+                                    scale: [1, 1.2, 1],
+                                  }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 0.8,
+                                    delay: i * 0.2,
+                                  }}
+                                  className="w-2 h-2 bg-blue-500"
+                                />
+                              ))}
                             </div>
+                          </motion.div>
+                        ) : aguaWinners.length > 0 ? (
+                          <motion.div
+                            key="winner-agua"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center"
+                          >
+                            <motion.div
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                              className="flex items-center justify-center gap-2 text-white mb-3"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                                {aguaWinners.length > 1
+                                  ? "Os escolhidos são"
+                                  : "O escolhido é"}
+                              </span>
+                            </motion.div>
+                            <div className="flex flex-col gap-2">
+                              {aguaWinners.map((winner, idx) => (
+                                <motion.div
+                                  key={winner}
+                                  initial={{ x: -20, opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  transition={{ delay: 0.3 + idx * 0.1 }}
+                                  className="text-2xl md:text-3xl font-black text-blue-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                >
+                                  {winner}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="retro-empty-state w-full max-w-[240px]">
+                            <div className="retro-empty-icon">
+                              <Droplets className="h-7 w-7 text-white/20" />
+                            </div>
+                            <p className="pixel-text text-[8px] text-white/45">
+                              AGUARDANDO
+                              <br />
+                              SORTEIO
+                            </p>
                           </div>
-                        ))}
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </section>
+
+                  {/* Balde Section */}
+                  <section className="draw-card group">
+                    <div className="draw-card-header">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h2 className="draw-card-title">Balde</h2>
+                          <div className="draw-card-meta">
+                            DESAFIO INTERMEDIARIO
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="draw-card-progress w-44">
+                              <motion.div
+                                className="h-full bg-purple-500"
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${((profiles.filter((n) => n.participates_in_balde).length - excludedIdsBalde.length) / profiles.filter((n) => n.participates_in_balde).length) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
+                              {profiles.filter((n) => n.participates_in_balde)
+                                .length - excludedIdsBalde.length}
+                              /
+                              {
+                                profiles.filter((n) => n.participates_in_balde)
+                                  .length
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {excludedIdsBalde.length > 0 && (
+                          <button
+                            onClick={() => resetCycle("balde")}
+                            className="draw-card-reset"
+                            title="Resetar ciclo"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => drawWinner("balde")}
+                          disabled={isDrawingBalde || profiles.length === 0}
+                          className="draw-card-action disabled:rpg-button-disabled"
+                        >
+                          <Shuffle
+                            className={`w-5 h-5 ${isDrawingBalde ? "animate-spin" : ""}`}
+                          />
+                        </button>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-white/20 p-6 text-center">
-                    <p className="pixel-text text-[8px] text-white/50">
-                      SEM LEITURA ARCANA
-                    </p>
-                  </div>
+
+                    <div className="draw-card-screen">
+                      <AnimatePresence mode="wait">
+                        {isDrawingBalde ? (
+                          <motion.div
+                            key="drawing-balde"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.1 }}
+                            className="flex flex-col items-center gap-4"
+                          >
+                            <div className="text-3xl md:text-4xl font-black text-purple-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                              {cyclingNameBalde}
+                            </div>
+                            <div className="flex gap-2">
+                              {[0, 1, 2].map((i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{
+                                    opacity: [0.3, 1, 0.3],
+                                    scale: [1, 1.2, 1],
+                                  }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 0.8,
+                                    delay: i * 0.2,
+                                  }}
+                                  className="w-2 h-2 bg-purple-500"
+                                />
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : baldeWinners.length > 0 ? (
+                          <motion.div
+                            key="winner-balde"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center"
+                          >
+                            <motion.div
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                              className="flex items-center justify-center gap-2 text-white mb-3"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                                O escolhido é
+                              </span>
+                            </motion.div>
+                            <div className="flex flex-col gap-2">
+                              {baldeWinners.map((winner, idx) => (
+                                <motion.div
+                                  key={winner}
+                                  initial={{ y: 20, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  transition={{
+                                    delay: 0.3 + idx * 0.1,
+                                    type: "spring",
+                                  }}
+                                  className="text-3xl md:text-4xl font-black text-purple-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                >
+                                  {winner}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="retro-empty-state w-full max-w-[240px]">
+                            <div className="retro-empty-icon">
+                              <PaintBucket className="h-7 w-7 text-white/20" />
+                            </div>
+                            <p className="pixel-text text-[8px] text-white/45">
+                              AGUARDANDO
+                              <br />
+                              SORTEIO
+                            </p>
+                          </div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </section>
+
+                  {/* Geral Section */}
+                  <section className="draw-card group">
+                    <div className="draw-card-header">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h2 className="draw-card-title">Geral</h2>
+                          <div className="draw-card-meta">EVENTO NEUTRO</div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="draw-card-progress w-44">
+                              <motion.div
+                                className="h-full bg-emerald-500"
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${((profiles.filter((n) => n.participates_in_geral).length - excludedIdsGeral.length) / profiles.filter((n) => n.participates_in_geral).length) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="pixel-text border-2 border-white bg-black px-2 py-1 text-[7px] text-white">
+                              {profiles.filter((n) => n.participates_in_geral)
+                                .length - excludedIdsGeral.length}
+                              /
+                              {
+                                profiles.filter((n) => n.participates_in_geral)
+                                  .length
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {excludedIdsGeral.length > 0 && (
+                          <button
+                            onClick={() => resetCycle("geral")}
+                            className="draw-card-reset"
+                            title="Resetar ciclo"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => drawWinner("geral")}
+                          disabled={isDrawingGeral || profiles.length === 0}
+                          className="draw-card-action disabled:rpg-button-disabled"
+                        >
+                          <Shuffle
+                            className={`w-5 h-5 ${isDrawingGeral ? "animate-spin" : ""}`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="draw-card-screen">
+                      <AnimatePresence mode="wait">
+                        {isDrawingGeral ? (
+                          <motion.div
+                            key="drawing-geral"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.1 }}
+                            className="flex flex-col items-center gap-4"
+                          >
+                            <div className="text-3xl md:text-4xl font-black text-emerald-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                              {cyclingNameGeral}
+                            </div>
+                            <div className="flex gap-2">
+                              {[0, 1, 2].map((i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{
+                                    opacity: [0.3, 1, 0.3],
+                                    scale: [1, 1.2, 1],
+                                  }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 0.8,
+                                    delay: i * 0.2,
+                                  }}
+                                  className="w-2 h-2 bg-emerald-500"
+                                />
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : geralWinners.length > 0 ? (
+                          <motion.div
+                            key="winner-geral"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center"
+                          >
+                            <motion.div
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                              className="flex items-center justify-center gap-2 text-white mb-3"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                                O escolhido é
+                              </span>
+                            </motion.div>
+                            <div className="flex flex-col gap-2">
+                              {geralWinners.map((winner, idx) => (
+                                <motion.div
+                                  key={winner}
+                                  initial={{ y: 20, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  transition={{
+                                    delay: 0.3 + idx * 0.1,
+                                    type: "spring",
+                                  }}
+                                  className="text-3xl md:text-4xl font-black text-emerald-500 tracking-tighter font-display drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+                                >
+                                  {winner}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="retro-empty-state w-full max-w-[240px]">
+                            <div className="retro-empty-icon">
+                              <Star className="h-7 w-7 text-white/20" />
+                            </div>
+                            <p className="pixel-text text-[8px] text-white/45">
+                              AGUARDANDO
+                              <br />
+                              SORTEIO
+                            </p>
+                          </div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </section>
+                </div>
+
+                {mageProfiles.length > 0 && (
+                  <section
+                    className={`glass-card p-5 ${
+                      mageInsights && selectedMageId ? "snes-arcane-glow" : ""
+                    }`}
+                  >
+                    <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
+                      <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+                        OLHAR ARCANO
+                      </h2>
+                      <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="pixel-text mb-2 block text-[8px] text-white/70">
+                        MAGO ATIVO:
+                      </label>
+                      <select
+                        className="snes-input pixel-text w-full text-[8px]"
+                        value={selectedMageId || ""}
+                        onChange={(e) => setSelectedMageId(e.target.value)}
+                      >
+                        {mageProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {mageInsights ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          {mageInsights.queues.map((queue) => (
+                            <div
+                              key={queue.key}
+                              className="border-2 border-white/20 bg-black/30 p-3"
+                            >
+                              <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+                                {queue.label}
+                              </div>
+                              <div className="mt-2 pixel-text text-[7px] text-white/65">
+                                FILA: {queue.excludedNames.length}
+                              </div>
+                              <div className="mt-2 min-h-9 space-y-1">
+                                {queue.excludedNames.length > 0 ? (
+                                  queue.excludedNames
+                                    .slice(0, 3)
+                                    .map((name) => (
+                                      <div
+                                        key={`${queue.key}-${name}`}
+                                        className="pixel-text truncate text-[7px] text-white"
+                                      >
+                                        {name}
+                                      </div>
+                                    ))
+                                ) : (
+                                  <div className="pixel-text text-[7px] text-white/40">
+                                    LIMPA
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="border-2 border-white/20 bg-black/30 p-3">
+                          <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
+                            LOG DETALHADO
+                          </div>
+                          <div className="space-y-2">
+                            {mageInsights.recentLogs
+                              .slice(0, 4)
+                              .map((entry) => (
+                                <div
+                                  key={entry.id}
+                                  className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
+                                >
+                                  <div className="pixel-text text-[7px] text-white">
+                                    {entry.profiles?.name || "SISTEMA"}
+                                  </div>
+                                  <div className="pixel-text mt-1 text-[7px] text-white/60">
+                                    {entry.message}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-white/20 p-6 text-center">
+                        <p className="pixel-text text-[8px] text-white/50">
+                          SEM LEITURA ARCANA
+                        </p>
+                      </div>
+                    )}
+                  </section>
                 )}
-              </section>
+              </>
+            ) : (
+              <>
+                {historySection}
+                {mageProfiles.length > 0 && (
+                  <section
+                    className={`glass-card p-5 ${
+                      mageInsights && selectedMageId ? "snes-arcane-glow" : ""
+                    }`}
+                  >
+                    <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
+                      <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+                        OLHAR ARCANO
+                      </h2>
+                      <Wand2 className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="pixel-text mb-2 block text-[8px] text-white/70">
+                        MAGO ATIVO:
+                      </label>
+                      <select
+                        className="snes-input pixel-text w-full text-[8px]"
+                        value={selectedMageId || ""}
+                        onChange={(e) => setSelectedMageId(e.target.value)}
+                      >
+                        {mageProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {mageInsights ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          {mageInsights.queues.map((queue) => (
+                            <div
+                              key={queue.key}
+                              className="border-2 border-white/20 bg-black/30 p-3"
+                            >
+                              <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+                                {queue.label}
+                              </div>
+                              <div className="mt-2 pixel-text text-[7px] text-white/65">
+                                FILA: {queue.excludedNames.length}
+                              </div>
+                              <div className="mt-2 min-h-9 space-y-1">
+                                {queue.excludedNames.length > 0 ? (
+                                  queue.excludedNames
+                                    .slice(0, 3)
+                                    .map((name) => (
+                                      <div
+                                        key={`${queue.key}-${name}`}
+                                        className="pixel-text truncate text-[7px] text-white"
+                                      >
+                                        {name}
+                                      </div>
+                                    ))
+                                ) : (
+                                  <div className="pixel-text text-[7px] text-white/40">
+                                    LIMPA
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="border-2 border-white/20 bg-black/30 p-3">
+                          <div className="pixel-text mb-3 text-[8px] text-[var(--color-snes-gold)]">
+                            LOG DETALHADO
+                          </div>
+                          <div className="space-y-2">
+                            {mageInsights.recentLogs
+                              .slice(0, 4)
+                              .map((entry) => (
+                                <div
+                                  key={entry.id}
+                                  className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
+                                >
+                                  <div className="pixel-text text-[7px] text-white">
+                                    {entry.profiles?.name || "SISTEMA"}
+                                  </div>
+                                  <div className="pixel-text mt-1 text-[7px] text-white/60">
+                                    {entry.message}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-white/20 p-6 text-center">
+                        <p className="pixel-text text-[8px] text-white/50">
+                          SEM LEITURA ARCANA
+                        </p>
+                      </div>
+                    )}
+                  </section>
+                )}
+              </>
             )}
           </div>
         </main>
