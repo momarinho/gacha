@@ -300,7 +300,8 @@ async function initDb() {
     const dbPath = path.join(__dirname, "..", "raffle.db");
     console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
     try {
-      const { default: Database } = await import("better-sqlite3");
+      const sqliteModuleName = "better-sqlite3";
+      const { default: Database } = await import(sqliteModuleName);
       db = new Database(dbPath);
       db.exec(`
         CREATE TABLE IF NOT EXISTS raffle_state (
