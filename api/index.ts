@@ -42,6 +42,10 @@ const PROFILE_CLASSES = [
   "clerigo",
 ] as const;
 
+function getXpRequiredForLevel(level: number) {
+  return 100 + Math.max(0, level - 1) * 25;
+}
+
 type ProfileClass = (typeof PROFILE_CLASSES)[number];
 
 type ActiveBuff = {
@@ -1384,8 +1388,8 @@ async function createExpressApp() {
         let newCoins = p.coins + coinsChange;
         let newLevel = p.level;
 
-        while (newXp >= newLevel * 100) {
-          newXp -= newLevel * 100;
+        while (newXp >= getXpRequiredForLevel(newLevel)) {
+          newXp -= getXpRequiredForLevel(newLevel);
           newLevel++;
           newHp = p.max_hp;
           logs.push({

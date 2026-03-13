@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { MageInsights, Profile } from "../../types";
+import { getXpRequiredForLevel } from "../../app/progression";
 
 type Category = "pao" | "agua" | "balde" | "geral";
 
@@ -134,6 +135,7 @@ export function ParticipantRosterSection({
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {profiles.map((person) => {
+                const xpRequired = getXpRequiredForLevel(person.level);
                 const customTitle = getCustomTitle(person);
                 const recentClassEffect =
                   recentClassEffectsByProfileId[person.id];
@@ -167,7 +169,7 @@ export function ParticipantRosterSection({
                       <div
                         className="h-full bg-blue-500"
                         style={{
-                          width: `${(person.xp / (person.level * 100)) * 100}%`,
+                          width: `${(person.xp / xpRequired) * 100}%`,
                         }}
                       />
                     </div>
@@ -384,7 +386,7 @@ export function ParticipantRosterSection({
                               XP
                             </span>
                             <span className="retro-label text-white">
-                              {person.xp}/{person.level * 100}
+                              {person.xp}/{xpRequired}
                             </span>
                           </div>
                           <div className="h-2 border border-white bg-black">
@@ -393,10 +395,7 @@ export function ParticipantRosterSection({
                               style={{
                                 width: `${Math.max(
                                   0,
-                                  Math.min(
-                                    100,
-                                    (person.xp / (person.level * 100)) * 100,
-                                  ),
+                                  Math.min(100, (person.xp / xpRequired) * 100),
                                 )}%`,
                               }}
                             />
