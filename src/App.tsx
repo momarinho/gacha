@@ -44,7 +44,9 @@ const RECENT_EFFECT_WINDOW_MS = 15 * 60 * 1000;
 const CUSTOM_TITLE_PREFIX = "custom:";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<"home" | "history">("home");
+  const [currentPage, setCurrentPage] = useState<
+    "home" | "history" | "settings" | "guide"
+  >("home");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [battleLogs, setBattleLogs] = useState<BattleLog[]>([]);
@@ -1068,7 +1070,7 @@ export default function App() {
   };
 
   const historySection = (
-    <section className="glass-card min-h-[320px] p-5 lg:p-6">
+    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
       <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
         <div className="flex items-center gap-3">
           <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -1095,7 +1097,7 @@ export default function App() {
         )}
       </div>
 
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
         <AnimatePresence mode="popLayout">
           {battleLogs.map((entry) => (
             <motion.div
@@ -1162,9 +1164,301 @@ export default function App() {
     </section>
   );
 
+  const settingsSection = (
+    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
+      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <Settings className="h-5 w-5 text-[var(--color-snes-gold)]" />
+          </div>
+          <div>
+            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+              CONFIGURAÇÕES
+            </h2>
+            <p className="pixel-text mt-2 text-[7px] text-white/55">
+              STATUS DO SISTEMA E CONTROLES RÁPIDOS
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            STATUS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+              <span className="pixel-text text-[7px] text-white/60">
+                Banco ativo
+              </span>
+              <span className="pixel-text text-[7px] text-white">
+                {dbProvider || "indefinido"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+              <span className="pixel-text text-[7px] text-white/60">
+                Sincronização
+              </span>
+              <span className="pixel-text text-[7px] text-white">
+                {isSyncing ? "sincronizando" : syncError ? "offline" : "ok"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+              <span className="pixel-text text-[7px] text-white/60">
+                Participantes
+              </span>
+              <span className="pixel-text text-[7px] text-white">
+                {profiles.length}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
+              <span className="pixel-text text-[7px] text-white/60">
+                Logs na tela
+              </span>
+              <span className="pixel-text text-[7px] text-white">
+                {battleLogs.length}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            AÇÕES
+          </h3>
+          <div className="mt-4 grid grid-cols-1 gap-3">
+            <button
+              type="button"
+              onClick={handleGeneralReset}
+              className="pixel-text border-2 border-white bg-red-900/80 px-4 py-3 text-[7px] text-white hover:bg-red-800"
+            >
+              RESETAR CICLOS VISUAIS
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem(STATE_KEY);
+                setPaoDeQueijoWinners([]);
+                setAguaWinners([]);
+                setBaldeWinners([]);
+                setGeralWinners([]);
+                setExcludedIdsPao([]);
+                setExcludedIdsAgua([]);
+                setExcludedIdsBalde([]);
+                setExcludedIdsGeral([]);
+                setAguaMode("muita");
+              }}
+              className="pixel-text border-2 border-white bg-slate-900 px-4 py-3 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+            >
+              LIMPAR ESTADO LOCAL
+            </button>
+            <button
+              type="button"
+              onClick={() => setBattleLogs([])}
+              className="pixel-text border-2 border-white bg-slate-900 px-4 py-3 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+            >
+              LIMPAR LOGS DA TELA
+            </button>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            NOTAS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Reset Geral limpa vencedores visuais e reinicia ciclos, sem
+              remover participantes.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Limpar estado local apaga apenas o cache visual salvo no
+              navegador.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Para limpar dados reais, perfis e histórico do banco, continue
+              usando SQL no Supabase.
+            </p>
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+
+  const guideSection = (
+    <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
+      <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="border-2 border-white bg-black/35 p-3 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <AlertCircle className="h-5 w-5 text-[var(--color-snes-gold)]" />
+          </div>
+          <div>
+            <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+              COMO JOGAR
+            </h2>
+            <p className="pixel-text mt-2 text-[7px] text-white/55">
+              GUIA RÁPIDO DO SISTEMA, CLASSES E LOJA
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-2">
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            VISÃO GERAL
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Cada participante acumula XP, nível, HP e SetorCoins conforme os
+              sorteios acontecem.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              O objetivo é evoluir a classe, sobreviver aos sorteios piores e
+              usar a loja para melhorar o desempenho diário.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              O HP também representa sanidade. Quando fica baixo demais, os
+              ganhos de moedas caem.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            PROGRESSÃO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Todo mundo começa como Novato.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              No nível 3, o jogador escolhe uma trilha de aprendiz.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              No nível 5, a classe final é liberada.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Novato recebe +10% XP enquanto aprende o sistema.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            CLASSES
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Guerreiro: reduz dano ruim e ganha XP passivo em todo sorteio.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Mago: recebe desconto na loja e acessa o Olhar Arcano.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Ladino: pode esquivar e ganha mais moedas quando escapa do
+              sorteio.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Clérigo: distribui moedas extras ao grupo e recupera melhor após
+              Pão.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            CATEGORIAS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Água: tarefa diária, segura, com ganho leve de XP e moedas.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Balde: desafio intermediário, dá mais XP e cobra HP.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Pão de Queijo: evento pesado; quem não é sorteado recebe alívio e
+              sorte temporária.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Geral: evento neutro com moedas base para os envolvidos.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            EXAUSTÃO E FEITOS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Quando o HP fica abaixo do limite de exaustão, o jogador recebe
+              menos moedas.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Os feitos aparecem conforme eventos reais do jogo, como vencer Pão
+              ou Balde.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              O título pessoal é separado dos feitos e pode ser definido pelo
+              próprio jogador.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            LOJA E ITENS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              Café Expresso: recupera 50% do HP instantaneamente.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Relatório Falso: tira o jogador do próximo Balde.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Imã de Moedas: aumenta ganhos por tempo limitado.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              Contrato de Terceirização: terceiriza a próxima Água se o jogador
+              for sorteado.
+            </p>
+          </div>
+        </section>
+
+        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            FLUXO RECOMENDADO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="pixel-text text-[7px] text-white/65">
+              1. Adicione os participantes.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              2. Deixe todos evoluírem como Novato até destravar a trilha.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              3. Faça os sorteios do dia e acompanhe HP, XP e moedas.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              4. Use a loja para recuperar HP ou alterar o meta.
+            </p>
+            <p className="pixel-text text-[7px] text-white/65">
+              5. Consulte Histórico e Olhar Arcano para acompanhar o estado do
+              setor.
+            </p>
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+
   return (
-    <div className="min-h-screen px-0.5 py-0.5 font-sans text-zinc-100 lg:px-2 lg:py-2">
-      <div className="app-shell mx-auto max-w-[1360px] overflow-hidden">
+    <div className="min-h-screen px-0 py-0 font-sans text-zinc-100 lg:px-1 lg:py-1">
+      <div className="app-shell mx-auto min-h-screen max-w-[1440px] overflow-hidden">
         {/* Header */}
         <header className="top-nav px-3 py-2.5 lg:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1223,13 +1517,14 @@ export default function App() {
                   </>
                 )}
               </div>
-              <div className="snes-window px-2.5 py-1">
+              {/*<div className="snes-window px-2.5 py-1">
                 <div className="pixel-text text-[8px] text-white">
                   LVL {highestLevel}
                 </div>
-              </div>
+              </div>*/}
               <button
                 type="button"
+                onClick={() => setCurrentPage("settings")}
                 className="p-1 text-[var(--color-snes-gold)] hover:rotate-90 transition-transform"
                 title="Configurações"
               >
@@ -1239,8 +1534,8 @@ export default function App() {
           </div>
         </header>
 
-        <main className="grid grid-cols-1 gap-3 px-2 py-3 lg:grid-cols-12 lg:px-3 lg:py-3 xl:px-4">
-          <div className="lg:col-span-3 space-y-4">
+        <main className="grid min-h-[calc(100vh-82px)] grid-cols-1 gap-3 px-2 py-3 lg:grid-cols-12 lg:px-3 lg:py-3 xl:px-4">
+          <div className="flex flex-col gap-4 lg:col-span-3">
             <section className="glass-card p-5">
               <h2 className="panel-title">MENU PRINCIPAL</h2>
               <ul className="space-y-2">
@@ -1268,9 +1563,33 @@ export default function App() {
                     Histórico
                   </button>
                 </li>
+                <li
+                  className={`menu-entry ${currentPage === "guide" ? "menu-entry-active" : ""}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("guide")}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <AlertCircle className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    Guia
+                  </button>
+                </li>
+                <li
+                  className={`menu-entry ${currentPage === "settings" ? "menu-entry-active" : ""}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("settings")}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <Settings className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    Config
+                  </button>
+                </li>
               </ul>
             </section>
-            <section className="glass-card p-5 h-fit">
+            <section className="glass-card flex min-h-[0] flex-1 flex-col p-5">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -1302,7 +1621,7 @@ export default function App() {
                 </button>
               </form>
 
-              <div className="space-y-3 max-h-[420px] lg:max-h-[62vh] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="custom-scrollbar min-h-[260px] flex-1 space-y-3 overflow-y-auto pr-1 lg:min-h-0">
                 <AnimatePresence mode="popLayout">
                   {profiles.map((person) =>
                     (() => {
@@ -1620,10 +1939,10 @@ export default function App() {
           </div>
 
           {/* Draw Sections */}
-          <div className="lg:col-span-9 space-y-4">
+          <div className="flex min-h-0 flex-col gap-4 lg:col-span-9">
             {currentPage === "home" ? (
               <>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 h-fit">
+                <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-2">
                   {/* Pão de Queijo Section */}
                   <section className="draw-card group">
                     <div className="draw-card-header">
@@ -2285,7 +2604,7 @@ export default function App() {
                   </section>
                 )}
               </>
-            ) : (
+            ) : currentPage === "history" ? (
               <>
                 {historySection}
                 {mageProfiles.length > 0 && (
@@ -2387,21 +2706,13 @@ export default function App() {
                   </section>
                 )}
               </>
+            ) : currentPage === "guide" ? (
+              guideSection
+            ) : (
+              settingsSection
             )}
           </div>
         </main>
-
-        <footer className="mt-8 border-t-4 border-slate-800 bg-slate-950 py-6 text-center">
-          <p className="pixel-text text-[7px] text-white/40">
-            © 1994-2026 DEVGACHA - RPG EDITION
-          </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <div className="h-4 w-4 bg-[var(--color-snes-gold)]" />
-            <div className="h-4 w-4 bg-red-600" />
-            <div className="h-4 w-4 bg-blue-600" />
-            <div className="h-4 w-4 bg-green-600" />
-          </div>
-        </footer>
       </div>
 
       {/* Class Selection Modal */}
