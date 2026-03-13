@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
@@ -13,6 +14,7 @@ const __dirname = path.dirname(__filename);
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const isSupabaseEnabled = !!(supabaseUrl && supabaseKey);
+const accessPassword = process.env.APP_ACCESS_PASSWORD?.trim() || "";
 
 let supabase: any = null;
 let db: any = null;
@@ -59,6 +61,30 @@ type ItemMetadata = {
     luck?: number;
   };
 };
+
+function getAccessCookieValue() {
+  if (!accessPassword) return "";
+  return createHash("sha256").update(accessPassword).digest("hex");
+}
+
+const accessCookieValue = getAccessCookieValue();
+
+function parseCookies(cookieHeader?: string) {
+  if (!cookieHeader) return {};
+
+  return cookieHeader.split(";").reduce<Record<string, string>>((acc, part) => {
+    const [rawKey, ...rawValue] = part.trim().split("=");
+    if (!rawKey) return acc;
+    acc[rawKey] = decodeURIComponent(rawValue.join("="));
+    return acc;
+  }, {});
+}
+
+function hasAccessCookie(req: express.Request) {
+  if (!accessPassword) return true;
+  const cookies = parseCookies(req.headers.cookie);
+  return cookies.devgacha_access === accessCookieValue;
+}
 
 function randomChance(chance: number) {
   const array = new Uint32Array(1);
@@ -317,6 +343,72 @@ async function createExpressApp() {
         .status(500)
         .json({ error: "Health check failed", details: String(err) });
     }
+  });
+
+  app.get("/api/access/status", (req, res) => {
+    const enabled = Boolean(accessPassword);
+    res.json({
+      enabled,
+      authenticated: enabled ? hasAccessCookie(req) : true,
+    });
+  });
+
+  app.post("/api/access/unlock", (req, res) => {
+    if (!accessPassword) {
+      return res.json({ success: true, authenticated: true, enabled: false });
+    }
+
+    const password =
+      typeof req.body?.password === "string" ? req.body.password.trim() : "";
+
+    if (!password || password !== accessPassword) {
+      return res.status(401).json({
+        success: false,
+        authenticated: false,
+        error: "Senha inválida",
+      });
+    }
+
+    res.setHeader(
+      "Set-Cookie",
+      [
+        `devgacha_access=${encodeURIComponent(accessCookieValue)}`,
+        "Path=/",
+        "HttpOnly",
+        "SameSite=Lax",
+        process.env.NODE_ENV === "production" ? "Secure" : "",
+        `Max-Age=${60 * 60 * 12}`,
+      ]
+        .filter(Boolean)
+        .join("; "),
+    );
+
+    return res.json({ success: true, authenticated: true, enabled: true });
+  });
+
+  app.post("/api/access/logout", (_req, res) => {
+    res.setHeader(
+      "Set-Cookie",
+      "devgacha_access=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
+    );
+    res.json({ success: true });
+  });
+
+  app.use("/api", (req, res, next) => {
+    if (
+      req.path === "/health" ||
+      req.path === "/access/status" ||
+      req.path === "/access/unlock" ||
+      req.path === "/access/logout"
+    ) {
+      return next();
+    }
+
+    if (!hasAccessCookie(req)) {
+      return res.status(401).json({ error: "Access denied" });
+    }
+
+    return next();
   });
 
   app.post("/api/shop/seed", async (req, res) => {

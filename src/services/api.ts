@@ -10,6 +10,34 @@ import {
 const API_BASE = "/api";
 
 export const api = {
+  getAccessStatus: async (): Promise<{
+    enabled: boolean;
+    authenticated: boolean;
+  }> => {
+    const res = await fetch(`${API_BASE}/access/status`);
+    if (!res.ok) throw new Error("Failed to fetch access status");
+    return res.json();
+  },
+  unlockAccess: async (
+    password: string,
+  ): Promise<{
+    success: boolean;
+    authenticated: boolean;
+    enabled: boolean;
+  }> => {
+    const res = await fetch(`${API_BASE}/access/unlock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) throw new Error("Invalid access password");
+    return res.json();
+  },
+  logoutAccess: async (): Promise<void> => {
+    const res = await fetch(`${API_BASE}/access/logout`, { method: "POST" });
+    if (!res.ok) throw new Error("Failed to logout access");
+  },
+
   // Profiles
   getProfiles: async (): Promise<Profile[]> => {
     const res = await fetch(`${API_BASE}/profiles`);

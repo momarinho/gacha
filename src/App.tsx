@@ -40,12 +40,18 @@ import { ClassSelectionModal } from "./components/app/ClassSelectionModal";
 import { ShopModal } from "./components/app/ShopModal";
 import { InventoryModal } from "./components/app/InventoryModal";
 import { DrawsPage } from "./components/app/DrawsPage";
+import { StartGate } from "./components/app/StartGate";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [battleLogs, setBattleLogs] = useState<BattleLog[]>([]);
+  const [accessReady, setAccessReady] = useState(false);
+  const [accessEnabled, setAccessEnabled] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   // Initialize other states from localStorage if available
   const getInitialState = (key: string, defaultValue: any) => {
@@ -130,7 +136,22 @@ export default function App() {
     setTitlesByProfileId(titles.titlesByProfileId);
   };
 
-  // Initial fetch from server
+  const unlockApp = async (password: string) => {
+    setIsUnlocking(true);
+    setAccessError(null);
+
+    try {
+      const result = await api.unlockAccess(password);
+      setAccessEnabled(result.enabled);
+      setHasAccess(result.authenticated);
+    } catch (error) {
+      console.error("Failed to unlock access:", error);
+      setAccessError("Senha incorreta. Tente novamente.");
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
   useEffect(() => {
     const fetchHealth = async () => {
       try {
@@ -147,6 +168,26 @@ export default function App() {
       }
     };
 
+    fetchHealth();
+
+    const fetchAccessStatus = async () => {
+      try {
+        const status = await api.getAccessStatus();
+        setAccessEnabled(status.enabled);
+        setHasAccess(status.authenticated);
+      } catch (error) {
+        console.error("Failed to fetch access status:", error);
+      } finally {
+        setAccessReady(true);
+      }
+    };
+
+    fetchAccessStatus();
+  }, []);
+
+  useEffect(() => {
+    if (!accessReady || !hasAccess) return;
+
     const fetchData = async () => {
       try {
         const [fetchedProfiles, fetchedShop, fetchedLogs, fetchedTitles] =
@@ -158,7 +199,6 @@ export default function App() {
           ]);
 
         setProfiles(fetchedProfiles);
-
         setShopItems(fetchedShop);
         setBattleLogs(fetchedLogs);
         setTitlesByProfileId(fetchedTitles.titlesByProfileId);
@@ -171,6 +211,10 @@ export default function App() {
       try {
         const response = await fetch("/api/state");
         if (response.status === 404) return;
+        if (response.status === 401) {
+          setHasAccess(false);
+          return;
+        }
         if (!response.ok) return;
 
         const data = await response.json();
@@ -191,13 +235,14 @@ export default function App() {
       }
     };
 
-    fetchHealth();
     fetchData();
     fetchState();
-  }, []);
+  }, [accessReady, hasAccess]);
 
   // Persist all other state to localStorage and Server
   useEffect(() => {
+    if (!accessReady || !hasAccess) return;
+
     const stateToSave = {
       paoDeQueijoWinners,
       aguaWinners,
@@ -235,6 +280,8 @@ export default function App() {
     const timeoutId = setTimeout(saveToServer, 1000);
     return () => clearTimeout(timeoutId);
   }, [
+    accessReady,
+    hasAccess,
     paoDeQueijoWinners,
     aguaWinners,
     baldeWinners,
@@ -812,6 +859,35 @@ export default function App() {
       ? profiles.find((profile) => profile.id === selectedInventoryProfileId) ||
         null
       : null;
+
+  if (!accessReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 py-8">
+        <div className="start-gate-shell w-full max-w-2xl">
+          <div className="start-gate-frame flex min-h-[360px] items-center justify-center">
+            <div className="text-center">
+              <p className="snes-ui-text text-[1.2rem] text-white/70">
+                VALIDANDO SISTEMA
+              </p>
+              <p className="pixel-text mt-6 text-[8px] text-[var(--color-snes-gold)]">
+                PREPARANDO O ACESSO AO SETOR...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessEnabled && !hasAccess) {
+    return (
+      <StartGate
+        isSubmitting={isUnlocking}
+        error={accessError}
+        onSubmit={unlockApp}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen px-0 py-0 font-sans text-zinc-100 lg:px-1 lg:py-1">
