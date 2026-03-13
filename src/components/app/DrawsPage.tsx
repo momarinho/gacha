@@ -33,7 +33,7 @@ function EmptyState({ icon }: { icon: ReactNode }) {
   return (
     <div className="retro-empty-state w-full max-w-[240px]">
       <div className="retro-empty-icon">{icon}</div>
-      <p className="pixel-text text-[8px] text-white/45">
+      <p className="retro-copy text-white/60">
         AGUARDANDO
         <br />
         SORTEIO
@@ -72,7 +72,7 @@ export function DrawsPage({
             <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
               MESA DE SORTEIOS
             </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
+            <p className="retro-copy-sm mt-2 text-white/75">
               EXECUTE O TURNO COM O GRUPO JÁ PREPARADO NA CENTRAL DE
               PARTICIPANTES
             </p>
@@ -80,7 +80,7 @@ export function DrawsPage({
           <button
             type="button"
             onClick={onBack}
-            className="pixel-text border-2 border-white bg-black px-4 py-2 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+            className="snes-ui-text border-2 border-white bg-black px-4 py-2 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
           >
             VOLTAR PARA PARTICIPANTES
           </button>
@@ -130,7 +130,7 @@ export function DrawsPage({
             <div className="flex gap-1.5">
               <button
                 onClick={() => onSetAguaMode("pouca")}
-                className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
+                className={`retro-label px-2 py-1 transition-none border-2 ${
                   aguaMode === "pouca"
                     ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                     : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"
@@ -140,7 +140,7 @@ export function DrawsPage({
               </button>
               <button
                 onClick={() => onSetAguaMode("muita")}
-                className={`text-[8px] px-2 py-1 font-black uppercase tracking-wider transition-none border-2 ${
+                className={`retro-label px-2 py-1 transition-none border-2 ${
                   aguaMode === "muita"
                     ? "bg-blue-600 text-white border-white shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                     : "bg-black text-zinc-500 border-zinc-800 hover:text-white hover:border-white"

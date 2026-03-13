@@ -761,7 +761,7 @@ async function createExpressApp() {
           class: "novato",
           level: 1,
           xp: 0,
-          coins: 0,
+          coins: 50,
           hp: 100,
           max_hp: 100,
           luck: 0,

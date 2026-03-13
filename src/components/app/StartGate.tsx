@@ -6,11 +6,7 @@ type StartGateProps = {
   onSubmit: (password: string) => Promise<void> | void;
 };
 
-export function StartGate({
-  isSubmitting,
-  error,
-  onSubmit,
-}: StartGateProps) {
+export function StartGate({ isSubmitting, error, onSubmit }: StartGateProps) {
   const [started, setStarted] = useState(false);
   const [password, setPassword] = useState("");
 
@@ -25,7 +21,7 @@ export function StartGate({
             <h1 className="pixel-text mt-6 text-[16px] text-[var(--color-snes-gold)] md:text-[22px]">
               PRESS START
             </h1>
-            <p className="pixel-text mt-6 text-[8px] leading-6 text-white/55">
+            <p className="retro-copy mt-6 text-white/75">
               ACESSO RESTRITO AO SETOR.
               <br />
               INSIRA A SENHA PARA CONTINUAR.

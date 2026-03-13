@@ -1,11 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import {
-  CheckCircle2,
-  Clock,
-  History,
-  ShoppingCart,
-  Star,
-} from "lucide-react";
+import { CheckCircle2, Clock, History, ShoppingCart, Star } from "lucide-react";
 
 import { BattleLog } from "../../types";
 
@@ -14,10 +8,7 @@ type HistorySectionProps = {
   onClear: () => void;
 };
 
-export function HistorySection({
-  battleLogs,
-  onClear,
-}: HistorySectionProps) {
+export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
   return (
     <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
       <div className="mb-6 flex items-center justify-between border-b-2 border-white/20 pb-4">
@@ -29,7 +20,7 @@ export function HistorySection({
             <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
               HISTÓRICO DE SORTEIOS
             </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
+            <p className="retro-copy-sm mt-2 text-white/75">
               REGISTROS DAS ÚLTIMAS ATIVIDADES
             </p>
           </div>
@@ -80,14 +71,14 @@ export function HistorySection({
                 ) && <History className="h-4 w-4" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="pixel-text mb-1 text-[8px] text-white">
+                <div className="retro-copy text-white">
                   {entry.profiles?.name || "SISTEMA"}
                 </div>
-                <div className="pixel-text text-[7px] text-white/60">
+                <div className="retro-copy-sm text-white/80">
                   {entry.message}
                 </div>
               </div>
-              <div className="pixel-text flex items-center gap-1 text-[7px] text-white/45">
+              <div className="retro-label flex items-center gap-1 text-white/65">
                 <Clock className="h-3 w-3" />
                 {new Date(entry.created_at).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -102,9 +93,7 @@ export function HistorySection({
             <div className="retro-empty-icon">
               <History className="h-7 w-7 text-white/25" />
             </div>
-            <p className="pixel-text text-[8px] text-white/35">
-              FIM DOS REGISTROS
-            </p>
+            <p className="retro-copy text-white/55">FIM DOS REGISTROS</p>
           </div>
         )}
       </div>

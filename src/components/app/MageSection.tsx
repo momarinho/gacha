@@ -31,11 +31,11 @@ export function MageSection({
       </div>
 
       <div className="mb-4">
-        <label className="pixel-text mb-2 block text-[8px] text-white/70">
+        <label className="retro-label mb-2 block text-white/80">
           MAGO ATIVO:
         </label>
         <select
-          className="snes-input pixel-text w-full text-[8px]"
+          className="snes-input retro-copy-sm w-full text-white"
           value={selectedMageId || ""}
           onChange={(e) => onSelectMage(e.target.value)}
         >
@@ -58,7 +58,7 @@ export function MageSection({
                 <div className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
                   {queue.label}
                 </div>
-                <div className="mt-2 pixel-text text-[7px] text-white/65">
+                <div className="retro-copy-sm mt-2 text-white/80">
                   FILA: {queue.excludedNames.length}
                 </div>
                 <div className="mt-2 min-h-9 space-y-1">
@@ -66,15 +66,13 @@ export function MageSection({
                     queue.excludedNames.slice(0, 3).map((name) => (
                       <div
                         key={`${queue.key}-${name}`}
-                        className="pixel-text truncate text-[7px] text-white"
+                        className="retro-copy-sm truncate text-white"
                       >
                         {name}
                       </div>
                     ))
                   ) : (
-                    <div className="pixel-text text-[7px] text-white/40">
-                      LIMPA
-                    </div>
+                    <div className="retro-copy-sm text-white/55">LIMPA</div>
                   )}
                 </div>
               </div>
@@ -91,10 +89,10 @@ export function MageSection({
                   key={entry.id}
                   className="border-l-2 border-[var(--color-snes-gold)] bg-white/5 px-2 py-2"
                 >
-                  <div className="pixel-text text-[7px] text-white">
+                  <div className="retro-copy text-white">
                     {entry.profiles?.name || "SISTEMA"}
                   </div>
-                  <div className="pixel-text mt-1 text-[7px] text-white/60">
+                  <div className="retro-copy-sm mt-1 text-white/80">
                     {entry.message}
                   </div>
                 </div>
@@ -104,9 +102,7 @@ export function MageSection({
         </div>
       ) : (
         <div className="border-2 border-dashed border-white/20 p-6 text-center">
-          <p className="pixel-text text-[8px] text-white/50">
-            SEM LEITURA ARCANA
-          </p>
+          <p className="retro-copy text-white/70">SEM LEITURA ARCANA</p>
         </div>
       )}
     </section>

@@ -32,7 +32,7 @@ export function SettingsSection({
             <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
               CONFIGURAÇÕES
             </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
+            <p className="retro-copy-sm mt-2 text-white/75">
               STATUS DO SISTEMA E CONTROLES RÁPIDOS
             </p>
           </div>
@@ -40,47 +40,35 @@ export function SettingsSection({
       </div>
 
       <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
-        <section className="border-2 border-white/30 bg-black/25 p-4">
+        <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             STATUS
           </h3>
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Banco ativo
-              </span>
-              <span className="pixel-text text-[7px] text-white">
+              <span className="retro-copy-sm text-white/75">Banco ativo</span>
+              <span className="retro-label text-white">
                 {dbProvider || "indefinido"}
               </span>
             </div>
             <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Sincronização
-              </span>
-              <span className="pixel-text text-[7px] text-white">
+              <span className="retro-copy-sm text-white/75">Sincronização</span>
+              <span className="retro-label text-white">
                 {isSyncing ? "sincronizando" : syncError ? "offline" : "ok"}
               </span>
             </div>
             <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Participantes
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {profilesCount}
-              </span>
+              <span className="retro-copy-sm text-white/75">Participantes</span>
+              <span className="retro-label text-white">{profilesCount}</span>
             </div>
             <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-              <span className="pixel-text text-[7px] text-white/60">
-                Logs na tela
-              </span>
-              <span className="pixel-text text-[7px] text-white">
-                {battleLogsCount}
-              </span>
+              <span className="retro-copy-sm text-white/75">Logs na tela</span>
+              <span className="retro-label text-white">{battleLogsCount}</span>
             </div>
           </div>
         </section>
 
-        <section className="border-2 border-white/30 bg-black/25 p-4">
+        <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             AÇÕES
           </h3>
@@ -109,20 +97,20 @@ export function SettingsSection({
           </div>
         </section>
 
-        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
+        <section className="retro-panel xl:col-span-2">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             NOTAS
           </h3>
           <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               Reset Geral limpa apenas vencedores visuais e o estado exibido dos
               sorteios, sem remover participantes.
             </p>
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               Limpar estado local apaga apenas o cache visual salvo no
               navegador.
             </p>
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               Para limpar dados reais, perfis e histórico do banco, continue
               usando SQL no Supabase.
             </p>

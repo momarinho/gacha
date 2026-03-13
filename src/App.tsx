@@ -869,7 +869,7 @@ export default function App() {
               <p className="snes-ui-text text-[1.2rem] text-white/70">
                 VALIDANDO SISTEMA
               </p>
-              <p className="pixel-text mt-6 text-[8px] text-[var(--color-snes-gold)]">
+              <p className="retro-copy text-[var(--color-snes-gold)]">
                 PREPARANDO O ACESSO AO SETOR...
               </p>
             </div>

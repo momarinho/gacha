@@ -77,7 +77,7 @@ export function ParticipantHomeSection({
             <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
               CENTRAL DE PARTICIPANTES
             </h2>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
+            <p className="retro-copy-sm mt-2 text-white/75">
               MONTE O GRUPO ANTES DE ABRIR OS SORTEIOS
             </p>
           </div>
@@ -93,21 +93,19 @@ export function ParticipantHomeSection({
       </div>
 
       <div className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
-        <section className="border-2 border-white/30 bg-black/25 p-4">
+        <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             RESUMO DO GRUPO
           </h3>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="border-2 border-white/15 bg-black/35 p-3">
-              <div className="pixel-text text-[6px] text-white/50">TOTAL</div>
+              <div className="retro-label text-white/70">TOTAL</div>
               <div className="pixel-text mt-2 text-[10px] text-white">
                 {profiles.length}
               </div>
             </div>
             <div className="border-2 border-white/15 bg-black/35 p-3">
-              <div className="pixel-text text-[6px] text-white/50">
-                NÍVEL MAIS ALTO
-              </div>
+              <div className="retro-label text-white/70">NÍVEL MAIS ALTO</div>
               <div className="pixel-text mt-2 text-[10px] text-white">
                 {highestLevel}
               </div>
@@ -115,7 +113,7 @@ export function ParticipantHomeSection({
           </div>
         </section>
 
-        <section className="border-2 border-white/30 bg-black/25 p-4">
+        <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             PARTICIPAÇÃO
           </h3>
@@ -130,10 +128,8 @@ export function ParticipantHomeSection({
                 key={key}
                 className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3"
               >
-                <span className="pixel-text text-[7px] text-white/70">
-                  {label}
-                </span>
-                <span className="pixel-text text-[7px] text-white">
+                <span className="retro-copy-sm text-white/80">{label}</span>
+                <span className="retro-label text-white">
                   {getParticipationCount(
                     key as "pao" | "agua" | "balde" | "geral",
                   )}
@@ -144,19 +140,19 @@ export function ParticipantHomeSection({
           </div>
         </section>
 
-        <section className="border-2 border-white/30 bg-black/25 p-4 xl:col-span-2">
+        <section className="retro-panel xl:col-span-2">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             NOVO FLUXO
           </h3>
           <div className="mt-4 space-y-3">
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               1. Cadastre os participantes e ajuste quem participa de cada
               categoria.
             </p>
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               2. Abra a página Sorteios para executar o turno do setor.
             </p>
-            <p className="pixel-text text-[7px] text-white/65">
+            <p className="retro-copy-sm text-white/85">
               3. Os sorteios agora usam participação contínua. Não existe mais
               exclusão por ciclo no fluxo padrão.
             </p>
@@ -190,7 +186,7 @@ export function ParticipantHomeSection({
             <div className="retro-empty-icon">
               <User className="h-7 w-7 text-white/25" />
             </div>
-            <p className="pixel-text text-[8px] text-white/50">
+            <p className="retro-copy text-white/70">
               O SETOR AINDA ESTÁ VAZIO.
               <br />
               CADASTRE O GRUPO PARA LIBERAR OS SORTEIOS.

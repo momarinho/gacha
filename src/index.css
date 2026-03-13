@@ -347,9 +347,38 @@
         line-height: 1.55;
     }
 
+    .pixel-text-soft {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        line-height: 1.45;
+        text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+    }
+
     .snes-ui-text {
         font-family: var(--font-ui-retro);
         font-size: 1.1rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .retro-copy {
+        font-family: var(--font-ui-retro);
+        font-size: 1.35rem;
+        line-height: 1.15;
+        letter-spacing: 0.03em;
+    }
+
+    .retro-copy-sm {
+        font-family: var(--font-ui-retro);
+        font-size: 1.15rem;
+        line-height: 1.12;
+        letter-spacing: 0.03em;
+    }
+
+    .retro-label {
+        font-family: var(--font-ui-retro);
+        font-size: 1rem;
         line-height: 1;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -388,6 +417,10 @@
 
     .snes-card-hover {
         @apply hover:bg-white/10 hover:border-[var(--color-snes-gold)] transition-none;
+    }
+
+    .retro-panel {
+        @apply border-2 border-white/30 bg-black/25 p-4;
     }
 
     .snes-arcane-glow {

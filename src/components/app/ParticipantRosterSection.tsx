@@ -85,7 +85,7 @@ export function ParticipantRosterSection({
             <h3 className="pixel-text text-[9px] text-[var(--color-snes-gold)]">
               ELENCO DO SETOR
             </h3>
-            <p className="pixel-text mt-2 text-[7px] text-white/55">
+            <p className="retro-copy-sm mt-2 text-white/75">
               AJUSTE O GRUPO, OS PAPÉIS E A PARTICIPAÇÃO DE CADA UM
             </p>
           </div>
@@ -109,7 +109,7 @@ export function ParticipantRosterSection({
         className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]"
       >
         <div>
-          <label className="pixel-text mb-2 block text-[8px] text-white/70">
+          <label className="retro-label mb-2 block text-white/80">
             NOVO MEMBRO:
           </label>
           <input
@@ -117,7 +117,7 @@ export function ParticipantRosterSection({
             value={newName}
             onChange={(e) => onNewNameChange(e.target.value)}
             placeholder="NOME..."
-            className="snes-input pixel-text w-full text-[9px] placeholder:text-white/35"
+            className="snes-input retro-copy w-full placeholder:text-white/45"
           />
         </div>
         <button
@@ -168,14 +168,6 @@ export function ParticipantRosterSection({
                         className="h-full bg-blue-500"
                         style={{
                           width: `${(person.xp / (person.level * 100)) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="absolute bottom-0 left-0 h-1.5 w-full border-t-2 border-white bg-black">
-                      <div
-                        className="h-full bg-red-600"
-                        style={{
-                          width: `${(person.hp / person.max_hp) * 100}%`,
                         }}
                       />
                     </div>
@@ -272,7 +264,7 @@ export function ParticipantRosterSection({
 
                       <div className="grid grid-cols-[1fr_auto] gap-2">
                         <div className="space-y-1">
-                          <div className="pixel-text truncate text-[6px] text-white/60">
+                          <div className="retro-copy-sm truncate text-white/80">
                             {customTitle || getClassPowerText(person.class)}
                           </div>
                           {(person.passive_coin_multiplier > 1 ||
@@ -280,19 +272,19 @@ export function ParticipantRosterSection({
                             person.luck > 0) && (
                             <div className="flex flex-wrap gap-1">
                               {person.passive_coin_multiplier > 1 && (
-                                <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-[6px] text-yellow-200">
+                                <span className="retro-label border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-yellow-200">
                                   Eco x
                                   {person.passive_coin_multiplier.toFixed(2)}
                                 </span>
                               )}
                               {person.temporary_coin_multiplier > 1 && (
-                                <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-[6px] text-cyan-200">
+                                <span className="retro-label border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-cyan-200">
                                   Boost x
                                   {person.temporary_coin_multiplier.toFixed(2)}
                                 </span>
                               )}
                               {person.luck > 0 && (
-                                <span className="pixel-text border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-[6px] text-blue-200">
+                                <span className="retro-label border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-blue-200">
                                   Sorte +{person.luck.toFixed(2)}
                                 </span>
                               )}
@@ -356,6 +348,62 @@ export function ParticipantRosterSection({
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+                        <div className="border border-white/20 bg-black/35 px-2 py-1.5">
+                          <div className="mb-1 flex items-center justify-between">
+                            <span className="retro-label text-red-200">HP</span>
+                            <span className="retro-label text-white">
+                              {person.hp}/{person.max_hp}
+                            </span>
+                          </div>
+                          <div className="h-2 border border-white bg-black">
+                            <div
+                              className={`h-full ${
+                                exhaustionState.tone === "critical"
+                                  ? "bg-red-500"
+                                  : exhaustionState.tone === "warning"
+                                    ? "bg-yellow-400"
+                                    : "bg-emerald-500"
+                              }`}
+                              style={{
+                                width: `${Math.max(
+                                  0,
+                                  Math.min(
+                                    100,
+                                    (person.hp / person.max_hp) * 100,
+                                  ),
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="border border-white/20 bg-black/35 px-2 py-1.5">
+                          <div className="mb-1 flex items-center justify-between">
+                            <span className="retro-label text-blue-200">
+                              XP
+                            </span>
+                            <span className="retro-label text-white">
+                              {person.xp}/{person.level * 100}
+                            </span>
+                          </div>
+                          <div className="h-2 border border-white bg-black">
+                            <div
+                              className="h-full bg-blue-500"
+                              style={{
+                                width: `${Math.max(
+                                  0,
+                                  Math.min(
+                                    100,
+                                    (person.xp / (person.level * 100)) * 100,
+                                  ),
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       {!customTitle && (
                         <div className="flex gap-1.5">
                           <input
@@ -366,7 +414,7 @@ export function ParticipantRosterSection({
                             }
                             maxLength={40}
                             placeholder="Titulo pessoal..."
-                            className="snes-input pixel-text h-7 flex-1 px-2 py-1 text-[6px] placeholder:text-white/30"
+                            className="snes-input retro-copy-sm h-8 flex-1 px-2 py-1 placeholder:text-white/45"
                           />
                           <button
                             type="button"
@@ -380,13 +428,13 @@ export function ParticipantRosterSection({
 
                       {achievementTitles.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="pixel-text text-[6px] text-white/45">
+                          <span className="retro-label text-white/60">
                             FEITOS
                           </span>
                           {achievementTitles.map((title) => (
                             <span
                               key={`${person.id}-${title}`}
-                              className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[6px] text-[var(--color-snes-gold)]/90"
+                              className="retro-label border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[var(--color-snes-gold)]/90"
                             >
                               {title}
                             </span>
@@ -395,7 +443,7 @@ export function ParticipantRosterSection({
                       )}
 
                       {recentClassEffect && (
-                        <div className="pixel-text text-[6px] text-white/70">
+                        <div className="retro-copy-sm text-white/80">
                           {recentClassEffect.detail}
                         </div>
                       )}
@@ -417,7 +465,7 @@ export function ParticipantRosterSection({
             <div className="retro-empty-icon">
               <User className="h-7 w-7 text-white/25" />
             </div>
-            <p className="pixel-text text-[8px] text-white/50">
+            <p className="retro-copy text-white/70">
               EQUIPE VAZIA.
               <br />
               ADICIONE NOMES PARA LUTAR!
