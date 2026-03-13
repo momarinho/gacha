@@ -1026,7 +1026,7 @@ export default function App() {
             onClick={async () => {
               setBattleLogs([]);
             }}
-            className="pixel-text border-2 border-white bg-black/35 px-3 py-2 text-[8px] text-white/70 hover:border-[var(--color-snes-gold)] hover:text-white"
+            className="snes-ui-text border-2 border-white bg-black/35 px-3 py-2 text-white/70 hover:border-[var(--color-snes-gold)] hover:text-white"
           >
             Limpar
           </button>
@@ -1167,7 +1167,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleGeneralReset}
-              className="pixel-text border-2 border-white bg-red-900/80 px-4 py-3 text-[7px] text-white hover:bg-red-800"
+              className="snes-ui-text border-2 border-white bg-red-900/80 px-4 py-3 text-white hover:bg-red-800"
             >
               LIMPAR SORTEIOS DA TELA
             </button>
@@ -1185,14 +1185,14 @@ export default function App() {
                 setExcludedIdsGeral([]);
                 setAguaMode("muita");
               }}
-              className="pixel-text border-2 border-white bg-slate-900 px-4 py-3 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+              className="snes-ui-text border-2 border-white bg-slate-900 px-4 py-3 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
             >
               LIMPAR ESTADO LOCAL
             </button>
             <button
               type="button"
               onClick={() => setBattleLogs([])}
-              className="pixel-text border-2 border-white bg-slate-900 px-4 py-3 text-[7px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+              className="snes-ui-text border-2 border-white bg-slate-900 px-4 py-3 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
             >
               LIMPAR LOGS DA TELA
             </button>
@@ -1475,7 +1475,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setCurrentPage("draws")}
-            className="pixel-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-[7px] text-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="snes-ui-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-black hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={profiles.length === 0}
           >
             ABRIR SORTEIOS
@@ -1501,7 +1501,7 @@ export default function App() {
         </div>
         <button
           type="submit"
-          className="pixel-text mt-[22px] flex h-10 items-center justify-center gap-2 border-2 border-white bg-[var(--color-snes-gold)] px-4 text-[8px] text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
+          className="snes-ui-text mt-[22px] flex h-10 items-center justify-center gap-2 border-2 border-white bg-[var(--color-snes-gold)] px-4 text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
         >
           <UserPlus className="h-4 w-4" />
           ADICIONAR
@@ -1759,7 +1759,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => saveCustomTitle(person)}
-                            className="pixel-text border-2 border-white bg-black px-2 text-[6px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+                            className="snes-ui-text border-2 border-white bg-black px-2 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
                           >
                             SALVAR
                           </button>
@@ -1812,7 +1812,7 @@ export default function App() {
             </p>
             <button
               type="button"
-              className="pixel-text border-2 border-white bg-slate-700 px-3 py-2 text-[8px] text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
+              className="snes-ui-text border-2 border-white bg-slate-700 px-3 py-2 text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
             >
               Importar Lista
             </button>
@@ -1841,7 +1841,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setCurrentPage("draws")}
-          className="pixel-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-[7px] text-black hover:bg-white"
+          className="snes-ui-text border-2 border-white bg-[var(--color-snes-gold)] px-4 py-2 text-black hover:bg-white"
           disabled={profiles.length === 0}
         >
           ABRIR SORTEIOS
@@ -1920,6 +1920,26 @@ export default function App() {
         </section>
 
         {participantRosterSection}
+
+        {profiles.length === 0 && (
+          <section className="retro-empty-state xl:col-span-2">
+            <div className="retro-empty-icon">
+              <User className="h-7 w-7 text-white/25" />
+            </div>
+            <p className="pixel-text text-[8px] text-white/50">
+              O SETOR AINDA ESTÁ VAZIO.
+              <br />
+              CADASTRE O GRUPO PARA LIBERAR OS SORTEIOS.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentPage("guide")}
+              className="snes-ui-text border-2 border-white bg-black px-3 py-2 text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+            >
+              ABRIR GUIA
+            </button>
+          </section>
+        )}
       </div>
     </section>
   );
@@ -2099,7 +2119,7 @@ export default function App() {
         </header>
 
         <main className="grid min-h-[calc(100vh-82px)] grid-cols-1 gap-3 px-2 py-3 lg:grid-cols-12 lg:px-3 lg:py-3 xl:px-4">
-          <div className="flex flex-col gap-4 lg:col-span-2">
+          <div className="flex flex-col gap-4 lg:col-span-3">
             <section className="glass-card p-5">
               <h2 className="panel-title">MENU PRINCIPAL</h2>
               <ul className="space-y-2">
@@ -2113,6 +2133,18 @@ export default function App() {
                   >
                     <User className="h-4 w-4 text-[var(--color-snes-gold)]" />
                     Participantes
+                  </button>
+                </li>
+                <li
+                  className={`menu-entry ${currentPage === "draws" ? "menu-entry-active" : ""}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("draws")}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <Shuffle className="h-4 w-4 text-[var(--color-snes-gold)]" />
+                    Sorteios
                   </button>
                 </li>
                 <li
@@ -2153,39 +2185,358 @@ export default function App() {
                 </li>
               </ul>
             </section>
-            <section className="glass-card p-5">
-              <h2 className="panel-title">STATUS</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-                  <span className="pixel-text text-[7px] text-white/60">
-                    Participantes
-                  </span>
-                  <span className="pixel-text text-[7px] text-white">
-                    {profiles.length}
-                  </span>
+            <section className="glass-card flex min-h-[0] flex-1 flex-col p-5">
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="border-2 border-white bg-black/35 p-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                    <User className="w-5 h-5 text-[var(--color-snes-gold)]" />
+                  </div>
+                  <h2 className="pixel-text text-[10px] text-[var(--color-snes-gold)]">
+                    PARTICIPANTES
+                  </h2>
                 </div>
-                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-                  <span className="pixel-text text-[7px] text-white/60">
-                    Nível mais alto
-                  </span>
-                  <span className="pixel-text text-[7px] text-white">
-                    {highestLevel}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-2 border-white/15 bg-black/35 px-3 py-3">
-                  <span className="pixel-text text-[7px] text-white/60">
-                    Logs
-                  </span>
-                  <span className="pixel-text text-[7px] text-white">
-                    {battleLogs.length}
-                  </span>
-                </div>
+                <span className="snes-chip">{profiles.length} TOTAL</span>
+              </div>
+
+              <form onSubmit={addName} className="relative mb-6 group">
+                <label className="pixel-text mb-2 block text-[8px] text-white/70">
+                  NOVO MEMBRO:
+                </label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="NOME..."
+                  className="snes-input pixel-text w-full pr-14 text-[9px] placeholder:text-white/35"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-[30px] flex h-9 w-9 items-center justify-center border-2 border-white bg-[var(--color-snes-gold)] text-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-white active:translate-y-1 active:shadow-none"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
+              </form>
+
+              <div className="custom-scrollbar min-h-[260px] flex-1 space-y-3 overflow-y-auto pr-1 lg:min-h-0">
+                <AnimatePresence mode="popLayout">
+                  {profiles.map((person) =>
+                    (() => {
+                      const exhaustionState = getExhaustionState(person);
+                      const recentClassEffect =
+                        recentClassEffectsByProfileId[person.id];
+                      const achievementTitles =
+                        titlesByProfileId[person.id] || [];
+                      const customTitle = getCustomTitle(person);
+                      const isArcaneFocus =
+                        selectedMageId === person.id &&
+                        ["mago", "aprendiz_mago"].includes(person.class) &&
+                        Boolean(mageInsights);
+                      return (
+                        <motion.div
+                          key={person.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className={`relative overflow-hidden border-2 bg-black/35 p-2.5 transition-none group snes-card-hover ${
+                            exhaustionState.tone === "critical"
+                              ? "border-red-400 shadow-[0_0_18px_rgba(239,68,68,0.35)]"
+                              : exhaustionState.tone === "warning"
+                                ? "border-yellow-300 shadow-[0_0_14px_rgba(250,204,21,0.28)]"
+                                : "border-white"
+                          } ${recentClassEffect?.cardClassName || ""} ${
+                            isArcaneFocus
+                              ? "snes-arcane-glow border-blue-300 shadow-[0_0_18px_rgba(96,165,250,0.24)]"
+                              : ""
+                          }`}
+                        >
+                          <div className="absolute left-0 top-0 h-1 w-full border-b-2 border-white bg-black">
+                            <div
+                              className="h-full bg-blue-500"
+                              style={{
+                                width: `${(person.xp / (person.level * 100)) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          <div className="absolute bottom-0 left-0 h-1.5 w-full border-t-2 border-white bg-black">
+                            <div
+                              className="h-full bg-red-600"
+                              style={{
+                                width: `${(person.hp / person.max_hp) * 100}%`,
+                              }}
+                            />
+                          </div>
+
+                          <div className="mt-1.5 flex flex-col gap-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedProfileId(person.id);
+                                      setClassModalOpen(true);
+                                    }}
+                                    className="flex h-6 w-6 shrink-0 items-center justify-center border-2 border-white bg-black/60 text-zinc-300 hover:bg-white hover:text-black transition-none"
+                                    title="Mudar Classe"
+                                  >
+                                    {person.class === "guerreiro" && (
+                                      <Shield className="w-3 h-3 text-red-400" />
+                                    )}
+                                    {person.class === "aprendiz_guerreiro" && (
+                                      <Shield className="w-3 h-3 text-red-300" />
+                                    )}
+                                    {person.class === "mago" && (
+                                      <Wand2 className="w-3 h-3 text-blue-400" />
+                                    )}
+                                    {person.class === "aprendiz_mago" && (
+                                      <Wand2 className="w-3 h-3 text-blue-300" />
+                                    )}
+                                    {person.class === "ladino" && (
+                                      <Crosshair className="w-3 h-3 text-emerald-400" />
+                                    )}
+                                    {person.class === "aprendiz_ladino" && (
+                                      <Crosshair className="w-3 h-3 text-emerald-300" />
+                                    )}
+                                    {person.class === "clerigo" && (
+                                      <Heart className="w-3 h-3 text-pink-400" />
+                                    )}
+                                    {person.class === "aprendiz_clerigo" && (
+                                      <Heart className="w-3 h-3 text-pink-300" />
+                                    )}
+                                    {person.class === "novato" && (
+                                      <User className="w-3 h-3 text-zinc-400" />
+                                    )}
+                                  </button>
+                                  <div className="min-w-0">
+                                    <div className="truncate text-[13px] font-semibold tracking-tight text-white">
+                                      {person.name}
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      <span className="snes-chip">
+                                        LV.{person.level}
+                                      </span>
+                                      <span
+                                        className={`pixel-text px-1.5 py-0.5 text-[6px] border ${
+                                          exhaustionState.tone === "critical"
+                                            ? "border-red-300 bg-red-950/70 text-red-200"
+                                            : exhaustionState.tone === "warning"
+                                              ? "border-yellow-300 bg-yellow-950/50 text-yellow-200"
+                                              : "border-emerald-300/40 bg-emerald-950/30 text-emerald-200/80"
+                                        }`}
+                                      >
+                                        {exhaustionState.label}
+                                      </span>
+                                      {recentClassEffect && (
+                                        <span
+                                          className={`pixel-text px-1.5 py-0.5 text-[6px] border ${recentClassEffect.badgeClassName}`}
+                                        >
+                                          {recentClassEffect.label}
+                                        </span>
+                                      )}
+                                      {isArcaneFocus && (
+                                        <span className="pixel-text border border-blue-300 bg-blue-950/55 px-1.5 py-0.5 text-[6px] text-blue-200">
+                                          Arcano
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-1">
+                                <div className="flex items-center gap-1 border-2 border-[var(--color-snes-gold)] bg-black px-2 py-1 text-[var(--color-snes-gold)]">
+                                  <Coins className="w-3 h-3" />
+                                  <span className="pixel-text text-[7px]">
+                                    {person.coins}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setSelectedInventoryProfileId(person.id);
+                                    setInventoryModalOpen(true);
+                                  }}
+                                  className="border-2 border-white bg-black p-1 text-zinc-300 hover:bg-white hover:text-black transition-none"
+                                  title="Inventário"
+                                >
+                                  <Package className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                              <div className="space-y-1">
+                                <div className="pixel-text truncate text-[6px] text-white/60">
+                                  {customTitle ||
+                                    getClassPowerText(person.class)}
+                                </div>
+                                {(person.passive_coin_multiplier > 1 ||
+                                  person.temporary_coin_multiplier > 1 ||
+                                  person.luck > 0) && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {person.passive_coin_multiplier > 1 && (
+                                      <span className="pixel-text border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-[6px] text-yellow-200">
+                                        Eco x
+                                        {person.passive_coin_multiplier.toFixed(
+                                          2,
+                                        )}
+                                      </span>
+                                    )}
+                                    {person.temporary_coin_multiplier > 1 && (
+                                      <span className="pixel-text border border-cyan-300 bg-cyan-950/45 px-1.5 py-0.5 text-[6px] text-cyan-200">
+                                        Boost x
+                                        {person.temporary_coin_multiplier.toFixed(
+                                          2,
+                                        )}
+                                      </span>
+                                    )}
+                                    {person.luck > 0 && (
+                                      <span className="pixel-text border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-[6px] text-blue-200">
+                                        Sorte +{person.luck.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-1">
+                                <button
+                                  onClick={() =>
+                                    toggleParticipation(person.id, "pao")
+                                  }
+                                  className={`p-1 transition-none border-2 ${
+                                    person.participates_in_pao
+                                      ? "bg-orange-600 text-white border-white"
+                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                                  }`}
+                                  title="Participar do Pão de Queijo"
+                                >
+                                  <Coffee className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    toggleParticipation(person.id, "agua")
+                                  }
+                                  className={`p-1 transition-none border-2 ${
+                                    person.participates_in_agua
+                                      ? "bg-blue-600 text-white border-white"
+                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                                  }`}
+                                  title="Participar da Água"
+                                >
+                                  <Droplets className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    toggleParticipation(person.id, "balde")
+                                  }
+                                  className={`p-1 transition-none border-2 ${
+                                    person.participates_in_balde
+                                      ? "bg-purple-600 text-white border-white"
+                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                                  }`}
+                                  title="Participar do Balde"
+                                >
+                                  <PaintBucket className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    toggleParticipation(person.id, "geral")
+                                  }
+                                  className={`p-1 transition-none border-2 ${
+                                    person.participates_in_geral
+                                      ? "bg-emerald-600 text-white border-white"
+                                      : "bg-black text-zinc-700 border-zinc-700 hover:border-white hover:text-white"
+                                  }`}
+                                  title="Participar do Geral"
+                                >
+                                  <Star className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {!customTitle && (
+                              <div className="flex gap-1.5">
+                                <input
+                                  type="text"
+                                  value={titleDrafts[person.id] || ""}
+                                  onChange={(e) =>
+                                    setTitleDrafts((currentDrafts) => ({
+                                      ...currentDrafts,
+                                      [person.id]: e.target.value,
+                                    }))
+                                  }
+                                  maxLength={40}
+                                  placeholder="Titulo pessoal..."
+                                  className="snes-input pixel-text h-7 flex-1 px-2 py-1 text-[6px] placeholder:text-white/30"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => saveCustomTitle(person)}
+                                  className="pixel-text border-2 border-white bg-black px-2 text-[6px] text-white hover:border-[var(--color-snes-gold)] hover:text-[var(--color-snes-gold)]"
+                                >
+                                  SALVAR
+                                </button>
+                              </div>
+                            )}
+
+                            {achievementTitles.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1">
+                                <span className="pixel-text text-[6px] text-white/45">
+                                  FEITOS
+                                </span>
+                                {achievementTitles.map((title) => (
+                                  <span
+                                    key={`${person.id}-${title}`}
+                                    className="pixel-text border border-[var(--color-snes-gold)]/70 bg-black/45 px-1.5 py-0.5 text-[6px] text-[var(--color-snes-gold)]/90"
+                                  >
+                                    {title}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {recentClassEffect && (
+                              <div className="pixel-text text-[6px] text-white/70">
+                                {recentClassEffect.detail}
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => removeName(person.id)}
+                            className="absolute bottom-1.5 left-2 border-2 border-transparent p-1 text-zinc-500 opacity-0 transition-none group-hover:opacity-100 hover:border-red-500 hover:bg-black hover:text-red-400"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </motion.div>
+                      );
+                    })(),
+                  )}
+                </AnimatePresence>
+                {profiles.length === 0 && (
+                  <div className="retro-empty-state">
+                    <div className="retro-empty-icon">
+                      <User className="h-7 w-7 text-white/25" />
+                    </div>
+                    <p className="pixel-text text-[8px] text-white/50">
+                      EQUIPE VAZIA.
+                      <br />
+                      ADICIONE NOMES PARA LUTAR!
+                    </p>
+                    <button
+                      type="button"
+                      className="pixel-text border-2 border-white bg-slate-700 px-3 py-2 text-[8px] text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-slate-600"
+                    >
+                      Importar Lista
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
           </div>
 
           {/* Main Content */}
-          <div className="flex min-h-0 flex-col gap-4 lg:col-span-10">
+          <div className="flex min-h-0 flex-col gap-4 lg:col-span-9">
             {currentPage === "home" ? (
               participantHomeSection
             ) : currentPage === "draws" ? (

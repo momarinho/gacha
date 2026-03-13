@@ -4,6 +4,7 @@
 @theme {
     --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Press Start 2P", ui-monospace, SFMono-Regular, monospace;
+    --font-ui-retro: "VT323", ui-monospace, SFMono-Regular, monospace;
     --color-snes-gold: #f4c025;
     --color-snes-blue-top: #0000aa;
     --color-snes-blue-bottom: #000055;
@@ -125,9 +126,11 @@
 
     .top-nav-button {
         @apply flex items-center gap-2 border-2 border-white px-3 py-2 text-[8px] text-white shadow-[3px_3px_0px_rgba(0,0,0,0.85)] transition-none;
-        font-family: var(--font-display);
+        font-family: var(--font-ui-retro);
+        font-size: 1.15rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
     }
 
     .top-nav-button-neutral {
@@ -156,9 +159,11 @@
 
     .menu-entry {
         @apply flex items-center gap-3 border-2 border-transparent px-3 py-3 text-[8px] text-white/80 transition-none;
-        font-family: var(--font-display);
+        font-family: var(--font-ui-retro);
+        font-size: 1.2rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
         background: transparent;
     }
 
@@ -279,22 +284,34 @@
         line-height: 1.55;
     }
 
+    .snes-ui-text {
+        font-family: var(--font-ui-retro);
+        font-size: 1.1rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
     .snes-input {
         @apply bg-[#010114] border-2 border-slate-500 px-3 py-3 text-white outline-none focus:border-[var(--color-snes-gold)] transition-none;
     }
 
     .snes-chip {
         @apply text-[8px] px-2 py-1 border-2 border-white bg-[#02020d] text-white;
-        font-family: var(--font-display);
+        font-family: var(--font-ui-retro);
+        font-size: 1.1rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
     }
 
     .snes-muted-chip {
         @apply text-[8px] px-2 py-1 border-2 border-white/40 bg-black/30 text-white/65;
-        font-family: var(--font-display);
+        font-family: var(--font-ui-retro);
+        font-size: 1.1rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
     }
 
     .snes-progress {
