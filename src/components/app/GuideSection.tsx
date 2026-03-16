@@ -134,7 +134,11 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Tarefa diária, segura, com ganho leve de XP e moedas.
+                Tarefa diária com risco baixo: dá XP e moedas, mas cobra um
+                pouco de HP de quem for sorteado.
+              </p>
+              <p className="retro-copy-sm mt-2 text-blue-200/90">
+                Perda base: 8 HP no sorteado.
               </p>
             </div>
             <div className="border-2 border-purple-400/40 bg-black/30 p-3">
@@ -144,13 +148,20 @@ export function GuideSection() {
               <p className="retro-copy-sm mt-2 text-white/85">
                 Desafio intermediário, dá mais XP e cobra HP.
               </p>
+              <p className="retro-copy-sm mt-2 text-purple-200/90">
+                Perda base: 18 HP no sorteado.
+              </p>
             </div>
             <div className="border-2 border-orange-400/40 bg-black/30 p-3">
               <div className="pixel-text-soft text-[7px] text-orange-300">
                 PÃO DE QUEIJO
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Evento pesado; quem escapa recebe alívio e sorte temporária.
+                Evento pesado, mas menos punitivo que antes; quem escapa recebe
+                alívio e sorte temporária.
+              </p>
+              <p className="retro-copy-sm mt-2 text-orange-200/90">
+                Perda base: 25 HP no sorteado.
               </p>
             </div>
             <div className="border-2 border-emerald-400/40 bg-black/30 p-3">
@@ -158,7 +169,11 @@ export function GuideSection() {
                 GERAL
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Evento neutro com moedas base para todos os envolvidos.
+                Evento de rotina: dá moedas para todos, e o sorteado perde um
+                pouco de HP.
+              </p>
+              <p className="retro-copy-sm mt-2 text-emerald-200/90">
+                Perda base: 5 HP no sorteado.
               </p>
             </div>
           </div>

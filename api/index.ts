@@ -26,6 +26,10 @@ const GUERREIRO_PASSIVE_XP = 5;
 const CLERIGO_GROUP_COINS = 3;
 const COIN_MAGNET_MULTIPLIER = 1.5;
 const NOVATO_XP_MULTIPLIER = 1.1;
+const PAO_HP_LOSS = 25;
+const AGUA_HP_LOSS = 8;
+const BALDE_HP_LOSS = 18;
+const GERAL_HP_LOSS = 5;
 const APPRENTICE_UNLOCK_LEVEL = 3;
 const FINAL_CLASS_UNLOCK_LEVEL = 5;
 const CUSTOM_TITLE_PREFIX = "custom:";
@@ -1312,7 +1316,7 @@ async function createExpressApp() {
         if (isParticipant) {
           if (category === "pao") {
             if (isWinner) {
-              hpChange = -40;
+              hpChange = -PAO_HP_LOSS;
             } else {
               addXp("Base do sorteio (PAO)", 20);
               addCoins("Base do sorteio (PAO)", 10);
@@ -1326,6 +1330,7 @@ async function createExpressApp() {
             }
           } else if (category === "agua") {
             if (isWinner) {
+              hpChange = -AGUA_HP_LOSS;
               addXp("Base do sorteio (AGUA) - sorteado", 10);
               addCoins("Base do sorteio (AGUA) - sorteado", 5);
             } else {
@@ -1333,13 +1338,16 @@ async function createExpressApp() {
             }
           } else if (category === "balde") {
             if (isWinner) {
-              hpChange = -20;
+              hpChange = -BALDE_HP_LOSS;
               addXp("Base do sorteio (BALDE) - sorteado", 30);
               addCoins("Base do sorteio (BALDE) - sorteado", 15);
             } else {
               addXp("Base do sorteio (BALDE) - participante", 10);
             }
           } else if (category === "geral") {
+            if (isWinner) {
+              hpChange = -GERAL_HP_LOSS;
+            }
             addCoins("Base do sorteio (GERAL)", 5);
           }
         }
