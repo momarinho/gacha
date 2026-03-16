@@ -3,6 +3,7 @@ import { Trash2, UserPlus, Package } from "lucide-react";
 
 import {
   BattleLog,
+  DrawRewardSummary,
   MageInsights,
   Profile,
   ProfileClass,
@@ -111,6 +112,9 @@ export default function App() {
   const [cyclingNameAgua, setCyclingNameAgua] = useState<string>("");
   const [cyclingNameBalde, setCyclingNameBalde] = useState<string>("");
   const [cyclingNameGeral, setCyclingNameGeral] = useState<string>("");
+  const [lastDrawRewards, setLastDrawRewards] = useState<DrawRewardSummary[]>(
+    [],
+  );
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(false);
@@ -636,6 +640,7 @@ export default function App() {
 
           if (drawMode === "training") {
             appendTrainingLog("pao", [winner]);
+            setLastDrawRewards([]);
             return;
           }
 
@@ -650,6 +655,7 @@ export default function App() {
             setPaoDeQueijoWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
+            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -692,6 +698,7 @@ export default function App() {
 
           if (drawMode === "training") {
             appendTrainingLog("agua", selectedWinners);
+            setLastDrawRewards([]);
             return;
           }
 
@@ -706,6 +713,7 @@ export default function App() {
             setAguaWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
+            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -739,6 +747,7 @@ export default function App() {
 
           if (drawMode === "training") {
             appendTrainingLog("balde", [winner]);
+            setLastDrawRewards([]);
             return;
           }
 
@@ -753,6 +762,7 @@ export default function App() {
             setBaldeWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
+            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -786,6 +796,7 @@ export default function App() {
 
           if (drawMode === "training") {
             appendTrainingLog("geral", [winner]);
+            setLastDrawRewards([]);
             return;
           }
 
@@ -800,6 +811,7 @@ export default function App() {
             setGeralWinners(
               resolveWinnerNames(result.winnerIds, result.updates),
             );
+            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -827,6 +839,7 @@ export default function App() {
       setExcludedIdsAgua([]);
       setExcludedIdsBalde([]);
       setExcludedIdsGeral([]);
+      setLastDrawRewards([]);
       // aguaMode is maintained as requested ("funções escolhidas serão mantidas")
     }
   };
@@ -873,6 +886,7 @@ export default function App() {
         setExcludedIdsBalde([]);
         setExcludedIdsGeral([]);
         setAguaMode("muita");
+        setLastDrawRewards([]);
       }}
       onClearScreenLogs={() => setBattleLogs([])}
     />
@@ -1004,10 +1018,12 @@ export default function App() {
                 cyclingNameAgua={cyclingNameAgua}
                 cyclingNameBalde={cyclingNameBalde}
                 cyclingNameGeral={cyclingNameGeral}
+                lastDrawRewards={lastDrawRewards}
                 onBack={() => setCurrentPage("home")}
                 onSetAguaMode={setAguaMode}
                 onSetDrawMode={(mode) => {
                   setDrawMode(mode);
+                  setLastDrawRewards([]);
                   if (mode === "training") {
                     setBattleLogs((currentLogs) =>
                       currentLogs.filter(

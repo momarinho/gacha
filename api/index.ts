@@ -1155,6 +1155,7 @@ async function createExpressApp() {
       const consumedBuffsByProfile = new Map<string, Set<string>>();
       const updates = [];
       const logs = [];
+      const rewards = [];
 
       const consumeBuff = (profileId: string, buffType: string) => {
         if (!consumedBuffsByProfile.has(profileId)) {
@@ -1247,10 +1248,22 @@ async function createExpressApp() {
         const isParticipant = participantSet.has(p.id);
         const isWinner = resolvedWinnerIds.includes(p.id);
         let hpChange = 0;
-        let xpChange = p.class === "guerreiro" ? GUERREIRO_PASSIVE_XP : 0;
+        let xpChange = 0;
         let coinsChange = 0;
         let activeBuffs = purgeExpiredBuffs(normalizeBuffs(p.active_buffs));
         let titles = normalizeTitles(p.titles);
+        const xpBreakdown: { label: string; value: number }[] = [];
+        const coinBreakdown: { label: string; value: number }[] = [];
+        const addXp = (label: string, value: number) => {
+          if (value === 0) return;
+          xpChange += value;
+          xpBreakdown.push({ label, value });
+        };
+        const addCoins = (label: string, value: number) => {
+          if (value === 0) return;
+          coinsChange += value;
+          coinBreakdown.push({ label, value });
+        };
         const luck = typeof p.luck === "number" ? p.luck : 0;
         const exhaustionThreshold =
           typeof p.exhaustion_threshold === "number"
@@ -1292,13 +1305,17 @@ async function createExpressApp() {
           p.temporary_coin_multiplier,
         );
 
+        if (p.class === "guerreiro") {
+          addXp("Passiva de classe (Guerreiro)", GUERREIRO_PASSIVE_XP);
+        }
+
         if (isParticipant) {
           if (category === "pao") {
             if (isWinner) {
               hpChange = -40;
             } else {
-              xpChange += 20;
-              coinsChange += 10;
+              addXp("Base do sorteio (PAO)", 20);
+              addCoins("Base do sorteio (PAO)", 10);
               activeBuffs.push({
                 type: "RELIEF_LUCK",
                 expiresAt: new Date(
@@ -1309,26 +1326,34 @@ async function createExpressApp() {
             }
           } else if (category === "agua") {
             if (isWinner) {
-              xpChange += 10;
-              coinsChange += 5;
+              addXp("Base do sorteio (AGUA) - sorteado", 10);
+              addCoins("Base do sorteio (AGUA) - sorteado", 5);
             } else {
-              xpChange += 5;
+              addXp("Base do sorteio (AGUA) - participante", 5);
             }
           } else if (category === "balde") {
             if (isWinner) {
               hpChange = -20;
-              xpChange += 30;
-              coinsChange += 15;
+              addXp("Base do sorteio (BALDE) - sorteado", 30);
+              addCoins("Base do sorteio (BALDE) - sorteado", 15);
             } else {
-              xpChange += 10;
+              addXp("Base do sorteio (BALDE) - participante", 10);
             }
           } else if (category === "geral") {
-            coinsChange += 5;
+            addCoins("Base do sorteio (GERAL)", 5);
           }
         }
 
         if (p.class === "novato" && xpChange > 0) {
+          const previousXpChange = xpChange;
           xpChange = Math.ceil(xpChange * NOVATO_XP_MULTIPLIER);
+          const novatoBonus = xpChange - previousXpChange;
+          if (novatoBonus !== 0) {
+            xpBreakdown.push({
+              label: "Bonus de classe (Novato +10% XP)",
+              value: novatoBonus,
+            });
+          }
         }
 
         if (
@@ -1337,9 +1362,16 @@ async function createExpressApp() {
           !isWinner &&
           coinsChange > 0
         ) {
-          coinsChange = Math.floor(
-            coinsChange * (p.class === "ladino" ? 1.25 : 1.1),
-          );
+          const previousCoinsChange = coinsChange;
+          const classMultiplier = p.class === "ladino" ? 1.25 : 1.1;
+          coinsChange = Math.floor(coinsChange * classMultiplier);
+          const ladinoBonus = coinsChange - previousCoinsChange;
+          if (ladinoBonus !== 0) {
+            coinBreakdown.push({
+              label: `Bonus de classe (${p.class === "ladino" ? "Ladino x1.25" : "Aprendiz Ladino x1.10"})`,
+              value: ladinoBonus,
+            });
+          }
         }
 
         if (
@@ -1352,22 +1384,41 @@ async function createExpressApp() {
         }
 
         if (clericWinnerIds.length > 0 && isParticipant && !isWinner) {
-          coinsChange += clericWinnerIds.length * CLERIGO_GROUP_COINS;
+          addCoins(
+            `Aura de Comunhao (${clericWinnerIds.length} Clerigo(s))`,
+            clericWinnerIds.length * CLERIGO_GROUP_COINS,
+          );
         }
 
         if (coinsChange > 0) {
+          const previousCoinsChange = coinsChange;
           coinsChange = Math.floor(
             coinsChange * passiveCoinMultiplier * temporaryCoinMultiplier,
           );
+          const multiplierDelta = coinsChange - previousCoinsChange;
+          if (multiplierDelta !== 0) {
+            coinBreakdown.push({
+              label: `Multiplicadores de moedas (x${(passiveCoinMultiplier * temporaryCoinMultiplier).toFixed(2)})`,
+              value: multiplierDelta,
+            });
+          }
         }
 
         const exhausted =
           p.max_hp > 0 && p.hp / p.max_hp <= exhaustionThreshold;
         if (exhausted && coinsChange > 0) {
+          const previousCoinsChange = coinsChange;
           coinsChange = Math.max(
             0,
             Math.floor(coinsChange * exhaustionPenaltyMultiplier),
           );
+          const exhaustionDelta = coinsChange - previousCoinsChange;
+          if (exhaustionDelta !== 0) {
+            coinBreakdown.push({
+              label: `Penalidade por exaustao (x${exhaustionPenaltyMultiplier.toFixed(2)})`,
+              value: exhaustionDelta,
+            });
+          }
         }
 
         newHp = Math.min(p.max_hp, Math.max(0, newHp + hpChange));
@@ -1438,6 +1489,22 @@ async function createExpressApp() {
           participates_in_balde: p.participates_in_balde,
           participates_in_geral: p.participates_in_geral,
         });
+
+        if (
+          isParticipant &&
+          (xpChange !== 0 || coinsChange !== 0 || isWinner)
+        ) {
+          rewards.push({
+            profileId: p.id,
+            profileName: p.name,
+            category,
+            isWinner,
+            xpGain: xpChange,
+            coinGain: coinsChange,
+            xpBreakdown,
+            coinBreakdown,
+          });
+        }
       }
 
       const { error: uErr } = await supabase.from("profiles").upsert(updates);
@@ -1466,7 +1533,12 @@ async function createExpressApp() {
         await supabase.from("battle_logs").insert(logs);
       }
 
-      res.json({ success: true, updates, winnerIds: resolvedWinnerIds });
+      res.json({
+        success: true,
+        updates,
+        winnerIds: resolvedWinnerIds,
+        rewards,
+      });
     } catch (error) {
       res
         .status(500)

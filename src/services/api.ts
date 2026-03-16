@@ -5,6 +5,7 @@ import {
   MageInsights,
   SocialRankingEntry,
   SocialTitlesResponse,
+  ProcessDrawResponse,
 } from "../types";
 
 const API_BASE = "/api";
@@ -124,7 +125,7 @@ export const api = {
     category: string,
     winnerIds: string[],
     participants: string[],
-  ): Promise<{ success: boolean; updates: Profile[]; winnerIds: string[] }> => {
+  ): Promise<ProcessDrawResponse> => {
     const res = await fetch(`${API_BASE}/draw/process`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

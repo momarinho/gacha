@@ -102,3 +102,26 @@ export interface SocialRankingEntry {
 export interface SocialTitlesResponse {
   titlesByProfileId: Record<string, string[]>;
 }
+
+export interface RewardBreakdownItem {
+  label: string;
+  value: number;
+}
+
+export interface DrawRewardSummary {
+  profileId: string;
+  profileName: string;
+  category: "pao" | "agua" | "balde" | "geral";
+  isWinner: boolean;
+  xpGain: number;
+  coinGain: number;
+  xpBreakdown: RewardBreakdownItem[];
+  coinBreakdown: RewardBreakdownItem[];
+}
+
+export interface ProcessDrawResponse {
+  success: boolean;
+  updates: Profile[];
+  winnerIds: string[];
+  rewards: DrawRewardSummary[];
+}
