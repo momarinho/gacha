@@ -6,7 +6,8 @@ alter table profiles
   add column if not exists passive_coin_multiplier numeric(6,2) not null default 1,
   add column if not exists temporary_coin_multiplier numeric(6,2) not null default 1,
   add column if not exists exhaustion_threshold numeric(5,2) not null default 0.30,
-  add column if not exists exhaustion_penalty_multiplier numeric(5,2) not null default 0.50;
+  add column if not exists exhaustion_penalty_multiplier numeric(5,2) not null default 0.50,
+  add column if not exists last_weekday_recovery_at text;
 
 alter table profiles
   alter column inventory set default '[]'::jsonb,
@@ -118,6 +119,13 @@ set
   metadata = coalesce(metadata, '{}'::jsonb),
   stackable = coalesce(stackable, true),
   min_level = coalesce(min_level, 1);
+
+update shop_items
+set price = case
+  when effect_code = 'HEAL_PERCENT_50' then 35
+  when effect_code = 'OUTSOURCE_AGUA' then 180
+  else price
+end;
 
 do $$
 begin

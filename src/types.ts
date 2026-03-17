@@ -38,6 +38,7 @@ export interface Profile {
   exhaustion_penalty_multiplier: number;
   inventory: InventoryItem[];
   active_buffs: ActiveBuff[];
+  last_weekday_recovery_at?: string | null;
   participates_in_pao: boolean;
   participates_in_agua: boolean;
   participates_in_balde: boolean;
@@ -111,7 +112,7 @@ export interface RewardBreakdownItem {
 export interface DrawRewardSummary {
   profileId: string;
   profileName: string;
-  category: "pao" | "agua" | "balde" | "geral";
+  category: "pao" | "agua" | "balde" | "geral" | "solo";
   isWinner: boolean;
   xpGain: number;
   coinGain: number;

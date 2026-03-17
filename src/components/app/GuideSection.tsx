@@ -37,6 +37,10 @@ export function GuideSection() {
               O HP também representa sanidade. Quando fica baixo demais, os
               ganhos de moedas caem.
             </p>
+            <p className="retro-copy-sm text-white/85">
+              De segunda a sexta, todo perfil recupera 10% do HP uma vez por
+              dia no primeiro sorteio oficial processado.
+            </p>
           </div>
         </section>
 
@@ -56,6 +60,9 @@ export function GuideSection() {
             </p>
             <p className="retro-copy-sm text-white/85">
               Novato recebe +10% XP enquanto aprende o sistema.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Toda subida de nível restaura o HP e concede +20 SetorCoins.
             </p>
           </div>
         </section>
@@ -134,11 +141,11 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Tarefa diária com risco baixo: dá XP e moedas, mas cobra um
-                pouco de HP de quem for sorteado.
+                Sorteado: +10 XP e +5 $C. Participantes não selecionados:
+                +5 XP e -8 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-blue-200/90">
-                Perda base: 8 HP no sorteado.
+                O dano agora vai para quem participou e nao foi selecionado.
               </p>
             </div>
             <div className="border-2 border-purple-400/40 bg-black/30 p-3">
@@ -146,10 +153,11 @@ export function GuideSection() {
                 BALDE
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Desafio intermediário, dá mais XP e cobra HP.
+                Sorteado: +30 XP e +15 $C. Participantes nao selecionados:
+                +10 XP e -18 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-purple-200/90">
-                Perda base: 18 HP no sorteado.
+                O sorteado leva a recompensa; o resto absorve o desgaste.
               </p>
             </div>
             <div className="border-2 border-orange-400/40 bg-black/30 p-3">
@@ -157,11 +165,11 @@ export function GuideSection() {
                 PÃO DE QUEIJO
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Evento pesado, mas menos punitivo que antes; quem escapa recebe
-                alívio e sorte temporária.
+                Participantes nao selecionados: +20 XP, +10 $C, -25 HP e sorte
+                temporaria. O sorteado escapa do dano.
               </p>
               <p className="retro-copy-sm mt-2 text-orange-200/90">
-                Perda base: 25 HP no sorteado.
+                Continua sendo o evento mais pesado do setor.
               </p>
             </div>
             <div className="border-2 border-emerald-400/40 bg-black/30 p-3">
@@ -169,11 +177,11 @@ export function GuideSection() {
                 GERAL
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Evento de rotina: dá moedas para todos, e o sorteado perde um
-                pouco de HP.
+                Todos ganham +5 $C. Participantes nao selecionados ainda perdem
+                -5 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-emerald-200/90">
-                Perda base: 5 HP no sorteado.
+                O selecionado so recebe a recompensa base.
               </p>
             </div>
           </div>
@@ -196,6 +204,30 @@ export function GuideSection() {
               O título pessoal é separado dos feitos e pode ser definido pelo
               próprio jogador.
             </p>
+            <p className="retro-copy-sm text-white/85">
+              Gastos de SetorCoins acontecem na loja; fora dela, as perdas de
+              moedas ficam restritas a compras e futuros ajustes do meta.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            ECONOMIA
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              Ganhos atuais por nivel: +20 $C por level up.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Ganhos base por sorteio: PAO +10 $C para nao sorteados, AGUA +5
+              $C para sorteado, BALDE +15 $C para sorteado, GERAL +5 $C para
+              todos e SOLO +8 $C para o selecionado.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Moedas extras ainda podem ser alteradas por Ladino, Clerigo,
+              Ima de Moedas, descontos de Mago e penalidade por exaustao.
+            </p>
           </div>
         </section>
 
@@ -206,7 +238,7 @@ export function GuideSection() {
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="border-2 border-white/20 bg-black/35 p-3">
               <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
-                CAFÉ EXPRESSO
+                CAFE EXPRESSO · 35 $C
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
                 Recupera 50% do HP instantaneamente.
@@ -230,12 +262,44 @@ export function GuideSection() {
             </div>
             <div className="border-2 border-white/20 bg-black/35 p-3">
               <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
-                TERCEIRIZAÇÃO
+                TERCEIRIZACAO · 180 $C
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
                 Terceiriza a próxima Água se o jogador for sorteado.
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            SORTEIO SOLO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              Serve para dias em que alguem vai sozinho e nao existe fila real
+              para disputar.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              O participante selecionado ganha +12 XP e +8 $C, sem causar dano
+              colateral no resto do grupo.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            ROADMAP
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              Sugestoes atuais dos participantes: mais eventos cooperativos,
+              passivas globais mais visiveis e economia com metas semanais.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Proximos candidatos: missoes de equipe, recompensas por
+              frequencia e novos consumiveis utilitarios.
+            </p>
           </div>
         </section>
 

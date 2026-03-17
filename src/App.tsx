@@ -107,11 +107,17 @@ export default function App() {
   const [isDrawingAgua, setIsDrawingAgua] = useState(false);
   const [isDrawingBalde, setIsDrawingBalde] = useState(false);
   const [isDrawingGeral, setIsDrawingGeral] = useState(false);
+  const [isDrawingSolo, setIsDrawingSolo] = useState(false);
 
   const [cyclingNamePao, setCyclingNamePao] = useState<string>("");
   const [cyclingNameAgua, setCyclingNameAgua] = useState<string>("");
   const [cyclingNameBalde, setCyclingNameBalde] = useState<string>("");
   const [cyclingNameGeral, setCyclingNameGeral] = useState<string>("");
+  const [cyclingNameSolo, setCyclingNameSolo] = useState<string>("");
+  const [soloWinners, setSoloWinners] = useState<string[]>([]);
+  const [selectedSoloProfileId, setSelectedSoloProfileId] = useState<
+    string | null
+  >(null);
   const [lastDrawRewards, setLastDrawRewards] = useState<DrawRewardSummary[]>(
     [],
   );
@@ -351,11 +357,26 @@ export default function App() {
   }, [profiles]);
 
   useEffect(() => {
+    if (profiles.length === 0) {
+      setSelectedSoloProfileId(null);
+      return;
+    }
+
+    if (
+      !selectedSoloProfileId ||
+      !profiles.some((profile) => profile.id === selectedSoloProfileId)
+    ) {
+      setSelectedSoloProfileId(profiles[0].id);
+    }
+  }, [profiles, selectedSoloProfileId]);
+
+  useEffect(() => {
     const hasStaleDrawState =
       paoDeQueijoWinners.length > 0 ||
       aguaWinners.length > 0 ||
       baldeWinners.length > 0 ||
       geralWinners.length > 0 ||
+      soloWinners.length > 0 ||
       excludedIdsPao.length > 0 ||
       excludedIdsAgua.length > 0 ||
       excludedIdsBalde.length > 0 ||
@@ -367,6 +388,7 @@ export default function App() {
       setAguaWinners([]);
       setBaldeWinners([]);
       setGeralWinners([]);
+      setSoloWinners([]);
       setExcludedIdsPao([]);
       setExcludedIdsAgua([]);
       setExcludedIdsBalde([]);
@@ -381,6 +403,7 @@ export default function App() {
     aguaWinners.length,
     baldeWinners.length,
     geralWinners.length,
+    soloWinners.length,
     excludedIdsPao.length,
     excludedIdsAgua.length,
     excludedIdsBalde.length,
@@ -583,7 +606,7 @@ export default function App() {
   );
 
   const appendTrainingLog = (
-    category: "pao" | "agua" | "balde" | "geral",
+    category: "pao" | "agua" | "balde" | "geral" | "solo",
     winners: Profile[],
   ) => {
     const names = winners.map((winner) => winner.name).join(", ");
@@ -609,7 +632,7 @@ export default function App() {
     setBattleLogs((currentLogs) => [newLog, ...currentLogs]);
   };
 
-  const drawWinner = (type: "pao" | "agua" | "balde" | "geral") => {
+  const drawWinner = (type: "pao" | "agua" | "balde" | "geral" | "solo") => {
     if (profiles.length === 0) return;
 
     const duration = 2000;
@@ -773,7 +796,7 @@ export default function App() {
           }
         }
       }, interval);
-    } else {
+    } else if (type === "geral") {
       const eligibleProfiles = profiles.filter((p) => p.participates_in_geral);
       if (eligibleProfiles.length === 0) return;
 
@@ -822,6 +845,53 @@ export default function App() {
           }
         }
       }, interval);
+    } else {
+      const selectedProfile = profiles.find(
+        (profile) => profile.id === selectedSoloProfileId,
+      );
+      if (!selectedProfile) return;
+
+      setIsDrawingSolo(true);
+      setSoloWinners([]);
+
+      const timer = setInterval(async () => {
+        const randomIndex = getSecureRandomInt(profiles.length);
+        setCyclingNameSolo(profiles[randomIndex].name);
+        currentStep++;
+
+        if (currentStep >= steps) {
+          clearInterval(timer);
+
+          setSoloWinners([selectedProfile.name]);
+          setIsDrawingSolo(false);
+
+          if (drawMode === "training") {
+            appendTrainingLog("solo", [selectedProfile]);
+            setLastDrawRewards([]);
+            return;
+          }
+
+          try {
+            const result = await api.processDraw(
+              "solo",
+              [selectedProfile.id],
+              [selectedProfile.id],
+            );
+            setProfiles(result.updates);
+            setSoloWinners(
+              resolveWinnerNames(result.winnerIds, result.updates),
+            );
+            setLastDrawRewards(result.rewards || []);
+            const [logs] = await Promise.all([
+              api.getLogs(),
+              refreshSocialData(),
+            ]);
+            setBattleLogs(logs);
+          } catch (err) {
+            console.error("Failed to process RPG draw", err);
+          }
+        }
+      }, interval);
     }
   };
 
@@ -835,6 +905,7 @@ export default function App() {
       setAguaWinners([]);
       setBaldeWinners([]);
       setGeralWinners([]);
+      setSoloWinners([]);
       setExcludedIdsPao([]);
       setExcludedIdsAgua([]);
       setExcludedIdsBalde([]);
@@ -845,7 +916,7 @@ export default function App() {
   };
 
   const getParticipationCount = (
-    category: "pao" | "agua" | "balde" | "geral",
+    category: "pao" | "agua" | "balde" | "geral" | "solo",
   ) => {
     if (category === "pao")
       return profiles.filter((profile) => profile.participates_in_pao).length;
@@ -853,11 +924,12 @@ export default function App() {
       return profiles.filter((profile) => profile.participates_in_agua).length;
     if (category === "balde")
       return profiles.filter((profile) => profile.participates_in_balde).length;
+    if (category === "solo") return profiles.length;
     return profiles.filter((profile) => profile.participates_in_geral).length;
   };
 
   const getParticipationRatio = (
-    category: "pao" | "agua" | "balde" | "geral",
+    category: "pao" | "agua" | "balde" | "geral" | "solo",
   ) => {
     if (profiles.length === 0) return 0;
     return (getParticipationCount(category) / profiles.length) * 100;
@@ -881,6 +953,7 @@ export default function App() {
         setAguaWinners([]);
         setBaldeWinners([]);
         setGeralWinners([]);
+        setSoloWinners([]);
         setExcludedIdsPao([]);
         setExcludedIdsAgua([]);
         setExcludedIdsBalde([]);
@@ -1010,17 +1083,26 @@ export default function App() {
                 aguaWinners={aguaWinners}
                 baldeWinners={baldeWinners}
                 geralWinners={geralWinners}
+                soloWinners={soloWinners}
                 isDrawingPao={isDrawingPao}
                 isDrawingAgua={isDrawingAgua}
                 isDrawingBalde={isDrawingBalde}
                 isDrawingGeral={isDrawingGeral}
+                isDrawingSolo={isDrawingSolo}
                 cyclingNamePao={cyclingNamePao}
                 cyclingNameAgua={cyclingNameAgua}
                 cyclingNameBalde={cyclingNameBalde}
                 cyclingNameGeral={cyclingNameGeral}
+                cyclingNameSolo={cyclingNameSolo}
+                soloProfiles={profiles.map((profile) => ({
+                  id: profile.id,
+                  name: profile.name,
+                }))}
+                selectedSoloProfileId={selectedSoloProfileId}
                 lastDrawRewards={lastDrawRewards}
                 onBack={() => setCurrentPage("home")}
                 onSetAguaMode={setAguaMode}
+                onSelectSoloProfile={setSelectedSoloProfileId}
                 onSetDrawMode={(mode) => {
                   setDrawMode(mode);
                   setLastDrawRewards([]);

@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
-import { Coffee, Droplets, PaintBucket, Star } from "lucide-react";
+import { Coffee, Droplets, PaintBucket, Star, UserRound } from "lucide-react";
 
 import { DrawCategoryCard } from "./DrawCategoryCard";
 import type { DrawMode } from "../../app/constants";
 import type { DrawRewardSummary } from "../../types";
 
-type DrawCategory = "pao" | "agua" | "balde" | "geral";
+type DrawCategory = "pao" | "agua" | "balde" | "geral" | "solo";
 
 type DrawsPageProps = {
   profilesCount: number;
@@ -17,17 +17,23 @@ type DrawsPageProps = {
   aguaWinners: string[];
   baldeWinners: string[];
   geralWinners: string[];
+  soloWinners: string[];
   isDrawingPao: boolean;
   isDrawingAgua: boolean;
   isDrawingBalde: boolean;
   isDrawingGeral: boolean;
+  isDrawingSolo: boolean;
   cyclingNamePao: string;
   cyclingNameAgua: string;
   cyclingNameBalde: string;
   cyclingNameGeral: string;
+  cyclingNameSolo: string;
+  soloProfiles: { id: string; name: string }[];
+  selectedSoloProfileId: string | null;
   lastDrawRewards: DrawRewardSummary[];
   onBack: () => void;
   onSetAguaMode: (mode: "muita" | "pouca") => void;
+  onSelectSoloProfile: (profileId: string) => void;
   onSetDrawMode: (mode: DrawMode) => void;
   onDraw: (category: DrawCategory) => void;
   getParticipationCount: (category: DrawCategory) => number;
@@ -56,17 +62,23 @@ export function DrawsPage({
   aguaWinners,
   baldeWinners,
   geralWinners,
+  soloWinners,
   isDrawingPao,
   isDrawingAgua,
   isDrawingBalde,
   isDrawingGeral,
+  isDrawingSolo,
   cyclingNamePao,
   cyclingNameAgua,
   cyclingNameBalde,
   cyclingNameGeral,
+  cyclingNameSolo,
+  soloProfiles,
+  selectedSoloProfileId,
   lastDrawRewards,
   onBack,
   onSetAguaMode,
+  onSelectSoloProfile,
   onSetDrawMode,
   onDraw,
   getParticipationCount,
@@ -130,7 +142,7 @@ export function DrawsPage({
         </div>
       </section>
 
-      <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <DrawCategoryCard
           title="Pão de Queijo"
           meta="WORLD BOSS DO SETOR"
@@ -233,6 +245,38 @@ export function DrawsPage({
           winnerHeading="O escolhido é"
           onDraw={() => onDraw("geral")}
           disabled={isDrawingGeral || getParticipationCount("geral") === 0}
+        />
+
+        <DrawCategoryCard
+          title="Solo"
+          meta="TURNO SEM FILA"
+          progressColorClass="bg-amber-500"
+          winnerColorClass="text-amber-400"
+          emptyState={
+            <EmptyState icon={<UserRound className="h-7 w-7 text-white/20" />} />
+          }
+          participationCount={soloProfiles.length}
+          totalProfiles={profilesCount}
+          progressWidth={profilesCount === 0 ? 0 : 100}
+          isDrawing={isDrawingSolo}
+          cyclingName={cyclingNameSolo}
+          winners={soloWinners}
+          winnerHeading="Selecionado"
+          onDraw={() => onDraw("solo")}
+          disabled={isDrawingSolo || !selectedSoloProfileId}
+          headerExtras={
+            <select
+              value={selectedSoloProfileId || ""}
+              onChange={(event) => onSelectSoloProfile(event.target.value)}
+              className="retro-label w-full border-2 border-white/40 bg-black px-2 py-1 text-white outline-none"
+            >
+              {soloProfiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name}
+                </option>
+              ))}
+            </select>
+          }
         />
       </div>
 

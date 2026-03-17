@@ -30,9 +30,18 @@ const PAO_HP_LOSS = 25;
 const AGUA_HP_LOSS = 8;
 const BALDE_HP_LOSS = 18;
 const GERAL_HP_LOSS = 5;
+const SOLO_XP_GAIN = 12;
+const SOLO_COIN_GAIN = 8;
+const LEVEL_UP_COIN_REWARD = 20;
+const WEEKDAY_PASSIVE_RECOVERY_RATIO = 0.1;
+const BUSINESS_TIMEZONE = "America/Sao_Paulo";
 const APPRENTICE_UNLOCK_LEVEL = 3;
 const FINAL_CLASS_UNLOCK_LEVEL = 5;
 const CUSTOM_TITLE_PREFIX = "custom:";
+const SHOP_PRICE_OVERRIDES: Record<string, number> = {
+  HEAL_PERCENT_50: 35,
+  OUTSOURCE_AGUA: 180,
+};
 
 const PROFILE_CLASSES = [
   "novato",
@@ -176,6 +185,29 @@ function getAchievementTitles(titles: unknown) {
 function normalizeItemMetadata(metadata: unknown): ItemMetadata {
   if (!metadata || typeof metadata !== "object") return {};
   return metadata as ItemMetadata;
+}
+
+function getBusinessDayState(now = new Date()) {
+  const dateKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BUSINESS_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: BUSINESS_TIMEZONE,
+    weekday: "short",
+  }).format(now);
+
+  return {
+    dateKey,
+    isWeekday: weekday !== "Sat" && weekday !== "Sun",
+  };
+}
+
+function getEffectiveShopPrice(item: any) {
+  const override = SHOP_PRICE_OVERRIDES[item?.effect_code];
+  return typeof override === "number" ? override : item?.price;
 }
 
 function isApprenticeClass(profileClass: string): profileClass is ProfileClass {
@@ -433,7 +465,7 @@ async function createExpressApp() {
           id: crypto.randomUUID(),
           name: "Café Expresso",
           description: "Recupera 50% do HP/Sanidade instantaneamente.",
-          price: 50,
+          price: 35,
           type: "consumable",
           effect_code: "HEAL_PERCENT_50",
           icon: "Coffee",
@@ -470,7 +502,7 @@ async function createExpressApp() {
           name: "Contrato de Terceirização",
           description:
             "Se você for sorteado na Água, tenta terceirizar o turno para outro participante.",
-          price: 260,
+          price: 180,
           type: "rare",
           effect_code: "OUTSOURCE_AGUA",
           icon: "RefreshCw",
@@ -885,7 +917,14 @@ async function createExpressApp() {
           .select("*")
           .order("price");
         if (error) throw error;
-        res.json(data);
+        res.json(
+          (data || [])
+            .map((item: any) => ({
+              ...item,
+              price: getEffectiveShopPrice(item),
+            }))
+            .sort((left: any, right: any) => left.price - right.price),
+        );
       } else {
         res.status(501).json({ error: "Not implemented for SQLite yet" });
       }
@@ -943,12 +982,13 @@ async function createExpressApp() {
         .single();
       if (iErr) throw iErr;
 
+      const basePrice = getEffectiveShopPrice(item);
       const chargedPrice =
         profile.class === "mago"
-          ? Math.ceil(item.price * 0.8)
+          ? Math.ceil(basePrice * 0.8)
           : profile.class === "aprendiz_mago"
-            ? Math.ceil(item.price * 0.9)
-            : item.price;
+            ? Math.ceil(basePrice * 0.9)
+            : basePrice;
 
       if (profile.coins < chargedPrice)
         return res.status(400).json({ error: "Not enough coins" });
@@ -982,7 +1022,7 @@ async function createExpressApp() {
           primary_actor_id: profileId,
           metadata: {
             coinsChanged: -chargedPrice,
-            originalPrice: item.price,
+            originalPrice: basePrice,
             itemId,
           },
         },
@@ -1160,6 +1200,8 @@ async function createExpressApp() {
       const updates = [];
       const logs = [];
       const rewards = [];
+      const { dateKey: weekdayRecoveryKey, isWeekday: isWeekdayForRecovery } =
+        getBusinessDayState();
 
       const consumeBuff = (profileId: string, buffType: string) => {
         if (!consumedBuffsByProfile.has(profileId)) {
@@ -1277,6 +1319,10 @@ async function createExpressApp() {
           typeof p.exhaustion_penalty_multiplier === "number"
             ? p.exhaustion_penalty_multiplier
             : 0.5;
+        const lastWeekdayRecoveryAt =
+          typeof p.last_weekday_recovery_at === "string"
+            ? p.last_weekday_recovery_at
+            : null;
 
         if (category === "balde") {
           activeBuffs = activeBuffs.filter(
@@ -1293,6 +1339,30 @@ async function createExpressApp() {
 
         const recoveryPerDraw = getBuffValue(activeBuffs, "POST_PAO_RECOVERY");
         let newHp = Math.min(p.max_hp, p.hp + recoveryPerDraw);
+        if (
+          isWeekdayForRecovery &&
+          lastWeekdayRecoveryAt !== weekdayRecoveryKey &&
+          p.max_hp > 0
+        ) {
+          const passiveRecovery = Math.max(
+            1,
+            Math.ceil(p.max_hp * WEEKDAY_PASSIVE_RECOVERY_RATIO),
+          );
+          const recoveredHp = Math.max(
+            0,
+            Math.min(p.max_hp, newHp + passiveRecovery) - newHp,
+          );
+          newHp = Math.min(p.max_hp, newHp + passiveRecovery);
+
+          if (recoveredHp > 0) {
+            logs.push({
+              event_type: "passive_recovery",
+              category: "system",
+              message: `${p.name} recuperou ${recoveredHp} HP da passiva diaria`,
+              primary_actor_id: p.id,
+            });
+          }
+        }
 
         if (newHp >= p.max_hp) {
           activeBuffs = activeBuffs.filter(
@@ -1315,9 +1385,8 @@ async function createExpressApp() {
 
         if (isParticipant) {
           if (category === "pao") {
-            if (isWinner) {
+            if (!isWinner) {
               hpChange = -PAO_HP_LOSS;
-            } else {
               addXp("Base do sorteio (PAO)", 20);
               addCoins("Base do sorteio (PAO)", 10);
               activeBuffs.push({
@@ -1330,25 +1399,28 @@ async function createExpressApp() {
             }
           } else if (category === "agua") {
             if (isWinner) {
-              hpChange = -AGUA_HP_LOSS;
               addXp("Base do sorteio (AGUA) - sorteado", 10);
               addCoins("Base do sorteio (AGUA) - sorteado", 5);
             } else {
+              hpChange = -AGUA_HP_LOSS;
               addXp("Base do sorteio (AGUA) - participante", 5);
             }
           } else if (category === "balde") {
             if (isWinner) {
-              hpChange = -BALDE_HP_LOSS;
               addXp("Base do sorteio (BALDE) - sorteado", 30);
               addCoins("Base do sorteio (BALDE) - sorteado", 15);
             } else {
+              hpChange = -BALDE_HP_LOSS;
               addXp("Base do sorteio (BALDE) - participante", 10);
             }
           } else if (category === "geral") {
-            if (isWinner) {
+            if (!isWinner) {
               hpChange = -GERAL_HP_LOSS;
             }
             addCoins("Base do sorteio (GERAL)", 5);
+          } else if (category === "solo" && isWinner) {
+            addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
+            addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
           }
         }
 
@@ -1452,10 +1524,16 @@ async function createExpressApp() {
           newXp -= getXpRequiredForLevel(newLevel);
           newLevel++;
           newHp = p.max_hp;
+          coinsChange += LEVEL_UP_COIN_REWARD;
+          newCoins += LEVEL_UP_COIN_REWARD;
+          coinBreakdown.push({
+            label: `Bonus por subir para o LV.${newLevel}`,
+            value: LEVEL_UP_COIN_REWARD,
+          });
           logs.push({
             event_type: "level_up",
             category: "system",
-            message: `Subiu para o nível ${newLevel}!`,
+            message: `Subiu para o nivel ${newLevel} e ganhou ${LEVEL_UP_COIN_REWARD} SetorCoins!`,
             primary_actor_id: p.id,
           });
         }
@@ -1492,6 +1570,9 @@ async function createExpressApp() {
           max_hp: p.max_hp,
           inventory: p.inventory,
           active_buffs: activeBuffs,
+          last_weekday_recovery_at: isWeekdayForRecovery
+            ? weekdayRecoveryKey
+            : lastWeekdayRecoveryAt,
           participates_in_pao: p.participates_in_pao,
           participates_in_agua: p.participates_in_agua,
           participates_in_balde: p.participates_in_balde,
