@@ -70,6 +70,10 @@ type ActiveBuff = {
 
 type ItemMetadata = {
   multiplier?: number;
+  luckBonus?: number;
+  duration_hours?: number;
+  xpBonus?: number;
+  coinBonus?: number;
   profileModifiers?: {
     passive_coin_multiplier?: number;
     temporary_coin_multiplier?: number;
@@ -474,6 +478,29 @@ async function createExpressApp() {
         },
         {
           id: crypto.randomUUID(),
+          name: "Band-Aid Corporativo",
+          description: "Recupera 100 HP instantaneamente.",
+          price: 55,
+          type: "consumable",
+          effect_code: "HEAL_100",
+          icon: "HeartPulse",
+          min_level: 1,
+          stackable: true,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Capa de Fuga",
+          description: "Aumenta sua chance de escapar de sorteios de risco por 24 horas.",
+          price: 60,
+          type: "consumable",
+          effect_code: "RELIEF_LUCK_BOOST",
+          icon: "Shield",
+          min_level: 1,
+          stackable: true,
+          metadata: { luckBonus: 0.08, duration_hours: 24 },
+        },
+        {
+          id: crypto.randomUUID(),
           name: "Relatório Falso",
           description: "Te tira do próximo sorteio de Balde.",
           price: 120,
@@ -483,6 +510,19 @@ async function createExpressApp() {
           min_level: 1,
           stackable: true,
           target_category: "balde",
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Imã de Moedas Lite",
+          description: "Aumenta modestamente seus ganhos de SetorCoins por 30 minutos.",
+          price: 95,
+          type: "passive",
+          effect_code: "COIN_MAGNET",
+          icon: "Coins",
+          min_level: 1,
+          duration_minutes: 30,
+          metadata: { multiplier: 1.2 },
+          stackable: false,
         },
         {
           id: crypto.randomUUID(),
@@ -499,6 +539,19 @@ async function createExpressApp() {
         },
         {
           id: crypto.randomUUID(),
+          name: "Procuração do Pão",
+          description:
+            "Se você for sorteado no Pão, transfere o problema para outro participante.",
+          price: 140,
+          type: "rare",
+          effect_code: "TRANSFER_PAO",
+          icon: "ScrollText",
+          min_level: 2,
+          stackable: true,
+          target_category: "pao",
+        },
+        {
+          id: crypto.randomUUID(),
           name: "Contrato de Terceirização",
           description:
             "Se você for sorteado na Água, tenta terceirizar o turno para outro participante.",
@@ -509,6 +562,20 @@ async function createExpressApp() {
           min_level: 3,
           stackable: true,
           target_category: "agua",
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Vale Hora Extra",
+          description:
+            "No próximo sorteio Solo, você recebe bônus extra de XP e moedas.",
+          price: 160,
+          type: "rare",
+          effect_code: "SOLO_REWARD_BOOST",
+          icon: "BriefcaseBusiness",
+          min_level: 1,
+          stackable: true,
+          metadata: { xpBonus: 10, coinBonus: 6 },
+          target_category: null,
         },
       ];
 
@@ -1122,6 +1189,26 @@ async function createExpressApp() {
         updates.active_buffs = activeBuffs;
         updates.temporary_coin_multiplier = magnetMultiplier;
         logMessage = `Usou ${item.name} e aumentou seus ganhos de SetorCoins por ${itemDurationMinutes} min`;
+      } else if (item.effect_code === "RELIEF_LUCK_BOOST") {
+        const luckBonus =
+          typeof itemMetadata.luckBonus === "number" && itemMetadata.luckBonus > 0
+            ? itemMetadata.luckBonus
+            : DEFAULT_RELIEF_LUCK_BONUS;
+        const durationHours =
+          typeof itemMetadata.duration_hours === "number" &&
+          itemMetadata.duration_hours > 0
+            ? itemMetadata.duration_hours
+            : 24;
+
+        activeBuffs.push({
+          type: "RELIEF_LUCK",
+          expiresAt: new Date(
+            Date.now() + durationHours * 60 * 60 * 1000,
+          ).toISOString(),
+          value: luckBonus,
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e ganhou +${luckBonus.toFixed(2)} de sorte por ${durationHours}h`;
       } else if (
         item.effect_code === "TRANSFER_PAO" ||
         item.effect_code === "OUTSOURCE_AGUA"
@@ -1140,6 +1227,30 @@ async function createExpressApp() {
           item.effect_code === "OUTSOURCE_AGUA"
             ? `Usou ${item.name} e terceirizará a próxima Água se for sorteado`
             : `Usou ${item.name} e transferirá o próximo Pão se for sorteado`;
+      } else if (item.effect_code === "SOLO_REWARD_BOOST") {
+        const xpBonus =
+          typeof itemMetadata.xpBonus === "number" ? itemMetadata.xpBonus : 10;
+        const coinBonus =
+          typeof itemMetadata.coinBonus === "number"
+            ? itemMetadata.coinBonus
+            : 6;
+
+        activeBuffs.push({
+          type: "SOLO_XP_BONUS",
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          value: xpBonus,
+        });
+        activeBuffs.push({
+          type: "SOLO_COIN_BONUS",
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          value: coinBonus,
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e preparou bonus para o próximo sorteio Solo`;
       }
       updates = applyProfileModifiersFromItem(profile, itemMetadata, updates);
       // Add more effects as needed
@@ -1421,6 +1532,16 @@ async function createExpressApp() {
           } else if (category === "solo" && isWinner) {
             addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
             addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
+            const soloXpBonus = getBuffValue(activeBuffs, "SOLO_XP_BONUS");
+            const soloCoinBonus = getBuffValue(activeBuffs, "SOLO_COIN_BONUS");
+            if (soloXpBonus > 0) {
+              addXp("Vale Hora Extra", soloXpBonus);
+              consumeBuff(p.id, "SOLO_XP_BONUS");
+            }
+            if (soloCoinBonus > 0) {
+              addCoins("Vale Hora Extra", soloCoinBonus);
+              consumeBuff(p.id, "SOLO_COIN_BONUS");
+            }
           }
         }
 

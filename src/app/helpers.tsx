@@ -129,6 +129,26 @@ export function getItemEffectText(item: ShopItem) {
     return `x${metadata.multiplier.toFixed(2)} moedas por ${duration} min`;
   }
 
+  if (
+    typeof metadata.luckBonus === "number" &&
+    item.effect_code === "RELIEF_LUCK_BOOST"
+  ) {
+    const durationHours =
+      typeof metadata.duration_hours === "number" ? metadata.duration_hours : 24;
+    return `Sorte +${metadata.luckBonus.toFixed(2)} por ${durationHours}h`;
+  }
+
+  if (
+    item.effect_code === "SOLO_REWARD_BOOST" &&
+    (typeof metadata.xpBonus === "number" ||
+      typeof metadata.coinBonus === "number")
+  ) {
+    const xpBonus = typeof metadata.xpBonus === "number" ? metadata.xpBonus : 0;
+    const coinBonus =
+      typeof metadata.coinBonus === "number" ? metadata.coinBonus : 0;
+    return `Próximo Solo: +${xpBonus} XP e +${coinBonus} $C`;
+  }
+
   if (typeof profileModifiers.passive_coin_multiplier === "number") {
     return `Economia passiva x${profileModifiers.passive_coin_multiplier.toFixed(2)}`;
   }

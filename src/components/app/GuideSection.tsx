@@ -254,6 +254,30 @@ export function GuideSection() {
             </div>
             <div className="border-2 border-white/20 bg-black/35 p-3">
               <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                BAND-AID CORPORATIVO · 55 $C
+              </div>
+              <p className="retro-copy-sm mt-2 text-white/85">
+                Recupera 100 HP instantaneamente.
+              </p>
+            </div>
+            <div className="border-2 border-white/20 bg-black/35 p-3">
+              <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                CAPA DE FUGA · 60 $C
+              </div>
+              <p className="retro-copy-sm mt-2 text-white/85">
+                Aumenta a sorte de fuga por 24 horas.
+              </p>
+            </div>
+            <div className="border-2 border-white/20 bg-black/35 p-3">
+              <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                IMA DE MOEDAS LITE · 95 $C
+              </div>
+              <p className="retro-copy-sm mt-2 text-white/85">
+                Bonus menor de moedas por 30 minutos.
+              </p>
+            </div>
+            <div className="border-2 border-white/20 bg-black/35 p-3">
+              <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
                 IMÃ DE MOEDAS
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
@@ -262,10 +286,26 @@ export function GuideSection() {
             </div>
             <div className="border-2 border-white/20 bg-black/35 p-3">
               <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                PROCURACAO DO PAO · 140 $C
+              </div>
+              <p className="retro-copy-sm mt-2 text-white/85">
+                Transfere o próximo Pão para outra pessoa.
+              </p>
+            </div>
+            <div className="border-2 border-white/20 bg-black/35 p-3">
+              <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
                 TERCEIRIZACAO · 180 $C
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
                 Terceiriza a próxima Água se o jogador for sorteado.
+              </p>
+            </div>
+            <div className="border-2 border-white/20 bg-black/35 p-3">
+              <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                VALE HORA EXTRA · 160 $C
+              </div>
+              <p className="retro-copy-sm mt-2 text-white/85">
+                Reforça o próximo sorteio Solo com XP e moedas extras.
               </p>
             </div>
           </div>
