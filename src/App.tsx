@@ -242,21 +242,37 @@ export default function App() {
     if (!accessReady || !hasAccess) return;
 
     const fetchData = async () => {
-      try {
-        const [fetchedProfiles, fetchedShop, fetchedLogs, fetchedTitles] =
-          await Promise.all([
-            api.getProfiles(),
-            api.getShopItems(),
-            api.getLogs(),
-            api.getTitles(),
-          ]);
+      const results = await Promise.allSettled([
+        api.getProfiles(),
+        api.getShopItems(),
+        api.getLogs(),
+        api.getTitles(),
+      ]);
 
-        setProfiles(fetchedProfiles);
-        setShopItems(fetchedShop);
-        setBattleLogs(fetchedLogs);
-        setTitlesByProfileId(fetchedTitles.titlesByProfileId);
-      } catch (error) {
-        console.error("Failed to fetch RPG data:", error);
+      const [profilesResult, shopResult, logsResult, titlesResult] = results;
+
+      if (profilesResult.status === "fulfilled") {
+        setProfiles(profilesResult.value);
+      } else {
+        console.error("Failed to fetch profiles:", profilesResult.reason);
+      }
+
+      if (shopResult.status === "fulfilled") {
+        setShopItems(shopResult.value);
+      } else {
+        console.error("Failed to fetch shop items:", shopResult.reason);
+      }
+
+      if (logsResult.status === "fulfilled") {
+        setBattleLogs(logsResult.value);
+      } else {
+        console.error("Failed to fetch logs:", logsResult.reason);
+      }
+
+      if (titlesResult.status === "fulfilled") {
+        setTitlesByProfileId(titlesResult.value.titlesByProfileId);
+      } else {
+        console.error("Failed to fetch titles:", titlesResult.reason);
       }
     };
 
