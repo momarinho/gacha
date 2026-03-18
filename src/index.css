@@ -445,6 +445,17 @@
         @apply bg-[#010114] border-2 border-slate-500 px-3 py-3 text-white outline-none focus:border-[var(--color-snes-gold)] transition-none;
     }
 
+    .pixel-input {
+        @apply w-full rounded-none border-2 border-slate-500 bg-[#010114] px-3 py-3 text-white outline-none transition-none focus:border-[var(--color-snes-gold)];
+        color-scheme: dark;
+    }
+
+    .pixel-input option,
+    .pixel-input optgroup {
+        background-color: #010114;
+        color: #f8fafc;
+    }
+
     .snes-chip {
         @apply text-[8px] px-2 py-1 border-2 border-white bg-[#02020d] text-white;
         font-family: var(--font-ui-retro);
