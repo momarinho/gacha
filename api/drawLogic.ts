@@ -434,9 +434,8 @@ export function processDrawOutcome({
 
     if (isParticipant) {
       if (category === "pao") {
-        if (isWinner) {
+        if (!isWinner) {
           hpChange = -PAO_HP_LOSS;
-        } else {
           addXp("Base do sorteio (PAO)", 20);
           addCoins("Base do sorteio (PAO)", 10);
           activeBuffs.push({
@@ -449,22 +448,22 @@ export function processDrawOutcome({
         }
       } else if (category === "agua") {
         if (isWinner) {
-          hpChange = -AGUA_HP_LOSS;
           addXp("Base do sorteio (AGUA) - sorteado", 10);
           addCoins("Base do sorteio (AGUA) - sorteado", 5);
         } else {
+          hpChange = -AGUA_HP_LOSS;
           addXp("Base do sorteio (AGUA) - participante", 5);
         }
       } else if (category === "balde") {
         if (isWinner) {
-          hpChange = -BALDE_HP_LOSS;
           addXp("Base do sorteio (BALDE) - sorteado", 30);
           addCoins("Base do sorteio (BALDE) - sorteado", 15);
         } else {
+          hpChange = -BALDE_HP_LOSS;
           addXp("Base do sorteio (BALDE) - participante", 10);
         }
       } else if (category === "geral") {
-        if (isWinner) {
+        if (!isWinner) {
           hpChange = -GERAL_HP_LOSS;
         }
         addCoins("Base do sorteio (GERAL)", 5);

@@ -50,7 +50,7 @@ function getProfile(
 
 const weekdayNow = new Date("2026-03-18T12:00:00-03:00");
 
-test("pao aplica dano apenas no sorteado e recompensa quem escapou", () => {
+test("pao aplica dano em quem nao foi sorteado e recompensa quem absorveu o evento", () => {
   const winner = makeProfile("winner");
   const other = makeProfile("other");
 
@@ -65,15 +65,15 @@ test("pao aplica dano apenas no sorteado e recompensa quem escapou", () => {
   const winnerUpdate = getProfile(result.updates, "winner");
   const otherUpdate = getProfile(result.updates, "other");
 
-  assert.equal(winnerUpdate.hp, 75);
+  assert.equal(winnerUpdate.hp, 100);
   assert.equal(winnerUpdate.xp, 0);
   assert.equal(winnerUpdate.coins, 0);
-  assert.equal(otherUpdate.hp, 100);
+  assert.equal(otherUpdate.hp, 75);
   assert.equal(otherUpdate.xp, 22);
   assert.equal(otherUpdate.coins, 10);
 });
 
-test("agua aplica dano no sorteado e xp reduzido no participante nao sorteado", () => {
+test("agua aplica dano em quem nao foi sorteado e mantem recompensa no sorteado", () => {
   const winner = makeProfile("winner");
   const other = makeProfile("other");
 
@@ -88,14 +88,14 @@ test("agua aplica dano no sorteado e xp reduzido no participante nao sorteado", 
   const winnerUpdate = getProfile(result.updates, "winner");
   const otherUpdate = getProfile(result.updates, "other");
 
-  assert.equal(winnerUpdate.hp, 92);
+  assert.equal(winnerUpdate.hp, 100);
   assert.equal(winnerUpdate.xp, 11);
   assert.equal(winnerUpdate.coins, 5);
-  assert.equal(otherUpdate.hp, 100);
+  assert.equal(otherUpdate.hp, 92);
   assert.equal(otherUpdate.xp, 6);
 });
 
-test("geral da moedas para todos e dano apenas no sorteado", () => {
+test("geral da moedas para todos e dano apenas em quem nao foi sorteado", () => {
   const winner = makeProfile("winner");
   const other = makeProfile("other");
 
@@ -110,8 +110,8 @@ test("geral da moedas para todos e dano apenas no sorteado", () => {
   const winnerUpdate = getProfile(result.updates, "winner");
   const otherUpdate = getProfile(result.updates, "other");
 
-  assert.equal(winnerUpdate.hp, 95);
-  assert.equal(otherUpdate.hp, 100);
+  assert.equal(winnerUpdate.hp, 100);
+  assert.equal(otherUpdate.hp, 95);
   assert.equal(winnerUpdate.coins, 5);
   assert.equal(otherUpdate.coins, 5);
 });
@@ -163,10 +163,10 @@ test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   const fallbackUpdate = getProfile(result.updates, "fallback");
   const dodgerUpdate = getProfile(result.updates, "dodger");
 
-  assert.equal(fallbackUpdate.hp, 92);
+  assert.equal(fallbackUpdate.hp, 100);
   assert.equal(fallbackUpdate.xp, 14);
   assert.equal(fallbackUpdate.coins, 6);
-  assert.equal(dodgerUpdate.hp, 100);
+  assert.equal(dodgerUpdate.hp, 92);
   assert.equal(dodgerUpdate.xp, 6);
 });
 
@@ -190,9 +190,9 @@ test("guerreiro reduz dano e exaustao reduz moedas", () => {
   const warriorUpdate = getProfile(result.updates, "warrior");
   const otherUpdate = getProfile(result.updates, "other");
 
-  assert.equal(warriorUpdate.hp, 19);
+  assert.equal(warriorUpdate.hp, 30);
   assert.equal(warriorUpdate.coins, 7);
   assert.equal(warriorUpdate.xp, 35);
-  assert.equal(otherUpdate.hp, 100);
+  assert.equal(otherUpdate.hp, 82);
   assert.equal(otherUpdate.xp, 11);
 });
