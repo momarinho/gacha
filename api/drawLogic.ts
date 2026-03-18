@@ -1,6 +1,55 @@
-import type { Profile, ProfileClass } from "../src/types";
+type ProfileClass =
+  | "novato"
+  | "aprendiz_guerreiro"
+  | "aprendiz_mago"
+  | "aprendiz_ladino"
+  | "aprendiz_clerigo"
+  | "guerreiro"
+  | "mago"
+  | "ladino"
+  | "clerigo";
 
-type ActiveBuff = Profile["active_buffs"][number];
+type InventoryItem = {
+  item_id: string;
+  qty: number;
+};
+
+type ActiveBuff = {
+  type: string;
+  expiresAt: string;
+  value?: number;
+  metadata?: Record<string, unknown>;
+};
+
+type Profile = {
+  id: string;
+  name: string;
+  class: ProfileClass;
+  level: number;
+  xp: number;
+  coins: number;
+  hp: number;
+  max_hp: number;
+  luck: number;
+  titles: string[];
+  passive_coin_multiplier: number;
+  temporary_coin_multiplier: number;
+  exhaustion_threshold: number;
+  exhaustion_penalty_multiplier: number;
+  inventory: InventoryItem[];
+  active_buffs: ActiveBuff[];
+  last_weekday_recovery_at?: string | null;
+  participates_in_pao: boolean;
+  participates_in_agua: boolean;
+  participates_in_balde: boolean;
+  participates_in_geral: boolean;
+  stat_points: number;
+  stat_foco: number;
+  stat_resiliencia: number;
+  stat_networking: number;
+  stat_malandragem: number;
+  created_at?: string;
+};
 
 type DrawCategory = "pao" | "agua" | "balde" | "geral" | "solo";
 
@@ -158,10 +207,14 @@ function getDodgeChance(
     typeof luck === "number" && Number.isFinite(luck) ? Math.max(0, luck) : 0;
   const reliefLuckBonus = getBuffValue(buffs, "RELIEF_LUCK");
   const malandragemStat =
-    typeof statMalandragem === "number" ? Math.max(0, statMalandragem) * 0.005 : 0;
+    typeof statMalandragem === "number"
+      ? Math.max(0, statMalandragem) * 0.005
+      : 0;
 
   if (profileClass === "ladino") {
-    return LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat;
+    return (
+      LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat
+    );
   }
 
   return malandragemStat;
@@ -285,7 +338,10 @@ export function processDrawOutcome({
     let hpChange = 0;
     let xpChange = 0;
     let coinsChange = 0;
-    let activeBuffs = purgeExpiredBuffs(normalizeBuffs(p.active_buffs), now.getTime());
+    let activeBuffs = purgeExpiredBuffs(
+      normalizeBuffs(p.active_buffs),
+      now.getTime(),
+    );
     let titles = normalizeTitles(p.titles);
     const xpBreakdown: RewardBreakdownItem[] = [];
     const coinBreakdown: RewardBreakdownItem[] = [];
@@ -357,7 +413,9 @@ export function processDrawOutcome({
     }
 
     if (newHp >= p.max_hp) {
-      activeBuffs = activeBuffs.filter((buff) => buff.type !== "POST_PAO_RECOVERY");
+      activeBuffs = activeBuffs.filter(
+        (buff) => buff.type !== "POST_PAO_RECOVERY",
+      );
     }
 
     const networkingBonus = (p.stat_networking || 0) * 0.005;
@@ -383,7 +441,9 @@ export function processDrawOutcome({
           addCoins("Base do sorteio (PAO)", 10);
           activeBuffs.push({
             type: "RELIEF_LUCK",
-            expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
+            expiresAt: new Date(
+              now.getTime() + 6 * 60 * 60 * 1000,
+            ).toISOString(),
             value: DEFAULT_RELIEF_LUCK_BONUS,
           });
         }
@@ -462,9 +522,7 @@ export function processDrawOutcome({
       (p.class === "guerreiro" || p.class === "aprendiz_guerreiro") &&
       hpChange < 0
     ) {
-      hpChange = Math.floor(
-        hpChange * (p.class === "guerreiro" ? 0.6 : 0.8),
-      );
+      hpChange = Math.floor(hpChange * (p.class === "guerreiro" ? 0.6 : 0.8));
     }
 
     if (clericWinnerIds.length > 0 && isParticipant && !isWinner) {

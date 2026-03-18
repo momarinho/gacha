@@ -1033,7 +1033,6 @@ export default function App() {
       }
       onSaveCustomTitle={saveCustomTitle}
       onRemoveProfile={removeName}
-      onAllocateStat={allocateStat}
       getParticipationCount={getParticipationCount}
       getExhaustionState={getExhaustionState}
       getCustomTitle={getCustomTitle}
@@ -1180,6 +1179,7 @@ export default function App() {
         getClassProgressionOptions={getClassProgressionOptions}
         classOptionMeta={classOptionMeta}
         onChangeClass={changeClass}
+        onAllocateStat={allocateStat}
         onClose={() => {
           setClassModalOpen(false);
           setSelectedProfileId(null);
