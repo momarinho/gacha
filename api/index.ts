@@ -3,6 +3,7 @@ import path from "path";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { processDrawOutcome } from "./drawLogic";
 
 dotenv.config();
 
@@ -1467,7 +1468,6 @@ async function createExpressApp() {
         participantSet.add(winnerIds[0]);
       }
 
-      const { processDrawOutcome } = await import("./drawLogic");
       const {
         updates,
         logs,
