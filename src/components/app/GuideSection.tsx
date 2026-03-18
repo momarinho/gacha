@@ -380,22 +380,6 @@ export function GuideSection() {
           </div>
         </section>
 
-        <section className="retro-panel">
-          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            ROADMAP
-          </h3>
-          <div className="mt-4 space-y-3">
-            <p className="retro-copy-sm text-white/85">
-              Sugestoes atuais dos participantes: mais eventos cooperativos,
-              passivas globais mais visiveis e economia com metas semanais.
-            </p>
-            <p className="retro-copy-sm text-white/85">
-              Proximos candidatos: missoes de equipe, recompensas por frequencia
-              e novos consumiveis utilitarios.
-            </p>
-          </div>
-        </section>
-
         <section className="retro-panel xl:col-span-2">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             FLUXO RECOMENDADO
