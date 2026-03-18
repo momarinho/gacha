@@ -602,11 +602,17 @@ export default function App() {
 
   const allocateStat = async (
     profileId: string,
-    stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem"
+    stat:
+      | "stat_foco"
+      | "stat_resiliencia"
+      | "stat_networking"
+      | "stat_malandragem",
   ) => {
     try {
       const updatedProfile = await api.allocateStat(profileId, stat);
-      setProfiles(profiles.map(p => p.id === profileId ? updatedProfile : p));
+      setProfiles(
+        profiles.map((p) => (p.id === profileId ? updatedProfile : p)),
+      );
     } catch (error) {
       console.error("Failed to allocate stat", error);
       alert("Falha ao distribuir ponto. Tente novamente.");
@@ -889,7 +895,7 @@ export default function App() {
             const result = await api.processDraw(
               "solo",
               [selectedProfile.id],
-              profiles.map((p) => p.id),
+              [selectedProfile.id],
             );
             setProfiles(result.updates);
             setSoloWinners(

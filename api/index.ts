@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { processDrawOutcome } from "./drawLogic";
 
 dotenv.config();
 
@@ -251,10 +252,14 @@ function getDodgeChance(
     typeof luck === "number" && Number.isFinite(luck) ? Math.max(0, luck) : 0;
   const reliefLuckBonus = getBuffValue(buffs, "RELIEF_LUCK");
   const malandragemStat =
-    typeof statMalandragem === "number" ? Math.max(0, statMalandragem) * 0.005 : 0; // Each point = 0.5% dodge
+    typeof statMalandragem === "number"
+      ? Math.max(0, statMalandragem) * 0.005
+      : 0; // Each point = 0.5% dodge
 
   if (profileClass === "ladino") {
-    return LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat;
+    return (
+      LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat
+    );
   }
 
   return 0 + malandragemStat;
@@ -494,7 +499,8 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Capa de Fuga",
-          description: "Aumenta sua chance de escapar de sorteios de risco por 24 horas.",
+          description:
+            "Aumenta sua chance de escapar de sorteios de risco por 24 horas.",
           price: 60,
           type: "consumable",
           effect_code: "RELIEF_LUCK_BOOST",
@@ -518,7 +524,8 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Imã de Moedas Lite",
-          description: "Aumenta modestamente seus ganhos de SetorCoins por 30 minutos.",
+          description:
+            "Aumenta modestamente seus ganhos de SetorCoins por 30 minutos.",
           price: 95,
           type: "passive",
           effect_code: "COIN_MAGNET",
@@ -914,15 +921,29 @@ async function createExpressApp() {
   app.post("/api/profiles/:id/allocate", async (req, res) => {
     try {
       await initDb();
-      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
       const { id } = req.params;
       const { stat } = req.body;
-      const allowedStats = ["stat_foco", "stat_resiliencia", "stat_networking", "stat_malandragem"];
-      if (!allowedStats.includes(stat)) return res.status(400).json({ error: "Invalid stat" });
+      const allowedStats = [
+        "stat_foco",
+        "stat_resiliencia",
+        "stat_networking",
+        "stat_malandragem",
+      ];
+      if (!allowedStats.includes(stat))
+        return res.status(400).json({ error: "Invalid stat" });
 
-      const { data: profile, error: pErr } = await supabase.from("profiles").select("*").eq("id", id).single();
+      const { data: profile, error: pErr } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
       if (pErr) throw pErr;
-      if (!profile || profile.stat_points <= 0) return res.status(400).json({ error: "No points available" });
+      if (!profile || profile.stat_points <= 0)
+        return res.status(400).json({ error: "No points available" });
 
       const updates: any = {
         stat_points: profile.stat_points - 1,
@@ -934,11 +955,18 @@ async function createExpressApp() {
         updates.hp = profile.hp + 1; // Heal 1 HP immediately
       }
 
-      const { data, error } = await supabase.from("profiles").update(updates).eq("id", id).select().single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
       if (error) throw error;
       res.json(data);
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
@@ -1017,55 +1045,99 @@ async function createExpressApp() {
   app.get("/api/roadmap", async (req, res) => {
     try {
       await initDb();
-      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
-      const { data, error } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
+      const { data, error } = await supabase
+        .from("roadmap")
+        .select("*, profiles(name, class)")
+        .order("votes", { ascending: false });
       if (error) throw error;
       res.json(data || []);
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
   app.post("/api/roadmap", async (req, res) => {
     try {
       await initDb();
-      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
       const { title, description, created_by } = req.body;
-      const { error } = await supabase.from("roadmap").insert([{ title, description, created_by }]);
+      const { error } = await supabase
+        .from("roadmap")
+        .insert([{ title, description, created_by }]);
       if (error) throw error;
-      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      const { data: all } = await supabase
+        .from("roadmap")
+        .select("*, profiles(name, class)")
+        .order("votes", { ascending: false });
       res.json(all || []);
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
   app.put("/api/roadmap/:id", async (req, res) => {
     try {
       await initDb();
-      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
       const { status } = req.body;
-      const { error } = await supabase.from("roadmap").update({ status }).eq("id", req.params.id);
+      const { error } = await supabase
+        .from("roadmap")
+        .update({ status })
+        .eq("id", req.params.id);
       if (error) throw error;
-      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      const { data: all } = await supabase
+        .from("roadmap")
+        .select("*, profiles(name, class)")
+        .order("votes", { ascending: false });
       res.json(all || []);
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
   app.post("/api/roadmap/:id/vote", async (req, res) => {
     try {
       await initDb();
-      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
-      const { data: roadmap, error: rErr } = await supabase.from("roadmap").select("votes").eq("id", req.params.id).single();
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
+      const { data: roadmap, error: rErr } = await supabase
+        .from("roadmap")
+        .select("votes")
+        .eq("id", req.params.id)
+        .single();
       if (rErr) throw rErr;
-      const { error } = await supabase.from("roadmap").update({ votes: (roadmap.votes || 0) + 1 }).eq("id", req.params.id);
+      const { error } = await supabase
+        .from("roadmap")
+        .update({ votes: (roadmap.votes || 0) + 1 })
+        .eq("id", req.params.id);
       if (error) throw error;
-      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      const { data: all } = await supabase
+        .from("roadmap")
+        .select("*, profiles(name, class)")
+        .order("votes", { ascending: false });
       res.json(all || []);
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
@@ -1286,7 +1358,8 @@ async function createExpressApp() {
         logMessage = `Usou ${item.name} e aumentou seus ganhos de SetorCoins por ${itemDurationMinutes} min`;
       } else if (item.effect_code === "RELIEF_LUCK_BOOST") {
         const luckBonus =
-          typeof itemMetadata.luckBonus === "number" && itemMetadata.luckBonus > 0
+          typeof itemMetadata.luckBonus === "number" &&
+          itemMetadata.luckBonus > 0
             ? itemMetadata.luckBonus
             : DEFAULT_RELIEF_LUCK_BONUS;
         const durationHours =
@@ -1394,464 +1467,25 @@ async function createExpressApp() {
       if (pErr) throw pErr;
 
       const participantSet = new Set<string>(participants);
-      const participantProfiles = profiles.filter((profile: any) =>
-        participantSet.has(profile.id),
-      );
-      const profileMap = new Map<string, any>(
-        profiles.map((profile: any) => [profile.id, profile]),
-      );
-
-      const resolvedWinnerIds = [...winnerIds];
-      const consumedBuffsByProfile = new Map<string, Set<string>>();
-      const updates = [];
-      const logs = [];
-      const rewards = [];
-      const { dateKey: weekdayRecoveryKey, isWeekday: isWeekdayForRecovery } =
-        getBusinessDayState();
-
-      const consumeBuff = (profileId: string, buffType: string) => {
-        if (!consumedBuffsByProfile.has(profileId)) {
-          consumedBuffsByProfile.set(profileId, new Set());
-        }
-        consumedBuffsByProfile.get(profileId)!.add(buffType);
-      };
-
-      for (let index = 0; index < resolvedWinnerIds.length; index++) {
-        const requestedWinnerId = resolvedWinnerIds[index];
-        const requestedWinner = profileMap.get(requestedWinnerId);
-        if (!requestedWinner) continue;
-
-        const activeBuffs = purgeExpiredBuffs(
-          normalizeBuffs(requestedWinner.active_buffs),
-        );
-        let shouldReroll = false;
-
-        if (category === "balde" && hasBuff(activeBuffs, "SKIP_BALDE")) {
-          shouldReroll = true;
-          consumeBuff(requestedWinner.id, "SKIP_BALDE");
-          logs.push({
-            event_type: "item_use",
-            category,
-            message: `${requestedWinner.name} usou Relatório Falso e escapou do Balde`,
-            primary_actor_id: requestedWinner.id,
-          });
-        }
-
-        if (["pao", "agua", "balde"].includes(category)) {
-          const dodgeChance = getDodgeChance(
-            requestedWinner.class,
-            requestedWinner.luck,
-            activeBuffs,
-            requestedWinner.stat_malandragem || 0,
-          );
-
-          if (dodgeChance > 0 && randomChance(dodgeChance)) {
-            shouldReroll = true;
-            logs.push({
-              event_type: "class_passive",
-              category,
-              message: `${requestedWinner.name} ativou Passo Leve e escapou do sorteio`,
-              primary_actor_id: requestedWinner.id,
-            });
-          }
-        }
-
-        if (category === "agua" && hasBuff(activeBuffs, "OUTSOURCE_AGUA")) {
-          shouldReroll = true;
-          consumeBuff(requestedWinner.id, "OUTSOURCE_AGUA");
-          logs.push({
-            event_type: "item_use",
-            category,
-            message: `${requestedWinner.name} terceirizou a Água`,
-            primary_actor_id: requestedWinner.id,
-          });
-        }
-
-        if (category === "pao" && hasBuff(activeBuffs, "TRANSFER_PAO")) {
-          shouldReroll = true;
-          consumeBuff(requestedWinner.id, "TRANSFER_PAO");
-          logs.push({
-            event_type: "item_use",
-            category,
-            message: `${requestedWinner.name} transferiu o Pão de Queijo`,
-            primary_actor_id: requestedWinner.id,
-          });
-        }
-
-        if (!shouldReroll) continue;
-
-        const rerollPool = participantProfiles.filter(
-          (profile: any) =>
-            profile.id !== requestedWinner.id &&
-            !resolvedWinnerIds.includes(profile.id),
-        );
-
-        if (rerollPool.length === 0) continue;
-
-        resolvedWinnerIds[index] =
-          rerollPool[randomIndex(rerollPool.length)].id;
+      if (category === "solo") {
+        participantSet.clear();
+        participantSet.add(winnerIds[0]);
       }
 
-      const clericWinnerIds = resolvedWinnerIds.filter((id) => {
-        const profile = profileMap.get(id);
-        return profile?.class === "clerigo";
+      const {
+        updates,
+        logs,
+        rewards,
+        winnerIds: resolvedWinnerIds,
+      } = processDrawOutcome({
+        category,
+        winnerIds,
+        participants: Array.from(participantSet),
+        profiles,
       });
-
-      for (const p of profiles) {
-        const isParticipant = participantSet.has(p.id);
-        const isWinner = resolvedWinnerIds.includes(p.id);
-        let hpChange = 0;
-        let xpChange = 0;
-        let coinsChange = 0;
-        let activeBuffs = purgeExpiredBuffs(normalizeBuffs(p.active_buffs));
-        let titles = normalizeTitles(p.titles);
-        const xpBreakdown: { label: string; value: number }[] = [];
-        const coinBreakdown: { label: string; value: number }[] = [];
-        // Apply stat_foco
-        const focoBonus = (p.stat_foco || 0) * 0.5;
-
-        const addXp = (label: string, value: number) => {
-          if (value === 0) return;
-          const adjustedValue = value > 0 && !(label.includes("Passiva") || label.includes("Novato")) ? value + focoBonus : value;
-          xpChange += adjustedValue;
-          xpBreakdown.push({ label, value: adjustedValue });
-        };
-        const addCoins = (label: string, value: number) => {
-          if (value === 0) return;
-          coinsChange += value;
-          coinBreakdown.push({ label, value });
-        };
-        const luck = typeof p.luck === "number" ? p.luck : 0;
-        const exhaustionThreshold =
-          typeof p.exhaustion_threshold === "number"
-            ? p.exhaustion_threshold
-            : 0.3;
-        const exhaustionPenaltyMultiplier =
-          typeof p.exhaustion_penalty_multiplier === "number"
-            ? p.exhaustion_penalty_multiplier
-            : 0.5;
-        const lastWeekdayRecoveryAt =
-          typeof p.last_weekday_recovery_at === "string"
-            ? p.last_weekday_recovery_at
-            : null;
-
-        if (category === "balde") {
-          activeBuffs = activeBuffs.filter(
-            (buff) => buff.type !== "SKIP_BALDE",
-          );
-        }
-
-        const consumedBuffs = consumedBuffsByProfile.get(p.id);
-        if (consumedBuffs) {
-          activeBuffs = activeBuffs.filter(
-            (buff) => !consumedBuffs.has(buff.type),
-          );
-        }
-
-        const recoveryPerDraw = getBuffValue(activeBuffs, "POST_PAO_RECOVERY");
-        let newHp = Math.min(p.max_hp, p.hp + recoveryPerDraw);
-        if (
-          isWeekdayForRecovery &&
-          lastWeekdayRecoveryAt !== weekdayRecoveryKey &&
-          p.max_hp > 0
-        ) {
-          const passiveRecovery = Math.max(
-            1,
-            Math.ceil(p.max_hp * WEEKDAY_PASSIVE_RECOVERY_RATIO),
-          );
-          const recoveredHp = Math.max(
-            0,
-            Math.min(p.max_hp, newHp + passiveRecovery) - newHp,
-          );
-          newHp = Math.min(p.max_hp, newHp + passiveRecovery);
-
-          if (recoveredHp > 0) {
-            logs.push({
-              event_type: "passive_recovery",
-              category: "system",
-              message: `${p.name} recuperou ${recoveredHp} HP da passiva diaria`,
-              primary_actor_id: p.id,
-            });
-          }
-        }
-
-        if (newHp >= p.max_hp) {
-          activeBuffs = activeBuffs.filter(
-            (buff) => buff.type !== "POST_PAO_RECOVERY",
-          );
-        }
-
-        // Apply Networking
-        const networkingBonus = (p.stat_networking || 0) * 0.005;
-
-        const {
-          passive: passiveCoinMultiplier,
-          temporary: temporaryCoinMultiplier,
-        } = resolveCoinMultipliers(
-          activeBuffs,
-          p.passive_coin_multiplier + networkingBonus,
-          p.temporary_coin_multiplier,
-        );
-
-        if (p.class === "guerreiro") {
-          addXp("Passiva de classe (Guerreiro)", GUERREIRO_PASSIVE_XP);
-        }
-
-        if (isParticipant) {
-          if (category === "pao") {
-            if (!isWinner) {
-              hpChange = -PAO_HP_LOSS;
-              addXp("Base do sorteio (PAO)", 20);
-              addCoins("Base do sorteio (PAO)", 10);
-              activeBuffs.push({
-                type: "RELIEF_LUCK",
-                expiresAt: new Date(
-                  Date.now() + 6 * 60 * 60 * 1000,
-                ).toISOString(),
-                value: DEFAULT_RELIEF_LUCK_BONUS,
-              });
-            }
-          } else if (category === "agua") {
-            if (isWinner) {
-              addXp("Base do sorteio (AGUA) - sorteado", 10);
-              addCoins("Base do sorteio (AGUA) - sorteado", 5);
-            } else {
-              hpChange = -AGUA_HP_LOSS;
-              addXp("Base do sorteio (AGUA) - participante", 5);
-            }
-          } else if (category === "balde") {
-            if (isWinner) {
-              addXp("Base do sorteio (BALDE) - sorteado", 30);
-              addCoins("Base do sorteio (BALDE) - sorteado", 15);
-            } else {
-              hpChange = -BALDE_HP_LOSS;
-              addXp("Base do sorteio (BALDE) - participante", 10);
-            }
-          } else if (category === "geral") {
-            if (!isWinner) {
-              hpChange = -GERAL_HP_LOSS;
-            }
-            addCoins("Base do sorteio (GERAL)", 5);
-          } else if (category === "solo") {
-            if (isWinner) {
-              addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
-              addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
-              const soloXpBonus = getBuffValue(activeBuffs, "SOLO_XP_BONUS");
-              const soloCoinBonus = getBuffValue(activeBuffs, "SOLO_COIN_BONUS");
-              if (soloXpBonus > 0) {
-                addXp("Vale Hora Extra", soloXpBonus);
-                consumeBuff(p.id, "SOLO_XP_BONUS");
-              }
-              if (soloCoinBonus > 0) {
-                addCoins("Vale Hora Extra", soloCoinBonus);
-                consumeBuff(p.id, "SOLO_COIN_BONUS");
-              }
-            } else {
-              hpChange = -SOLO_HP_LOSS;
-            }
-          }
-        }
-
-        if (p.class === "novato" && xpChange > 0) {
-          const previousXpChange = xpChange;
-          xpChange = Math.ceil(xpChange * NOVATO_XP_MULTIPLIER);
-          const novatoBonus = xpChange - previousXpChange;
-          if (novatoBonus !== 0) {
-            xpBreakdown.push({
-              label: "Bonus de classe (Novato +10% XP)",
-              value: novatoBonus,
-            });
-          }
-        }
-
-        if (
-          (p.class === "ladino" || p.class === "aprendiz_ladino") &&
-          isParticipant &&
-          !isWinner &&
-          coinsChange > 0
-        ) {
-          const previousCoinsChange = coinsChange;
-          const classMultiplier = p.class === "ladino" ? 1.25 : 1.1;
-          coinsChange = Math.floor(coinsChange * classMultiplier);
-          const ladinoBonus = coinsChange - previousCoinsChange;
-          if (ladinoBonus !== 0) {
-            coinBreakdown.push({
-              label: `Bonus de classe (${p.class === "ladino" ? "Ladino x1.25" : "Aprendiz Ladino x1.10"})`,
-              value: ladinoBonus,
-            });
-          }
-        }
-
-        if (
-          (p.class === "guerreiro" || p.class === "aprendiz_guerreiro") &&
-          hpChange < 0
-        ) {
-          hpChange = Math.floor(
-            hpChange * (p.class === "guerreiro" ? 0.6 : 0.8),
-          );
-        }
-
-        if (clericWinnerIds.length > 0 && isParticipant && !isWinner) {
-          addCoins(
-            `Aura de Comunhao (${clericWinnerIds.length} Clerigo(s))`,
-            clericWinnerIds.length * CLERIGO_GROUP_COINS,
-          );
-        }
-
-        if (coinsChange > 0) {
-          const previousCoinsChange = coinsChange;
-          coinsChange = Math.floor(
-            coinsChange * passiveCoinMultiplier * temporaryCoinMultiplier,
-          );
-          const multiplierDelta = coinsChange - previousCoinsChange;
-          if (multiplierDelta !== 0) {
-            coinBreakdown.push({
-              label: `Multiplicadores de moedas (x${(passiveCoinMultiplier * temporaryCoinMultiplier).toFixed(2)})`,
-              value: multiplierDelta,
-            });
-          }
-        }
-
-        const exhausted =
-          p.max_hp > 0 && p.hp / p.max_hp <= exhaustionThreshold;
-        if (exhausted && coinsChange > 0) {
-          const previousCoinsChange = coinsChange;
-          coinsChange = Math.max(
-            0,
-            Math.floor(coinsChange * exhaustionPenaltyMultiplier),
-          );
-          const exhaustionDelta = coinsChange - previousCoinsChange;
-          if (exhaustionDelta !== 0) {
-            coinBreakdown.push({
-              label: `Penalidade por exaustao (x${exhaustionPenaltyMultiplier.toFixed(2)})`,
-              value: exhaustionDelta,
-            });
-          }
-        }
-
-        newHp = Math.min(p.max_hp, Math.max(0, newHp + hpChange));
-
-        if (category === "pao" && isWinner) {
-          activeBuffs.push({
-            type: "POST_PAO_RECOVERY",
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            value:
-              p.class === "clerigo"
-                ? 10
-                : p.class === "aprendiz_clerigo"
-                  ? 8
-                  : 5,
-          });
-        }
-
-        let newXp = p.xp + xpChange;
-        let newCoins = p.coins + coinsChange;
-        let newLevel = p.level;
-        let newStatPoints = p.stat_points || 0;
-
-        while (newXp >= getXpRequiredForLevel(newLevel)) {
-          newXp -= getXpRequiredForLevel(newLevel);
-          newLevel++;
-          newStatPoints += 3;
-          newHp = p.max_hp;
-          coinsChange += LEVEL_UP_COIN_REWARD;
-          newCoins += LEVEL_UP_COIN_REWARD;
-          coinBreakdown.push({
-            label: `Bonus por subir para o LV.${newLevel}`,
-            value: LEVEL_UP_COIN_REWARD,
-          });
-          logs.push({
-            event_type: "level_up",
-            category: "system",
-            message: `Subiu para o nivel ${newLevel} e ganhou ${LEVEL_UP_COIN_REWARD} SetorCoins!`,
-            primary_actor_id: p.id,
-          });
-        }
-
-        if (category === "pao" && isWinner) {
-          titles = Array.from(new Set([...titles, "Mestre do Pão"]));
-        }
-        if (category === "balde" && isWinner) {
-          titles = Array.from(new Set([...titles, "Sobrevivente do Balde"]));
-        }
-        if (p.level < 5 && newLevel >= 5) {
-          titles = Array.from(new Set([...titles, "Lenda do Setor"]));
-        }
-        if (p.coins < 100 && newCoins >= 100) {
-          titles = Array.from(new Set([...titles, "Magnata das SetorCoins"]));
-        }
-
-        updates.push({
-          id: p.id,
-          hp: newHp,
-          xp: newXp,
-          coins: newCoins,
-          level: newLevel,
-          name: p.name,
-          class: p.class,
-          luck,
-          titles,
-          stat_points: newStatPoints,
-          stat_foco: p.stat_foco || 0,
-          stat_resiliencia: p.stat_resiliencia || 0,
-          stat_networking: p.stat_networking || 0,
-          stat_malandragem: p.stat_malandragem || 0,
-          passive_coin_multiplier: passiveCoinMultiplier,
-          temporary_coin_multiplier: hasBuff(activeBuffs, "COIN_MAGNET")
-            ? temporaryCoinMultiplier
-            : 1,
-          exhaustion_threshold: exhaustionThreshold,
-          exhaustion_penalty_multiplier: exhaustionPenaltyMultiplier,
-          max_hp: p.max_hp,
-          inventory: p.inventory,
-          active_buffs: activeBuffs,
-          last_weekday_recovery_at: isWeekdayForRecovery
-            ? weekdayRecoveryKey
-            : lastWeekdayRecoveryAt,
-          participates_in_pao: p.participates_in_pao,
-          participates_in_agua: p.participates_in_agua,
-          participates_in_balde: p.participates_in_balde,
-          participates_in_geral: p.participates_in_geral,
-        });
-
-        if (
-          isParticipant &&
-          (xpChange !== 0 || coinsChange !== 0 || isWinner)
-        ) {
-          rewards.push({
-            profileId: p.id,
-            profileName: p.name,
-            category,
-            isWinner,
-            xpGain: xpChange,
-            coinGain: coinsChange,
-            xpBreakdown,
-            coinBreakdown,
-          });
-        }
-      }
 
       const { error: uErr } = await supabase.from("profiles").upsert(updates);
       if (uErr) throw uErr;
-
-      for (const clericId of clericWinnerIds) {
-        logs.push({
-          event_type: "class_passive",
-          category,
-          message: `Aura de Comunhão concedeu moedas extras ao grupo`,
-          primary_actor_id: clericId,
-        });
-      }
-
-      for (const wId of resolvedWinnerIds) {
-        logs.push({
-          event_type: "draw_result",
-          category,
-          message: `Sorteado para ${category.toUpperCase()}`,
-          primary_actor_id: wId,
-          metadata: { participantsCount: participants.length },
-        });
-      }
 
       if (logs.length > 0) {
         await supabase.from("battle_logs").insert(logs);
