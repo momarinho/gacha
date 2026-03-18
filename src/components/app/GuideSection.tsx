@@ -38,8 +38,8 @@ export function GuideSection() {
               ganhos de moedas caem.
             </p>
             <p className="retro-copy-sm text-white/85">
-              De segunda a sexta, todo perfil recupera 10% do HP uma vez por dia
-              no primeiro sorteio oficial processado.
+              De segunda a sexta, todo perfil recupera 10% do HP atual uma vez
+              por dia no primeiro sorteio oficial processado.
             </p>
           </div>
         </section>

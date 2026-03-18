@@ -394,7 +394,7 @@ export function processDrawOutcome({
     ) {
       const passiveRecovery = Math.max(
         1,
-        Math.ceil(p.max_hp * WEEKDAY_PASSIVE_RECOVERY_RATIO),
+        Math.ceil(newHp * WEEKDAY_PASSIVE_RECOVERY_RATIO),
       );
       const recoveredHp = Math.max(
         0,
@@ -402,14 +402,12 @@ export function processDrawOutcome({
       );
       newHp = Math.min(p.max_hp, newHp + passiveRecovery);
 
-      if (recoveredHp > 0) {
-        logs.push({
-          event_type: "passive_recovery",
-          category: "system",
-          message: `${p.name} recuperou ${recoveredHp} HP da passiva diaria`,
-          primary_actor_id: p.id,
-        });
-      }
+      logs.push({
+        event_type: "passive_recovery",
+        category: "system",
+        message: `${p.name} recuperou ${recoveredHp} HP da passiva diaria`,
+        primary_actor_id: p.id,
+      });
     }
 
     if (newHp >= p.max_hp) {

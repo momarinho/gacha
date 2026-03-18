@@ -190,9 +190,48 @@ test("guerreiro reduz dano e exaustao reduz moedas", () => {
   const warriorUpdate = getProfile(result.updates, "warrior");
   const otherUpdate = getProfile(result.updates, "other");
 
-  assert.equal(warriorUpdate.hp, 30);
+  assert.equal(warriorUpdate.hp, 22);
   assert.equal(warriorUpdate.coins, 7);
   assert.equal(warriorUpdate.xp, 35);
   assert.equal(otherUpdate.hp, 82);
   assert.equal(otherUpdate.xp, 11);
+});
+
+test("recuperacao diaria usa 10% do HP atual para todos os perfis", () => {
+  const recovering = makeProfile("recovering", {
+    hp: 50,
+    last_weekday_recovery_at: "2026-03-17",
+  });
+  const capped = makeProfile("capped", {
+    hp: 96,
+    last_weekday_recovery_at: "2026-03-17",
+  });
+  const fullHp = makeProfile("full", {
+    hp: 100,
+    last_weekday_recovery_at: "2026-03-17",
+  });
+
+  const result = processDrawOutcome({
+    category: "geral",
+    winnerIds: ["recovering"],
+    participants: ["recovering", "capped", "full"],
+    profiles: [recovering, capped, fullHp],
+    now: weekdayNow,
+  });
+
+  const recoveringUpdate = getProfile(result.updates, "recovering");
+  const cappedUpdate = getProfile(result.updates, "capped");
+  const fullHpUpdate = getProfile(result.updates, "full");
+
+  assert.equal(recoveringUpdate.hp, 55);
+  assert.equal(cappedUpdate.hp, 95);
+  assert.equal(fullHpUpdate.hp, 95);
+  assert.equal(
+    result.logs.filter((log) => log.event_type === "passive_recovery").length,
+    3,
+  );
+  assert.match(
+    result.logs.find((log) => log.primary_actor_id === "full")?.message ?? "",
+    /recuperou 0 HP/,
+  );
 });
