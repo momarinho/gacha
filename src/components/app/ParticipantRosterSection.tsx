@@ -37,6 +37,7 @@ type ParticipantRosterSectionProps = {
   onTitleDraftChange: (profileId: string, title: string) => void;
   onSaveCustomTitle: (profile: Profile) => void;
   onRemoveProfile: (profileId: string) => void;
+  onAllocateStat: (profileId: string, stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem") => void;
   getExhaustionState: (profile: Profile) => {
     label: string;
     tone: "critical" | "warning" | "safe";
@@ -70,6 +71,7 @@ export function ParticipantRosterSection({
   onTitleDraftChange,
   onSaveCustomTitle,
   onRemoveProfile,
+  onAllocateStat,
   getExhaustionState,
   getCustomTitle,
   getClassPowerText,
@@ -422,6 +424,50 @@ export function ParticipantRosterSection({
                           >
                             SALVAR
                           </button>
+                        </div>
+                      )}
+
+                      {(person.stat_points || 0) > 0 && (
+                        <div className="mt-2 border border-emerald-500/50 bg-emerald-950/30 p-2">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="pixel-text text-[8px] text-emerald-300">
+                              PONTOS DE ATRIBUTO: {person.stat_points}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 gap-y-2">
+                            <button
+                              onClick={() => onAllocateStat(person.id, "stat_foco")}
+                              title="FOCO: +0.5 XP base por resultado"
+                              className="retro-label flex justify-between border border-white/20 bg-black px-1.5 py-1 text-[8px] hover:border-emerald-400 hover:text-emerald-300"
+                            >
+                              <span>FOCO</span>
+                              <span className="text-[var(--color-snes-gold)]">{person.stat_foco || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => onAllocateStat(person.id, "stat_resiliencia")}
+                              title="RESIL: +1 HP Máximo"
+                              className="retro-label flex justify-between border border-white/20 bg-black px-1.5 py-1 text-[8px] hover:border-emerald-400 hover:text-emerald-300"
+                            >
+                              <span>RESIL</span>
+                              <span className="text-[var(--color-snes-gold)]">{person.stat_resiliencia || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => onAllocateStat(person.id, "stat_networking")}
+                              title="NET: +0.5% ganho de moedas"
+                              className="retro-label flex justify-between border border-white/20 bg-black px-1.5 py-1 text-[8px] hover:border-emerald-400 hover:text-emerald-300"
+                            >
+                              <span>NET</span>
+                              <span className="text-[var(--color-snes-gold)]">{person.stat_networking || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => onAllocateStat(person.id, "stat_malandragem")}
+                              title="MALAND: +0.5% de chance de esquiva"
+                              className="retro-label flex justify-between border border-white/20 bg-black px-1.5 py-1 text-[8px] hover:border-emerald-400 hover:text-emerald-300"
+                            >
+                              <span>MALAND</span>
+                              <span className="text-[var(--color-snes-gold)]">{person.stat_malandragem || 0}</span>
+                            </button>
+                          </div>
                         </div>
                       )}
 

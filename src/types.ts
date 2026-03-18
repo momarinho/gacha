@@ -43,6 +43,11 @@ export interface Profile {
   participates_in_agua: boolean;
   participates_in_balde: boolean;
   participates_in_geral: boolean;
+  stat_points: number;
+  stat_foco: number;
+  stat_resiliencia: number;
+  stat_networking: number;
+  stat_malandragem: number;
   created_at?: string;
 }
 
@@ -125,4 +130,18 @@ export interface ProcessDrawResponse {
   updates: Profile[];
   winnerIds: string[];
   rewards: DrawRewardSummary[];
+}
+
+export interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "pending" | "in_progress" | "done";
+  created_by: string | null;
+  votes: number;
+  created_at: string;
+  profiles?: {
+    name: string;
+    class: string;
+  };
 }

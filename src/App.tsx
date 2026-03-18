@@ -44,6 +44,7 @@ import { ShopModal } from "./components/app/ShopModal";
 import { InventoryModal } from "./components/app/InventoryModal";
 import { DrawsPage } from "./components/app/DrawsPage";
 import { StartGate } from "./components/app/StartGate";
+import { RoadmapSection } from "./components/app/RoadmapSection";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
@@ -599,6 +600,19 @@ export default function App() {
     }
   };
 
+  const allocateStat = async (
+    profileId: string,
+    stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem"
+  ) => {
+    try {
+      const updatedProfile = await api.allocateStat(profileId, stat);
+      setProfiles(profiles.map(p => p.id === profileId ? updatedProfile : p));
+    } catch (error) {
+      console.error("Failed to allocate stat", error);
+      alert("Falha ao distribuir ponto. Tente novamente.");
+    }
+  };
+
   const highestLevel = getHighestLevel(profiles);
   const recentClassEffectsByProfileId = buildRecentClassEffectsByProfileId(
     profiles,
@@ -875,7 +889,7 @@ export default function App() {
             const result = await api.processDraw(
               "solo",
               [selectedProfile.id],
-              [selectedProfile.id],
+              profiles.map((p) => p.id),
             );
             setProfiles(result.updates);
             setSoloWinners(
@@ -997,6 +1011,7 @@ export default function App() {
       }
       onSaveCustomTitle={saveCustomTitle}
       onRemoveProfile={removeName}
+      onAllocateStat={allocateStat}
       getParticipationCount={getParticipationCount}
       getExhaustionState={getExhaustionState}
       getCustomTitle={getCustomTitle}
@@ -1125,6 +1140,8 @@ export default function App() {
               </>
             ) : currentPage === "guide" ? (
               guideSection
+            ) : currentPage === "roadmap" ? (
+              <RoadmapSection profiles={profiles} />
             ) : (
               settingsSection
             )}

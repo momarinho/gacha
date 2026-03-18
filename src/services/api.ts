@@ -6,6 +6,7 @@ import {
   SocialRankingEntry,
   SocialTitlesResponse,
   ProcessDrawResponse,
+  RoadmapItem,
 } from "../types";
 
 const API_BASE = "/api";
@@ -132,6 +133,59 @@ export const api = {
       body: JSON.stringify({ category, winnerIds, participants }),
     });
     if (!res.ok) throw new Error("Failed to process draw");
+    return res.json();
+  },
+
+  // Roadmap
+  getRoadmap: async (): Promise<RoadmapItem[]> => {
+    const res = await fetch(`${API_BASE}/roadmap`);
+    if (!res.ok) throw new Error("Failed to fetch roadmap");
+    return res.json();
+  },
+  addRoadmapItem: async (
+    title: string,
+    description: string,
+    created_by: string,
+  ): Promise<RoadmapItem[]> => {
+    const res = await fetch(`${API_BASE}/roadmap`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, description, created_by }),
+    });
+    if (!res.ok) throw new Error("Failed to add roadmap item");
+    return res.json();
+  },
+  voteRoadmapItem: async (id: string): Promise<RoadmapItem[]> => {
+    const res = await fetch(`${API_BASE}/roadmap/${id}/vote`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to vote for roadmap item");
+    return res.json();
+  },
+  updateRoadmapItemStatus: async (
+    id: string,
+    status: string,
+  ): Promise<RoadmapItem[]> => {
+    const res = await fetch(`${API_BASE}/roadmap/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("Failed to update roadmap item");
+    return res.json();
+  },
+
+  // Stats
+  allocateStat: async (
+    profileId: string,
+    stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem",
+  ): Promise<Profile> => {
+    const res = await fetch(`${API_BASE}/profiles/${profileId}/allocate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stat }),
+    });
+    if (!res.ok) throw new Error("Failed to allocate stat");
     return res.json();
   },
 };

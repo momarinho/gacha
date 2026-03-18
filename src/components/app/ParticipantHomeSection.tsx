@@ -24,6 +24,7 @@ type ParticipantHomeSectionProps = {
   onTitleDraftChange: (profileId: string, title: string) => void;
   onSaveCustomTitle: (profile: Profile) => void;
   onRemoveProfile: (profileId: string) => void;
+  onAllocateStat: (profileId: string, stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem") => void;
   getParticipationCount: (category: Category) => number;
   getExhaustionState: (profile: Profile) => {
     label: string;
@@ -60,6 +61,7 @@ export function ParticipantHomeSection({
   onTitleDraftChange,
   onSaveCustomTitle,
   onRemoveProfile,
+  onAllocateStat,
   getParticipationCount,
   getExhaustionState,
   getCustomTitle,
@@ -175,6 +177,7 @@ export function ParticipantHomeSection({
           onTitleDraftChange={onTitleDraftChange}
           onSaveCustomTitle={onSaveCustomTitle}
           onRemoveProfile={onRemoveProfile}
+          onAllocateStat={onAllocateStat}
           getExhaustionState={getExhaustionState}
           getCustomTitle={getCustomTitle}
           getClassPowerText={getClassPowerText}

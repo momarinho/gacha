@@ -1,4 +1,4 @@
-import { AlertCircle, History, Settings, User } from "lucide-react";
+import { AlertCircle, History, Settings, User, Map } from "lucide-react";
 
 import type { AppPage } from "../../app/constants";
 
@@ -14,6 +14,7 @@ const menuItems: Array<{
 }> = [
   { key: "home", label: "Participantes", icon: User },
   { key: "history", label: "Histórico", icon: History },
+  { key: "roadmap", label: "Roadmap", icon: Map },
   { key: "guide", label: "Guia", icon: AlertCircle },
   { key: "settings", label: "Config", icon: Settings },
 ];

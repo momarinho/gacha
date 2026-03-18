@@ -30,6 +30,7 @@ const PAO_HP_LOSS = 25;
 const AGUA_HP_LOSS = 8;
 const BALDE_HP_LOSS = 18;
 const GERAL_HP_LOSS = 5;
+const SOLO_HP_LOSS = 3;
 const SOLO_XP_GAIN = 12;
 const SOLO_COIN_GAIN = 8;
 const LEVEL_UP_COIN_REWARD = 20;
@@ -244,16 +245,19 @@ function getDodgeChance(
   profileClass: ProfileClass,
   luck: number,
   buffs: ActiveBuff[],
+  statMalandragem: number = 0,
 ) {
   const normalizedLuck =
     typeof luck === "number" && Number.isFinite(luck) ? Math.max(0, luck) : 0;
   const reliefLuckBonus = getBuffValue(buffs, "RELIEF_LUCK");
+  const malandragemStat =
+    typeof statMalandragem === "number" ? Math.max(0, statMalandragem) * 0.005 : 0; // Each point = 0.5% dodge
 
   if (profileClass === "ladino") {
-    return LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus;
+    return LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat;
   }
 
-  return 0;
+  return 0 + malandragemStat;
 }
 
 function applyProfileModifiersFromItem(
@@ -878,8 +882,12 @@ async function createExpressApp() {
           temporary_coin_multiplier: 1,
           exhaustion_threshold: 0.3,
           exhaustion_penalty_multiplier: 0.5,
-          inventory: [],
           active_buffs: [],
+          stat_points: 0,
+          stat_foco: 0,
+          stat_resiliencia: 0,
+          stat_networking: 0,
+          stat_malandragem: 0,
         };
 
         if (!payload.name) {
@@ -900,6 +908,37 @@ async function createExpressApp() {
       res
         .status(500)
         .json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  app.post("/api/profiles/:id/allocate", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      const { id } = req.params;
+      const { stat } = req.body;
+      const allowedStats = ["stat_foco", "stat_resiliencia", "stat_networking", "stat_malandragem"];
+      if (!allowedStats.includes(stat)) return res.status(400).json({ error: "Invalid stat" });
+
+      const { data: profile, error: pErr } = await supabase.from("profiles").select("*").eq("id", id).single();
+      if (pErr) throw pErr;
+      if (!profile || profile.stat_points <= 0) return res.status(400).json({ error: "No points available" });
+
+      const updates: any = {
+        stat_points: profile.stat_points - 1,
+        [stat]: (profile[stat] || 0) + 1,
+      };
+
+      if (stat === "stat_resiliencia") {
+        updates.max_hp = profile.max_hp + 1; // +1 HP per Resilience
+        updates.hp = profile.hp + 1; // Heal 1 HP immediately
+      }
+
+      const { data, error } = await supabase.from("profiles").update(updates).eq("id", id).select().single();
+      if (error) throw error;
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
@@ -971,6 +1010,62 @@ async function createExpressApp() {
       res
         .status(500)
         .json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  // Roadmap
+  app.get("/api/roadmap", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      const { data, error } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      if (error) throw error;
+      res.json(data || []);
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  app.post("/api/roadmap", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      const { title, description, created_by } = req.body;
+      const { error } = await supabase.from("roadmap").insert([{ title, description, created_by }]);
+      if (error) throw error;
+      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      res.json(all || []);
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  app.put("/api/roadmap/:id", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      const { status } = req.body;
+      const { error } = await supabase.from("roadmap").update({ status }).eq("id", req.params.id);
+      if (error) throw error;
+      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      res.json(all || []);
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  app.post("/api/roadmap/:id/vote", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled) return res.status(501).json({ error: "Not implemented for SQLite yet" });
+      const { data: roadmap, error: rErr } = await supabase.from("roadmap").select("votes").eq("id", req.params.id).single();
+      if (rErr) throw rErr;
+      const { error } = await supabase.from("roadmap").update({ votes: (roadmap.votes || 0) + 1 }).eq("id", req.params.id);
+      if (error) throw error;
+      const { data: all } = await supabase.from("roadmap").select("*, profiles(name, class)").order("votes", { ascending: false });
+      res.json(all || []);
+    } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: String(error) });
     }
   });
 
@@ -1347,6 +1442,7 @@ async function createExpressApp() {
             requestedWinner.class,
             requestedWinner.luck,
             activeBuffs,
+            requestedWinner.stat_malandragem || 0,
           );
 
           if (dodgeChance > 0 && randomChance(dodgeChance)) {
@@ -1411,10 +1507,14 @@ async function createExpressApp() {
         let titles = normalizeTitles(p.titles);
         const xpBreakdown: { label: string; value: number }[] = [];
         const coinBreakdown: { label: string; value: number }[] = [];
+        // Apply stat_foco
+        const focoBonus = (p.stat_foco || 0) * 0.5;
+
         const addXp = (label: string, value: number) => {
           if (value === 0) return;
-          xpChange += value;
-          xpBreakdown.push({ label, value });
+          const adjustedValue = value > 0 && !(label.includes("Passiva") || label.includes("Novato")) ? value + focoBonus : value;
+          xpChange += adjustedValue;
+          xpBreakdown.push({ label, value: adjustedValue });
         };
         const addCoins = (label: string, value: number) => {
           if (value === 0) return;
@@ -1481,12 +1581,15 @@ async function createExpressApp() {
           );
         }
 
+        // Apply Networking
+        const networkingBonus = (p.stat_networking || 0) * 0.005;
+
         const {
           passive: passiveCoinMultiplier,
           temporary: temporaryCoinMultiplier,
         } = resolveCoinMultipliers(
           activeBuffs,
-          p.passive_coin_multiplier,
+          p.passive_coin_multiplier + networkingBonus,
           p.temporary_coin_multiplier,
         );
 
@@ -1529,18 +1632,22 @@ async function createExpressApp() {
               hpChange = -GERAL_HP_LOSS;
             }
             addCoins("Base do sorteio (GERAL)", 5);
-          } else if (category === "solo" && isWinner) {
-            addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
-            addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
-            const soloXpBonus = getBuffValue(activeBuffs, "SOLO_XP_BONUS");
-            const soloCoinBonus = getBuffValue(activeBuffs, "SOLO_COIN_BONUS");
-            if (soloXpBonus > 0) {
-              addXp("Vale Hora Extra", soloXpBonus);
-              consumeBuff(p.id, "SOLO_XP_BONUS");
-            }
-            if (soloCoinBonus > 0) {
-              addCoins("Vale Hora Extra", soloCoinBonus);
-              consumeBuff(p.id, "SOLO_COIN_BONUS");
+          } else if (category === "solo") {
+            if (isWinner) {
+              addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
+              addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
+              const soloXpBonus = getBuffValue(activeBuffs, "SOLO_XP_BONUS");
+              const soloCoinBonus = getBuffValue(activeBuffs, "SOLO_COIN_BONUS");
+              if (soloXpBonus > 0) {
+                addXp("Vale Hora Extra", soloXpBonus);
+                consumeBuff(p.id, "SOLO_XP_BONUS");
+              }
+              if (soloCoinBonus > 0) {
+                addCoins("Vale Hora Extra", soloCoinBonus);
+                consumeBuff(p.id, "SOLO_COIN_BONUS");
+              }
+            } else {
+              hpChange = -SOLO_HP_LOSS;
             }
           }
         }
@@ -1640,10 +1747,12 @@ async function createExpressApp() {
         let newXp = p.xp + xpChange;
         let newCoins = p.coins + coinsChange;
         let newLevel = p.level;
+        let newStatPoints = p.stat_points || 0;
 
         while (newXp >= getXpRequiredForLevel(newLevel)) {
           newXp -= getXpRequiredForLevel(newLevel);
           newLevel++;
+          newStatPoints += 3;
           newHp = p.max_hp;
           coinsChange += LEVEL_UP_COIN_REWARD;
           newCoins += LEVEL_UP_COIN_REWARD;
@@ -1682,6 +1791,11 @@ async function createExpressApp() {
           class: p.class,
           luck,
           titles,
+          stat_points: newStatPoints,
+          stat_foco: p.stat_foco || 0,
+          stat_resiliencia: p.stat_resiliencia || 0,
+          stat_networking: p.stat_networking || 0,
+          stat_malandragem: p.stat_malandragem || 0,
           passive_coin_multiplier: passiveCoinMultiplier,
           temporary_coin_multiplier: hasBuff(activeBuffs, "COIN_MAGNET")
             ? temporaryCoinMultiplier
