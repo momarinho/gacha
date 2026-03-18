@@ -1,15 +1,11 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { processDrawOutcome } from "./drawLogic";
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Supabase Configuration
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -346,7 +342,7 @@ async function initDb() {
       "Running on Vercel but no Supabase config found. Cloud sync will be offline.",
     );
   } else {
-    const dbPath = path.join(__dirname, "..", "raffle.db");
+    const dbPath = path.join(process.cwd(), "raffle.db");
     console.log(`No Supabase config found. Using local SQLite at ${dbPath}`);
     try {
       const sqliteModuleName = "better-sqlite3";
@@ -1527,9 +1523,9 @@ async function createExpressApp() {
     }
   } else if (!process.env.VERCEL) {
     // Only serve static files if NOT on Vercel (Vercel handles this via vercel.json)
-    app.use(express.static(path.join(__dirname, "..", "dist")));
+    app.use(express.static(path.join(process.cwd(), "dist")));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "..", "dist", "index.html"));
+      res.sendFile(path.join(process.cwd(), "dist", "index.html"));
     });
   }
 
