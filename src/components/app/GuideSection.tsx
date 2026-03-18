@@ -38,8 +38,8 @@ export function GuideSection() {
               ganhos de moedas caem.
             </p>
             <p className="retro-copy-sm text-white/85">
-              De segunda a sexta, todo perfil recupera 10% do HP uma vez por
-              dia no primeiro sorteio oficial processado.
+              De segunda a sexta, todo perfil recupera 10% do HP uma vez por dia
+              no primeiro sorteio oficial processado.
             </p>
           </div>
         </section>
@@ -64,6 +64,59 @@ export function GuideSection() {
             <p className="retro-copy-sm text-white/85">
               Toda subida de nível restaura o HP e concede +20 SetorCoins.
             </p>
+            <p className="retro-copy-sm text-white/85">
+              Toda subida de nível também concede +3 pontos de atributo.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            ATRIBUTOS
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              Os pontos de atributo são distribuídos no mesmo modal da
+              progressão de classe.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Cada nível ganho entrega +3 pontos livres para especializar o
+              perfil.
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="border-2 border-white/20 bg-black/30 p-3">
+                <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                  FOCO
+                </div>
+                <p className="retro-copy-sm mt-2 text-white/85">
+                  +0.5 XP base por resultado.
+                </p>
+              </div>
+              <div className="border-2 border-white/20 bg-black/30 p-3">
+                <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                  RESILIÊNCIA
+                </div>
+                <p className="retro-copy-sm mt-2 text-white/85">
+                  +1 HP máximo e +1 HP imediato por ponto.
+                </p>
+              </div>
+              <div className="border-2 border-white/20 bg-black/30 p-3">
+                <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                  NETWORKING
+                </div>
+                <p className="retro-copy-sm mt-2 text-white/85">
+                  +0.5% no ganho passivo de moedas por ponto.
+                </p>
+              </div>
+              <div className="border-2 border-white/20 bg-black/30 p-3">
+                <div className="pixel-text-soft text-[7px] text-[var(--color-snes-gold)]">
+                  MALANDRAGEM
+                </div>
+                <p className="retro-copy-sm mt-2 text-white/85">
+                  +0.5% de chance de esquiva por ponto.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -141,8 +194,8 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +10 XP e +5 $C. Participantes não selecionados:
-                +5 XP e -8 HP.
+                Sorteado: +10 XP e +5 $C. Participantes não selecionados: +5 XP
+                e -8 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-blue-200/90">
                 O dano agora vai para quem participou e nao foi selecionado.
@@ -153,8 +206,8 @@ export function GuideSection() {
                 BALDE
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +30 XP e +15 $C. Participantes nao selecionados:
-                +10 XP e -18 HP.
+                Sorteado: +30 XP e +15 $C. Participantes nao selecionados: +10
+                XP e -18 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-purple-200/90">
                 O sorteado leva a recompensa; o resto absorve o desgaste.
@@ -220,13 +273,13 @@ export function GuideSection() {
               Ganhos atuais por nivel: +20 $C por level up.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Ganhos base por sorteio: PAO +10 $C para nao sorteados, AGUA +5
-              $C para sorteado, BALDE +15 $C para sorteado, GERAL +5 $C para
-              todos e SOLO +8 $C para o selecionado.
+              Ganhos base por sorteio: PAO +10 $C para nao sorteados, AGUA +5 $C
+              para sorteado, BALDE +15 $C para sorteado, GERAL +5 $C para todos
+              e SOLO +8 $C para o selecionado.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Moedas extras ainda podem ser alteradas por Ladino, Clerigo,
-              Ima de Moedas, descontos de Mago e penalidade por exaustao.
+              Moedas extras ainda podem ser alteradas por Ladino, Clerigo, Ima
+              de Moedas, descontos de Mago e penalidade por exaustao.
             </p>
           </div>
         </section>
@@ -337,8 +390,8 @@ export function GuideSection() {
               passivas globais mais visiveis e economia com metas semanais.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Proximos candidatos: missoes de equipe, recompensas por
-              frequencia e novos consumiveis utilitarios.
+              Proximos candidatos: missoes de equipe, recompensas por frequencia
+              e novos consumiveis utilitarios.
             </p>
           </div>
         </section>
