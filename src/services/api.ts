@@ -1,6 +1,7 @@
 import {
   Profile,
   ShopItem,
+  ShopPullResult,
   BattleLog,
   MageInsights,
   SocialRankingEntry,
@@ -76,6 +77,18 @@ export const api = {
   getShopItems: async (): Promise<ShopItem[]> => {
     const res = await fetch(`${API_BASE}/shop`);
     if (!res.ok) throw new Error("Failed to fetch shop items");
+    return res.json();
+  },
+  pullShopItems: async (
+    profileId: string,
+    count: 1 | 10,
+  ): Promise<ShopPullResult> => {
+    const res = await fetch(`${API_BASE}/shop/pull`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profileId, count }),
+    });
+    if (!res.ok) throw new Error("Failed to pull shop items");
     return res.json();
   },
   buyItem: async (profileId: string, itemId: string): Promise<Profile> => {
@@ -178,7 +191,11 @@ export const api = {
   // Stats
   allocateStat: async (
     profileId: string,
-    stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem",
+    stat:
+      | "stat_foco"
+      | "stat_resiliencia"
+      | "stat_networking"
+      | "stat_malandragem",
   ): Promise<Profile> => {
     const res = await fetch(`${API_BASE}/profiles/${profileId}/allocate`, {
       method: "POST",

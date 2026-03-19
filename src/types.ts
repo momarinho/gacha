@@ -57,6 +57,7 @@ export interface ShopItem {
   description: string;
   price: number;
   type: "consumable" | "passive" | "rare";
+  rarity?: "common" | "rare" | "epic" | "legendary";
   effect_code: string;
   icon: string;
   min_level: number;
@@ -65,6 +66,21 @@ export interface ShopItem {
   stackable?: boolean;
   target_category?: "pao" | "agua" | "balde" | "geral" | null;
   created_at?: string;
+}
+
+export interface ShopPullDrop {
+  item: ShopItem;
+  rarity: "common" | "rare" | "epic" | "legendary";
+  isGuaranteed: boolean;
+}
+
+export interface ShopPullResult {
+  profile: Profile;
+  spentCoins: number;
+  totalPulls: number;
+  pityToRare: number;
+  pityToLegendary: number;
+  drops: ShopPullDrop[];
 }
 
 export interface BattleLog {

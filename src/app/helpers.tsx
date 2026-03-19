@@ -30,7 +30,9 @@ export function resolveWinnerNames(
   const profileMap = new Map(
     updatedProfiles.map((profile) => [profile.id, profile.name]),
   );
-  return winnerIds.map((winnerId) => profileMap.get(winnerId) ?? "Desconhecido");
+  return winnerIds.map(
+    (winnerId) => profileMap.get(winnerId) ?? "Desconhecido",
+  );
 }
 
 export function getHighestLevel(profiles: Profile[]) {
@@ -134,7 +136,9 @@ export function getItemEffectText(item: ShopItem) {
     item.effect_code === "RELIEF_LUCK_BOOST"
   ) {
     const durationHours =
-      typeof metadata.duration_hours === "number" ? metadata.duration_hours : 24;
+      typeof metadata.duration_hours === "number"
+        ? metadata.duration_hours
+        : 24;
     return `Sorte +${metadata.luckBonus.toFixed(2)} por ${durationHours}h`;
   }
 
@@ -160,6 +164,44 @@ export function getItemEffectText(item: ShopItem) {
   return null;
 }
 
+export function getShopPullPrice(
+  profile: Pick<Profile, "class"> | null | undefined,
+  count: 1 | 10,
+) {
+  const basePrice = count === 10 ? 180 : 20;
+
+  if (!profile) return basePrice;
+  if (profile.class === "mago") return Math.ceil(basePrice * 0.8);
+  if (profile.class === "aprendiz_mago") return Math.ceil(basePrice * 0.9);
+  return basePrice;
+}
+
+export function getShopRarityLabel(rarity?: ShopItem["rarity"]) {
+  switch (rarity) {
+    case "legendary":
+      return "Lendário";
+    case "epic":
+      return "Épico";
+    case "rare":
+      return "Raro";
+    default:
+      return "Comum";
+  }
+}
+
+export function getShopPityCount(
+  profile: Pick<Profile, "active_buffs"> | null | undefined,
+  type: "rare" | "legendary",
+) {
+  if (!profile || !Array.isArray(profile.active_buffs)) return 0;
+
+  const buffType = type === "rare" ? "SHOP_PITY_RARE" : "SHOP_PITY_LEGENDARY";
+  const pityBuff = profile.active_buffs.find((buff) => buff.type === buffType);
+  return typeof pityBuff?.value === "number" && pityBuff.value > 0
+    ? Math.floor(pityBuff.value)
+    : 0;
+}
+
 export function getClassProgressionOptions(profile: Profile) {
   if (profile.class === "novato") {
     if (profile.level < APPRENTICE_UNLOCK_LEVEL) return [];
@@ -173,10 +215,12 @@ export function getClassProgressionOptions(profile: Profile) {
 
   if (profile.level < FINAL_CLASS_UNLOCK_LEVEL) return [];
 
-  if (profile.class === "aprendiz_guerreiro") return ["guerreiro"] as ProfileClass[];
+  if (profile.class === "aprendiz_guerreiro")
+    return ["guerreiro"] as ProfileClass[];
   if (profile.class === "aprendiz_mago") return ["mago"] as ProfileClass[];
   if (profile.class === "aprendiz_ladino") return ["ladino"] as ProfileClass[];
-  if (profile.class === "aprendiz_clerigo") return ["clerigo"] as ProfileClass[];
+  if (profile.class === "aprendiz_clerigo")
+    return ["clerigo"] as ProfileClass[];
 
   return [];
 }
@@ -210,7 +254,9 @@ export function buildRecentClassEffectsByProfileId(
   >((acc, entry) => {
     if (!entry.primary_actor_id || acc[entry.primary_actor_id]) return acc;
 
-    const profile = profiles.find((person) => person.id === entry.primary_actor_id);
+    const profile = profiles.find(
+      (person) => person.id === entry.primary_actor_id,
+    );
     if (!profile) return acc;
 
     if (
@@ -265,7 +311,8 @@ export const classOptionMeta: Record<
 > = {
   aprendiz_guerreiro: {
     label: "Aprendiz Guerreiro",
-    description: "Primeiro passo da trilha de defesa. Reduz parte do dano ruim.",
+    description:
+      "Primeiro passo da trilha de defesa. Reduz parte do dano ruim.",
     tone: "hover:border-red-400",
     icon: <Shield className="w-6 h-6 text-white" />,
   },

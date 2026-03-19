@@ -8,6 +8,7 @@ import {
   Profile,
   ProfileClass,
   ShopItem,
+  ShopPullResult,
 } from "./types";
 import { api } from "./services/api";
 import {
@@ -562,19 +563,24 @@ export default function App() {
     }
   };
 
-  const buyItem = async (profileId: string, itemId: string) => {
+  const pullShopItems = async (
+    profileId: string,
+    count: 1 | 10,
+  ): Promise<ShopPullResult> => {
     try {
-      const updatedProfile = await api.buyItem(profileId, itemId);
+      const result = await api.pullShopItems(profileId, count);
       setProfiles(
-        profiles.map((p) => (p.id === profileId ? updatedProfile : p)),
+        profiles.map((p) => (p.id === profileId ? result.profile : p)),
       );
       const [logs] = await Promise.all([api.getLogs(), refreshSocialData()]);
       setBattleLogs(logs);
+      return result;
     } catch (err) {
-      console.error("Failed to buy item", err);
+      console.error("Failed to pull shop items", err);
       alert(
-        "Falha ao comprar item. Verifique se você tem SetorCoins suficientes e nível adequado.",
+        "Falha ao fazer pull. Verifique se você tem SetorCoins suficientes e nível adequado.",
       );
+      throw err;
     }
   };
 
@@ -1194,7 +1200,7 @@ export default function App() {
         getItemEffectText={getItemEffectText}
         onClose={() => setShopModalOpen(false)}
         onSelectProfile={setSelectedProfileId}
-        onBuyItem={buyItem}
+        onPullItems={pullShopItems}
       />
 
       <InventoryModal

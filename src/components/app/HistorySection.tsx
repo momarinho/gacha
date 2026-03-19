@@ -54,7 +54,7 @@ export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
                       ? "bg-yellow-500 text-slate-950"
                       : entry.event_type === "level_up"
                         ? "bg-emerald-600 text-white"
-                        : entry.event_type === "item_buy"
+                        : ["item_buy", "gacha_pull"].includes(entry.event_type)
                           ? "bg-blue-600 text-white"
                           : "bg-black/40 text-white"
                 }`}
@@ -65,7 +65,7 @@ export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
                 {entry.event_type === "level_up" && (
                   <CheckCircle2 className="h-4 w-4" />
                 )}
-                {entry.event_type === "item_buy" && (
+                {["item_buy", "gacha_pull"].includes(entry.event_type) && (
                   <ShoppingCart className="h-4 w-4" />
                 )}
                 {![
@@ -73,6 +73,7 @@ export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
                   "training_draw",
                   "level_up",
                   "item_buy",
+                  "gacha_pull",
                 ].includes(entry.event_type) && <History className="h-4 w-4" />}
               </div>
               <div className="min-w-0 flex-1">

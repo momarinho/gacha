@@ -39,6 +39,19 @@ const SHOP_PRICE_OVERRIDES: Record<string, number> = {
   HEAL_PERCENT_50: 35,
   OUTSOURCE_AGUA: 180,
 };
+const SHOP_PULL_PRICE_SINGLE = 20;
+const SHOP_PULL_PRICE_MULTI = 180;
+const SHOP_RARE_PITY_THRESHOLD = 10;
+const SHOP_LEGENDARY_PITY_THRESHOLD = 90;
+const SHOP_BANNER_RATES: Record<ShopItemRarity, number> = {
+  common: 0.65,
+  rare: 0.25,
+  epic: 0.09,
+  legendary: 0.01,
+};
+const SHOP_PITY_RARE_BUFF = "SHOP_PITY_RARE";
+const SHOP_PITY_LEGENDARY_BUFF = "SHOP_PITY_LEGENDARY";
+const SHOP_PITY_EXPIRES_AT = "2099-12-31T23:59:59.999Z";
 
 const PROFILE_CLASSES = [
   "novato",
@@ -78,6 +91,24 @@ type ItemMetadata = {
     exhaustion_penalty_multiplier?: number;
     luck?: number;
   };
+};
+
+type ShopItemRarity = "common" | "rare" | "epic" | "legendary";
+
+type ShopItemRecord = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  type: string;
+  effect_code: string;
+  icon: string;
+  min_level: number;
+  duration_minutes?: number | null;
+  metadata?: ItemMetadata;
+  stackable?: boolean;
+  target_category?: "pao" | "agua" | "balde" | "geral" | null;
+  created_at?: string;
 };
 
 type DrawCategory = "pao" | "agua" | "balde" | "geral" | "solo";
@@ -282,6 +313,101 @@ function getBusinessDayState(now = new Date()) {
 function getEffectiveShopPrice(item: any) {
   const override = SHOP_PRICE_OVERRIDES[item?.effect_code];
   return typeof override === "number" ? override : item?.price;
+}
+
+function getShopItemRarity(item: ShopItemRecord): ShopItemRarity {
+  switch (item.effect_code) {
+    case "OUTSOURCE_AGUA":
+      return "legendary";
+    case "TRANSFER_PAO":
+      return "epic";
+    case "COIN_MAGNET":
+      return item.duration_minutes && item.duration_minutes >= 60
+        ? "epic"
+        : "rare";
+    case "SKIP_BALDE_NEXT":
+    case "SOLO_REWARD_BOOST":
+      return "rare";
+    default:
+      return "common";
+  }
+}
+
+function normalizeShopItem(item: ShopItemRecord) {
+  return {
+    ...item,
+    price: getEffectiveShopPrice(item),
+    rarity: getShopItemRarity(item),
+  };
+}
+
+function getShopPullPrice(profileClass: ProfileClass, count: 1 | 10) {
+  const basePrice =
+    count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE;
+
+  if (profileClass === "mago") return Math.ceil(basePrice * 0.8);
+  if (profileClass === "aprendiz_mago") return Math.ceil(basePrice * 0.9);
+  return basePrice;
+}
+
+function getPersistentPityCount(buffs: ActiveBuff[], type: string) {
+  const pityBuff = buffs.find((buff) => buff.type === type);
+  return typeof pityBuff?.value === "number" && pityBuff.value > 0
+    ? Math.floor(pityBuff.value)
+    : 0;
+}
+
+function upsertPersistentPityBuff(
+  buffs: ActiveBuff[],
+  type: string,
+  value: number,
+): ActiveBuff[] {
+  const nextBuffs = buffs.filter((buff) => buff.type !== type);
+  nextBuffs.push({
+    type,
+    expiresAt: SHOP_PITY_EXPIRES_AT,
+    value: Math.max(0, Math.floor(value)),
+  });
+  return nextBuffs;
+}
+
+function pickWeightedShopItem(items: ReturnType<typeof normalizeShopItem>[]) {
+  const totalWeight = items.reduce((sum, item) => {
+    return sum + Math.max(1, Math.round(400 / Math.max(1, item.price)));
+  }, 0);
+  const target = randomIndex(totalWeight);
+  let cursor = 0;
+
+  for (const item of items) {
+    cursor += Math.max(1, Math.round(400 / Math.max(1, item.price)));
+    if (target < cursor) return item;
+  }
+
+  return items[items.length - 1];
+}
+
+function pickShopRarity(forceRareOrBetter: boolean, forceLegendary: boolean) {
+  if (forceLegendary) return "legendary" as ShopItemRarity;
+
+  const rates = forceRareOrBetter
+    ? {
+        rare: SHOP_BANNER_RATES.rare,
+        epic: SHOP_BANNER_RATES.epic,
+        legendary: SHOP_BANNER_RATES.legendary,
+      }
+    : SHOP_BANNER_RATES;
+
+  const total = Object.values(rates).reduce((sum, value) => sum + value, 0);
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  let roll = (array[0] / 0xffffffff) * total;
+
+  for (const [rarity, chance] of Object.entries(rates)) {
+    roll -= chance;
+    if (roll <= 0) return rarity as ShopItemRarity;
+  }
+
+  return forceRareOrBetter ? "rare" : "common";
 }
 
 function isApprenticeClass(profileClass: string): profileClass is ProfileClass {
@@ -1666,15 +1792,170 @@ async function createExpressApp() {
         if (error) throw error;
         res.json(
           (data || [])
-            .map((item: any) => ({
-              ...item,
-              price: getEffectiveShopPrice(item),
-            }))
+            .map((item: ShopItemRecord) => normalizeShopItem(item))
             .sort((left: any, right: any) => left.price - right.price),
         );
       } else {
         res.status(501).json({ error: "Not implemented for SQLite yet" });
       }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
+
+  app.post("/api/shop/pull", async (req, res) => {
+    try {
+      await initDb();
+      if (!isSupabaseEnabled)
+        return res
+          .status(501)
+          .json({ error: "Not implemented for SQLite yet" });
+
+      const profileId = String(req.body?.profileId || "");
+      const rawCount = Number(req.body?.count);
+      const count: 1 | 10 = rawCount === 10 ? 10 : 1;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", profileId)
+        .single();
+      if (profileError) throw profileError;
+
+      const { data: items, error: itemError } = await supabase
+        .from("shop_items")
+        .select("*");
+      if (itemError) throw itemError;
+
+      const normalizedItems = (items || []).map((item: ShopItemRecord) =>
+        normalizeShopItem(item),
+      );
+      if (normalizedItems.length === 0) {
+        return res.status(400).json({ error: "Shop pool is empty" });
+      }
+
+      const chargedPrice = getShopPullPrice(profile.class, count);
+      if (profile.coins < chargedPrice) {
+        return res.status(400).json({ error: "Not enough coins" });
+      }
+
+      const inventory = Array.isArray(profile.inventory)
+        ? [...profile.inventory]
+        : [];
+      let activeBuffs = normalizeBuffs(profile.active_buffs);
+      let pityToRare = getPersistentPityCount(activeBuffs, SHOP_PITY_RARE_BUFF);
+      let pityToLegendary = getPersistentPityCount(
+        activeBuffs,
+        SHOP_PITY_LEGENDARY_BUFF,
+      );
+      const drops: Array<{
+        item: ReturnType<typeof normalizeShopItem>;
+        rarity: ShopItemRarity;
+        isGuaranteed: boolean;
+      }> = [];
+
+      for (let pullIndex = 0; pullIndex < count; pullIndex++) {
+        const forceLegendary =
+          pityToLegendary + 1 >= SHOP_LEGENDARY_PITY_THRESHOLD;
+        const forceRareOrBetter =
+          forceLegendary || pityToRare + 1 >= SHOP_RARE_PITY_THRESHOLD;
+
+        let rarity = pickShopRarity(forceRareOrBetter, forceLegendary);
+        let pool = normalizedItems.filter((item) => item.rarity === rarity);
+
+        if (pool.length === 0 && rarity === "legendary") {
+          rarity = "epic";
+          pool = normalizedItems.filter((item) => item.rarity === rarity);
+        }
+        if (pool.length === 0 && rarity === "epic") {
+          rarity = "rare";
+          pool = normalizedItems.filter((item) => item.rarity === rarity);
+        }
+        if (pool.length === 0 && rarity === "rare") {
+          rarity = "common";
+          pool = normalizedItems.filter((item) => item.rarity === rarity);
+        }
+        if (pool.length === 0) {
+          pool = normalizedItems;
+          rarity = pool[0].rarity || "common";
+        }
+
+        const awardedItem = pickWeightedShopItem(pool);
+        const existingItem = inventory.find(
+          (entry: any) => entry.item_id === awardedItem.id,
+        );
+
+        if (existingItem) {
+          existingItem.qty += 1;
+        } else {
+          inventory.push({ item_id: awardedItem.id, qty: 1 });
+        }
+
+        drops.push({
+          item: awardedItem,
+          rarity,
+          isGuaranteed:
+            forceLegendary || (forceRareOrBetter && rarity !== "common"),
+        });
+
+        pityToRare = rarity === "common" ? pityToRare + 1 : 0;
+        pityToLegendary = rarity === "legendary" ? 0 : pityToLegendary + 1;
+      }
+
+      activeBuffs = upsertPersistentPityBuff(
+        activeBuffs,
+        SHOP_PITY_RARE_BUFF,
+        pityToRare,
+      );
+      activeBuffs = upsertPersistentPityBuff(
+        activeBuffs,
+        SHOP_PITY_LEGENDARY_BUFF,
+        pityToLegendary,
+      );
+
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          coins: profile.coins - chargedPrice,
+          inventory,
+          active_buffs: activeBuffs,
+        })
+        .eq("id", profileId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      await supabase.from("battle_logs").insert([
+        {
+          event_type: "gacha_pull",
+          category: "system",
+          message: `Fez ${count} pull${count > 1 ? "s" : ""} no Banner do Setor`,
+          primary_actor_id: profileId,
+          metadata: {
+            coinsChanged: -chargedPrice,
+            count,
+            pityToRare,
+            pityToLegendary,
+            drops: drops.map((drop) => ({
+              itemId: drop.item.id,
+              rarity: drop.rarity,
+              guaranteed: drop.isGuaranteed,
+            })),
+          },
+        },
+      ]);
+
+      res.json({
+        profile: updatedProfile,
+        spentCoins: chargedPrice,
+        totalPulls: count,
+        pityToRare,
+        pityToLegendary,
+        drops,
+      });
     } catch (error) {
       res
         .status(500)
