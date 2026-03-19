@@ -162,13 +162,13 @@ export function ClassSelectionModal({
                       key: "stat_networking" as const,
                       label: "NETWORKING",
                       value: profile.stat_networking || 0,
-                      detail: "+0.5% no ganho passivo de moedas",
+                      detail: "+0.3% no ganho passivo de moedas",
                     },
                     {
                       key: "stat_malandragem" as const,
                       label: "MALANDRAGEM",
                       value: profile.stat_malandragem || 0,
-                      detail: "+0.5% de chance de esquiva",
+                      detail: "+0.4% de chance de esquiva",
                     },
                   ].map((stat) => (
                     <div

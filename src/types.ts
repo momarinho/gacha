@@ -1,3 +1,5 @@
+import type { DailyChallengeId } from "../shared/dailyChallenges";
+
 export type ProfileClass =
   | "novato"
   | "aprendiz_guerreiro"
@@ -21,6 +23,19 @@ export interface ActiveBuff {
   metadata?: Record<string, any>;
 }
 
+export interface DailyChallengeState {
+  dateKey: string;
+  challengeId: DailyChallengeId;
+  title: string;
+  description: string;
+  progress: number;
+  goal: number;
+  rewardXp: number;
+  rewardCoins: number;
+  completed: boolean;
+  completedAt?: string | null;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -38,6 +53,7 @@ export interface Profile {
   exhaustion_penalty_multiplier: number;
   inventory: InventoryItem[];
   active_buffs: ActiveBuff[];
+  daily_challenge_state?: DailyChallengeState | null;
   last_weekday_recovery_at?: string | null;
   participates_in_pao: boolean;
   participates_in_agua: boolean;
@@ -68,6 +84,8 @@ export interface ShopItem {
   created_at?: string;
 }
 
+export type ShopBanner = "standard" | "catastrophe";
+
 export interface ShopPullDrop {
   item: ShopItem;
   rarity: "common" | "rare" | "epic" | "legendary";
@@ -76,6 +94,7 @@ export interface ShopPullDrop {
 
 export interface ShopPullResult {
   profile: Profile;
+  banner: ShopBanner;
   spentCoins: number;
   totalPulls: number;
   pityToRare: number;

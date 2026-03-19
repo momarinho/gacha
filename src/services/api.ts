@@ -1,5 +1,6 @@
 import {
   Profile,
+  ShopBanner,
   ShopItem,
   ShopPullResult,
   BattleLog,
@@ -9,8 +10,14 @@ import {
   ProcessDrawResponse,
   RoadmapItem,
 } from "../types";
+import { localApi } from "./localApi";
 
 const API_BASE = "/api";
+let useLocalFallback = false;
+
+function shouldFallback(status: number) {
+  return status === 501 || status === 500;
+}
 
 export const api = {
   getAccessStatus: async (): Promise<{
@@ -43,78 +50,169 @@ export const api = {
 
   // Profiles
   getProfiles: async (): Promise<Profile[]> => {
-    const res = await fetch(`${API_BASE}/profiles`);
-    if (!res.ok) throw new Error("Failed to fetch profiles");
-    return res.json();
+    if (useLocalFallback) return localApi.getProfiles();
+    try {
+      const res = await fetch(`${API_BASE}/profiles`);
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.getProfiles();
+      }
+      if (!res.ok) throw new Error("Failed to fetch profiles");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.getProfiles();
+    }
   },
   createProfile: async (profile: Partial<Profile>): Promise<Profile> => {
-    const res = await fetch(`${API_BASE}/profiles`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    });
-    if (!res.ok) throw new Error("Failed to create profile");
-    return res.json();
+    if (useLocalFallback) return localApi.createProfile(profile);
+    try {
+      const res = await fetch(`${API_BASE}/profiles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.createProfile(profile);
+      }
+      if (!res.ok) throw new Error("Failed to create profile");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.createProfile(profile);
+    }
   },
   updateProfile: async (
     id: string,
     updates: Partial<Profile>,
   ): Promise<Profile> => {
-    const res = await fetch(`${API_BASE}/profiles/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) throw new Error("Failed to update profile");
-    return res.json();
+    if (useLocalFallback) return localApi.updateProfile(id, updates);
+    try {
+      const res = await fetch(`${API_BASE}/profiles/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.updateProfile(id, updates);
+      }
+      if (!res.ok) throw new Error("Failed to update profile");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.updateProfile(id, updates);
+    }
   },
   deleteProfile: async (id: string): Promise<void> => {
-    const res = await fetch(`${API_BASE}/profiles/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete profile");
+    if (useLocalFallback) return localApi.deleteProfile(id);
+    try {
+      const res = await fetch(`${API_BASE}/profiles/${id}`, { method: "DELETE" });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.deleteProfile(id);
+      }
+      if (!res.ok) throw new Error("Failed to delete profile");
+    } catch {
+      useLocalFallback = true;
+      return localApi.deleteProfile(id);
+    }
   },
 
   // Shop
   getShopItems: async (): Promise<ShopItem[]> => {
-    const res = await fetch(`${API_BASE}/shop`);
-    if (!res.ok) throw new Error("Failed to fetch shop items");
-    return res.json();
+    if (useLocalFallback) return localApi.getShopItems();
+    try {
+      const res = await fetch(`${API_BASE}/shop`);
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.getShopItems();
+      }
+      if (!res.ok) throw new Error("Failed to fetch shop items");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.getShopItems();
+    }
   },
   pullShopItems: async (
     profileId: string,
     count: 1 | 10,
+    banner: ShopBanner,
   ): Promise<ShopPullResult> => {
-    const res = await fetch(`${API_BASE}/shop/pull`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, count }),
-    });
-    if (!res.ok) throw new Error("Failed to pull shop items");
-    return res.json();
+    if (useLocalFallback) return localApi.pullShopItems(profileId, count, banner);
+    try {
+      const res = await fetch(`${API_BASE}/shop/pull`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId, count, banner }),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.pullShopItems(profileId, count, banner);
+      }
+      if (!res.ok) throw new Error("Failed to pull shop items");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.pullShopItems(profileId, count, banner);
+    }
   },
   buyItem: async (profileId: string, itemId: string): Promise<Profile> => {
-    const res = await fetch(`${API_BASE}/shop/buy`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, itemId }),
-    });
-    if (!res.ok) throw new Error("Failed to buy item");
-    return res.json();
+    if (useLocalFallback) return localApi.buyItem(profileId, itemId);
+    try {
+      const res = await fetch(`${API_BASE}/shop/buy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId, itemId }),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.buyItem(profileId, itemId);
+      }
+      if (!res.ok) throw new Error("Failed to buy item");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.buyItem(profileId, itemId);
+    }
   },
   useItem: async (profileId: string, itemId: string): Promise<Profile> => {
-    const res = await fetch(`${API_BASE}/inventory/use`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, itemId }),
-    });
-    if (!res.ok) throw new Error("Failed to use item");
-    return res.json();
+    if (useLocalFallback) return localApi.useItem(profileId, itemId);
+    try {
+      const res = await fetch(`${API_BASE}/inventory/use`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId, itemId }),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.useItem(profileId, itemId);
+      }
+      if (!res.ok) throw new Error("Failed to use item");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.useItem(profileId, itemId);
+    }
   },
 
   // Logs
   getLogs: async (): Promise<BattleLog[]> => {
-    const res = await fetch(`${API_BASE}/logs`);
-    if (!res.ok) throw new Error("Failed to fetch logs");
-    return res.json();
+    if (useLocalFallback) return localApi.getLogs();
+    try {
+      const res = await fetch(`${API_BASE}/logs`);
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.getLogs();
+      }
+      if (!res.ok) throw new Error("Failed to fetch logs");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.getLogs();
+    }
   },
   getMageInsights: async (profileId: string): Promise<MageInsights> => {
     const res = await fetch(
@@ -129,9 +227,19 @@ export const api = {
     return res.json();
   },
   getTitles: async (): Promise<SocialTitlesResponse> => {
-    const res = await fetch(`${API_BASE}/social/titles`);
-    if (!res.ok) throw new Error("Failed to fetch titles");
-    return res.json();
+    if (useLocalFallback) return localApi.getTitles();
+    try {
+      const res = await fetch(`${API_BASE}/social/titles`);
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.getTitles();
+      }
+      if (!res.ok) throw new Error("Failed to fetch titles");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.getTitles();
+    }
   },
 
   // Process Draw
@@ -140,13 +248,23 @@ export const api = {
     winnerIds: string[],
     participants: string[],
   ): Promise<ProcessDrawResponse> => {
-    const res = await fetch(`${API_BASE}/draw/process`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, winnerIds, participants }),
-    });
-    if (!res.ok) throw new Error("Failed to process draw");
-    return res.json();
+    if (useLocalFallback) return localApi.processDraw(category, winnerIds, participants);
+    try {
+      const res = await fetch(`${API_BASE}/draw/process`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, winnerIds, participants }),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.processDraw(category, winnerIds, participants);
+      }
+      if (!res.ok) throw new Error("Failed to process draw");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.processDraw(category, winnerIds, participants);
+    }
   },
 
   // Roadmap
@@ -197,12 +315,22 @@ export const api = {
       | "stat_networking"
       | "stat_malandragem",
   ): Promise<Profile> => {
-    const res = await fetch(`${API_BASE}/profiles/${profileId}/allocate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stat }),
-    });
-    if (!res.ok) throw new Error("Failed to allocate stat");
-    return res.json();
+    if (useLocalFallback) return localApi.allocateStat(profileId, stat);
+    try {
+      const res = await fetch(`${API_BASE}/profiles/${profileId}/allocate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stat }),
+      });
+      if (shouldFallback(res.status)) {
+        useLocalFallback = true;
+        return localApi.allocateStat(profileId, stat);
+      }
+      if (!res.ok) throw new Error("Failed to allocate stat");
+      return res.json();
+    } catch {
+      useLocalFallback = true;
+      return localApi.allocateStat(profileId, stat);
+    }
   },
 };

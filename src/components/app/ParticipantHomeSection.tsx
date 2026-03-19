@@ -9,6 +9,12 @@ type Category = "pao" | "agua" | "balde" | "geral";
 type ParticipantHomeSectionProps = {
   profiles: Profile[];
   highestLevel: number;
+  profilesLoadError: string | null;
+  dailyChallenge: {
+    title: string;
+    description: string;
+    completedCount: number;
+  };
   newName: string;
   titleDrafts: Record<string, string>;
   titlesByProfileId: Record<string, string[]>;
@@ -45,6 +51,8 @@ type ParticipantHomeSectionProps = {
 export function ParticipantHomeSection({
   profiles,
   highestLevel,
+  profilesLoadError,
+  dailyChallenge,
   newName,
   titleDrafts,
   titlesByProfileId,
@@ -140,22 +148,21 @@ export function ParticipantHomeSection({
           </div>
         </section>
 
-        <section className="retro-panel xl:col-span-2">
+        <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
-            NOVO FLUXO
+            DESAFIO DIÁRIO
           </h3>
           <div className="mt-4 space-y-3">
-            <p className="retro-copy-sm text-white/85">
-              1. Cadastre os participantes e ajuste quem participa de cada
-              categoria.
+            <p className="retro-copy-sm text-white/90">{dailyChallenge.title}</p>
+            <p className="retro-copy-sm text-white/70">
+              {dailyChallenge.description}
             </p>
-            <p className="retro-copy-sm text-white/85">
-              2. Abra a página Sorteios para executar o turno do setor.
-            </p>
-            <p className="retro-copy-sm text-white/85">
-              3. Os sorteios agora usam participação contínua. Não existe mais
-              exclusão por ciclo no fluxo padrão.
-            </p>
+            <div className="border-2 border-white/15 bg-black/35 p-3">
+              <div className="retro-label text-white/70">CONCLUÍDO</div>
+              <div className="pixel-text mt-2 text-[10px] text-white">
+                {dailyChallenge.completedCount}/{profiles.length}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -181,6 +188,25 @@ export function ParticipantHomeSection({
           recentClassEffectsByProfileId={recentClassEffectsByProfileId}
         />
 
+        <section className="retro-panel xl:col-span-2">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            NOVO FLUXO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              1. Cadastre os participantes e ajuste quem participa de cada
+              categoria.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              2. Abra a página Sorteios para executar o turno do setor.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              3. Os sorteios agora usam participação contínua. Não existe mais
+              exclusão por ciclo no fluxo padrão.
+            </p>
+          </div>
+        </section>
+
         {profiles.length === 0 && (
           <section className="retro-empty-state xl:col-span-2">
             <div className="retro-empty-icon">
@@ -191,6 +217,11 @@ export function ParticipantHomeSection({
               <br />
               CADASTRE O GRUPO PARA LIBERAR OS SORTEIOS.
             </p>
+            {profilesLoadError ? (
+              <p className="retro-copy-sm mt-3 border border-red-400/40 bg-red-950/25 px-3 py-2 text-red-200">
+                {profilesLoadError}
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={onOpenGuide}

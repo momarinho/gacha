@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { processDrawOutcome } from "../api/drawLogic";
+import { processDrawOutcome } from "../shared/drawLogic";
 import type { Profile } from "../src/types";
 
 function makeProfile(
@@ -49,6 +49,26 @@ function getProfile(
 }
 
 const weekdayNow = new Date("2026-03-18T12:00:00-03:00");
+const shopItems = [
+  {
+    id: "auto-transfer-pao",
+    name: "Seguro Catastrofe",
+    effect_code: "AUTO_TRANSFER_PAO",
+    metadata: { activation: "auto" },
+  },
+  {
+    id: "auto-outsource-agua",
+    name: "Boia de Emergencia",
+    effect_code: "AUTO_OUTSOURCE_AGUA",
+    metadata: { activation: "auto" },
+  },
+  {
+    id: "auto-balde-shield",
+    name: "Colete Anti-Balde",
+    effect_code: "AUTO_BALDE_SHIELD",
+    metadata: { activation: "auto", damageReduction: 12 },
+  },
+] as const;
 
 test("pao aplica dano em quem nao foi sorteado e recompensa quem absorveu o evento", () => {
   const winner = makeProfile("winner");
@@ -89,10 +109,38 @@ test("agua aplica dano em quem nao foi sorteado e mantem recompensa no sorteado"
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(winnerUpdate.hp, 100);
-  assert.equal(winnerUpdate.xp, 11);
-  assert.equal(winnerUpdate.coins, 5);
+  assert.equal(winnerUpdate.xp, 9);
+  assert.equal(winnerUpdate.coins, 4);
   assert.equal(otherUpdate.hp, 92);
-  assert.equal(otherUpdate.xp, 6);
+  assert.equal(otherUpdate.xp, 5);
+});
+
+test("boia corporativa reduz o impacto da proxima agua", () => {
+  const winner = makeProfile("winner");
+  const protectedProfile = makeProfile("protected", {
+    active_buffs: [
+      {
+        type: "AGUA_SHIELD",
+        expiresAt: "2099-12-31T23:59:59.999Z",
+        value: 6,
+      },
+    ],
+  });
+
+  const result = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["winner"],
+    participants: ["winner", "protected"],
+    profiles: [winner, protectedProfile],
+    now: weekdayNow,
+  });
+
+  const protectedUpdate = getProfile(result.updates, "protected");
+  assert.equal(protectedUpdate.hp, 98);
+  assert.equal(
+    protectedUpdate.active_buffs.some((buff) => buff.type === "AGUA_SHIELD"),
+    false,
+  );
 });
 
 test("geral da moedas para todos e dano apenas em quem nao foi sorteado", () => {
@@ -132,7 +180,7 @@ test("solo afeta apenas o perfil selecionado", () => {
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(selectedUpdate.hp, 100);
-  assert.equal(selectedUpdate.xp, 14);
+  assert.equal(selectedUpdate.xp, 11);
   assert.equal(selectedUpdate.coins, 8);
   assert.equal(otherUpdate.hp, 100);
   assert.equal(otherUpdate.xp, 0);
@@ -164,10 +212,10 @@ test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   const dodgerUpdate = getProfile(result.updates, "dodger");
 
   assert.equal(fallbackUpdate.hp, 100);
-  assert.equal(fallbackUpdate.xp, 14);
-  assert.equal(fallbackUpdate.coins, 6);
+  assert.equal(fallbackUpdate.xp, 11);
+  assert.equal(fallbackUpdate.coins, 4);
   assert.equal(dodgerUpdate.hp, 92);
-  assert.equal(dodgerUpdate.xp, 6);
+  assert.equal(dodgerUpdate.xp, 5);
 });
 
 test("guerreiro reduz dano e exaustao reduz moedas", () => {
@@ -195,6 +243,128 @@ test("guerreiro reduz dano e exaustao reduz moedas", () => {
   assert.equal(warriorUpdate.xp, 35);
   assert.equal(otherUpdate.hp, 82);
   assert.equal(otherUpdate.xp, 11);
+});
+
+test("transferencia de pao envia o sorteio para outro participante aleatorio e registra o substituto", () => {
+  const owner = makeProfile("owner", {
+    active_buffs: [
+      {
+        type: "TRANSFER_PAO",
+        expiresAt: "2099-12-31T23:59:59.999Z",
+      },
+    ],
+  });
+  const targetA = makeProfile("target-a");
+  const targetB = makeProfile("target-b");
+
+  const result = processDrawOutcome({
+    category: "pao",
+    winnerIds: ["owner"],
+    participants: ["owner", "target-a", "target-b"],
+    profiles: [owner, targetA, targetB],
+    now: weekdayNow,
+    randomIndex: () => 1,
+  });
+
+  assert.deepEqual(result.winnerIds, ["target-b"]);
+  assert.match(
+    result.logs.find((log) => log.primary_actor_id === "owner")?.message ?? "",
+    /transferiu o Pao de Queijo para Profile target-b/,
+  );
+});
+
+test("terceirizacao de agua envia o sorteio para outro participante aleatorio e registra o substituto", () => {
+  const owner = makeProfile("owner", {
+    active_buffs: [
+      {
+        type: "OUTSOURCE_AGUA",
+        expiresAt: "2099-12-31T23:59:59.999Z",
+      },
+    ],
+  });
+  const targetA = makeProfile("target-a");
+  const targetB = makeProfile("target-b");
+
+  const result = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["owner"],
+    participants: ["owner", "target-a", "target-b"],
+    profiles: [owner, targetA, targetB],
+    now: weekdayNow,
+    randomIndex: () => 0,
+  });
+
+  assert.deepEqual(result.winnerIds, ["target-a"]);
+  assert.match(
+    result.logs.find((log) => log.primary_actor_id === "owner")?.message ?? "",
+    /terceirizou a Agua para Profile target-a/,
+  );
+});
+
+test("seguro de pao automatico consome inventario e transfere para outro participante", () => {
+  const owner = makeProfile("owner", {
+    inventory: [{ item_id: "auto-transfer-pao", qty: 1 }],
+  });
+  const target = makeProfile("target");
+
+  const result = processDrawOutcome({
+    category: "pao",
+    winnerIds: ["owner"],
+    participants: ["owner", "target"],
+    profiles: [owner, target],
+    shopItems: [...shopItems],
+    now: weekdayNow,
+    randomIndex: () => 0,
+  });
+
+  const ownerUpdate = getProfile(result.updates, "owner");
+  assert.deepEqual(result.winnerIds, ["target"]);
+  assert.deepEqual(ownerUpdate.inventory, []);
+  assert.match(
+    result.logs.find((log) => log.primary_actor_id === "owner")?.message ?? "",
+    /Seguro Catastrofe/,
+  );
+});
+
+test("boia de emergencia automatica consome inventario e terceiriza a agua", () => {
+  const owner = makeProfile("owner", {
+    inventory: [{ item_id: "auto-outsource-agua", qty: 1 }],
+  });
+  const target = makeProfile("target");
+
+  const result = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["owner"],
+    participants: ["owner", "target"],
+    profiles: [owner, target],
+    shopItems: [...shopItems],
+    now: weekdayNow,
+    randomIndex: () => 0,
+  });
+
+  const ownerUpdate = getProfile(result.updates, "owner");
+  assert.deepEqual(result.winnerIds, ["target"]);
+  assert.deepEqual(ownerUpdate.inventory, []);
+});
+
+test("colete anti-balde automatico reduz dano e consome inventario", () => {
+  const winner = makeProfile("winner");
+  const protectedProfile = makeProfile("protected", {
+    inventory: [{ item_id: "auto-balde-shield", qty: 1 }],
+  });
+
+  const result = processDrawOutcome({
+    category: "balde",
+    winnerIds: ["winner"],
+    participants: ["winner", "protected"],
+    profiles: [winner, protectedProfile],
+    shopItems: [...shopItems],
+    now: weekdayNow,
+  });
+
+  const protectedUpdate = getProfile(result.updates, "protected");
+  assert.equal(protectedUpdate.hp, 94);
+  assert.deepEqual(protectedUpdate.inventory, []);
 });
 
 test("recuperacao diaria usa 10% do HP atual para todos os perfis", () => {

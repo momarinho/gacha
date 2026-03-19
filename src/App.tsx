@@ -7,6 +7,7 @@ import {
   MageInsights,
   Profile,
   ProfileClass,
+  ShopBanner,
   ShopItem,
   ShopPullResult,
 } from "./types";
@@ -46,10 +47,17 @@ import { InventoryModal } from "./components/app/InventoryModal";
 import { DrawsPage } from "./components/app/DrawsPage";
 import { StartGate } from "./components/app/StartGate";
 import { RoadmapSection } from "./components/app/RoadmapSection";
+import {
+  getBusinessDateKey,
+  normalizeDailyChallengeState,
+} from "../shared/dailyChallenges";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>("home");
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profilesLoadError, setProfilesLoadError] = useState<string | null>(
+    null,
+  );
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [battleLogs, setBattleLogs] = useState<BattleLog[]>([]);
   const [drawMode, setDrawMode] = useState<DrawMode>(() => {
@@ -126,9 +134,9 @@ export default function App() {
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(false);
-  const [dbProvider, setDbProvider] = useState<"sqlite" | "supabase" | null>(
-    null,
-  );
+  const [dbProvider, setDbProvider] = useState<
+    "sqlite" | "supabase" | "none" | null
+  >(null);
 
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
@@ -171,6 +179,7 @@ export default function App() {
   };
 
   const loadOfficialState = async () => {
+    if (dbProvider === "none") return;
     try {
       const response = await fetch("/api/state");
       if (response.status === 404) {
@@ -240,7 +249,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!accessReady || !hasAccess) return;
+    if (!accessReady || !hasAccess || dbProvider === "none") return;
 
     const fetchData = async () => {
       const results = await Promise.allSettled([
@@ -254,8 +263,12 @@ export default function App() {
 
       if (profilesResult.status === "fulfilled") {
         setProfiles(profilesResult.value);
+        setProfilesLoadError(null);
       } else {
         console.error("Failed to fetch profiles:", profilesResult.reason);
+        setProfilesLoadError(
+          "Falha ao carregar participantes. Verifique a API e a conexão com o banco.",
+        );
       }
 
       if (shopResult.status === "fulfilled") {
@@ -292,11 +305,11 @@ export default function App() {
           console.error("Failed to refresh official logs:", error),
         );
     }
-  }, [drawMode, accessReady, hasAccess]);
+  }, [drawMode, accessReady, hasAccess, dbProvider]);
 
   // Persist all other state to localStorage and Server
   useEffect(() => {
-    if (!accessReady || !hasAccess) return;
+    if (!accessReady || !hasAccess || dbProvider === "none") return;
 
     const stateToSave = {
       paoDeQueijoWinners,
@@ -349,6 +362,7 @@ export default function App() {
     excludedIdsGeral,
     aguaMode,
     drawMode,
+    dbProvider,
   ]);
 
   useEffect(() => {
@@ -566,9 +580,10 @@ export default function App() {
   const pullShopItems = async (
     profileId: string,
     count: 1 | 10,
+    banner: ShopBanner,
   ): Promise<ShopPullResult> => {
     try {
-      const result = await api.pullShopItems(profileId, count);
+      const result = await api.pullShopItems(profileId, count, banner);
       setProfiles(
         profiles.map((p) => (p.id === profileId ? result.profile : p)),
       );
@@ -642,6 +657,18 @@ export default function App() {
   };
 
   const highestLevel = getHighestLevel(profiles);
+  const currentDailyChallengeDateKey = getBusinessDateKey(new Date());
+  const dailyChallengeTemplate = normalizeDailyChallengeState(
+    null,
+    currentDailyChallengeDateKey,
+  );
+  const dailyChallengeCompletedCount = profiles.filter((profile) => {
+    const state = normalizeDailyChallengeState(
+      profile.daily_challenge_state ?? null,
+      currentDailyChallengeDateKey,
+    );
+    return state.completed;
+  }).length;
   const recentClassEffectsByProfileId = buildRecentClassEffectsByProfileId(
     profiles,
     battleLogs,
@@ -1011,9 +1038,15 @@ export default function App() {
 
   const participantHomeSection = (
     <ParticipantHomeSection
-      profiles={profiles}
-      highestLevel={highestLevel}
-      newName={newName}
+        profiles={profiles}
+        highestLevel={highestLevel}
+        profilesLoadError={profilesLoadError}
+        dailyChallenge={{
+          title: dailyChallengeTemplate.title,
+          description: `${dailyChallengeTemplate.description} Recompensa: +${dailyChallengeTemplate.rewardXp} XP e +${dailyChallengeTemplate.rewardCoins} $C.`,
+          completedCount: dailyChallengeCompletedCount,
+        }}
+        newName={newName}
       titleDrafts={titleDrafts}
       titlesByProfileId={titlesByProfileId}
       selectedMageId={selectedMageId}

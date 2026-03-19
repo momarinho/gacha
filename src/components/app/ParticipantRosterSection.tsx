@@ -271,7 +271,8 @@ export function ParticipantRosterSection({
                           </div>
                           {(person.passive_coin_multiplier > 1 ||
                             person.temporary_coin_multiplier > 1 ||
-                            person.luck > 0) && (
+                            person.luck > 0 ||
+                            person.daily_challenge_state?.goal) && (
                             <div className="flex flex-wrap gap-1">
                               {person.passive_coin_multiplier > 1 && (
                                 <span className="retro-label border border-yellow-300 bg-yellow-950/45 px-1.5 py-0.5 text-yellow-200">
@@ -288,6 +289,22 @@ export function ParticipantRosterSection({
                               {person.luck > 0 && (
                                 <span className="retro-label border border-blue-300 bg-blue-950/45 px-1.5 py-0.5 text-blue-200">
                                   Sorte +{person.luck.toFixed(2)}
+                                </span>
+                              )}
+                              {person.daily_challenge_state?.goal && (
+                                <span
+                                  className={`retro-label border px-1.5 py-0.5 ${
+                                    person.daily_challenge_state.completed
+                                      ? "border-emerald-300 bg-emerald-950/45 text-emerald-200"
+                                      : "border-orange-300 bg-orange-950/45 text-orange-200"
+                                  }`}
+                                >
+                                  Desafio{" "}
+                                  {Math.min(
+                                    person.daily_challenge_state.progress,
+                                    person.daily_challenge_state.goal,
+                                  )}
+                                  /{person.daily_challenge_state.goal}
                                 </span>
                               )}
                             </div>

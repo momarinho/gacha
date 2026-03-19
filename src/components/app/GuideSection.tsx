@@ -105,7 +105,7 @@ export function GuideSection() {
                   NETWORKING
                 </div>
                 <p className="retro-copy-sm mt-2 text-white/85">
-                  +0.5% no ganho passivo de moedas por ponto.
+                  +0.3% no ganho passivo de moedas por ponto.
                 </p>
               </div>
               <div className="border-2 border-white/20 bg-black/30 p-3">
@@ -113,7 +113,7 @@ export function GuideSection() {
                   MALANDRAGEM
                 </div>
                 <p className="retro-copy-sm mt-2 text-white/85">
-                  +0.5% de chance de esquiva por ponto.
+                  +0.4% de chance de esquiva por ponto, com teto de esquiva total.
                 </p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export function GuideSection() {
                 <span className="retro-copy-sm text-white">Mago</span>
               </div>
               <p className="retro-copy-sm text-white/85">
-                Recebe desconto na loja e acessa o Olhar Arcano.
+                Recebe desconto moderado na loja e acessa o Olhar Arcano.
               </p>
             </div>
             <div className="border-2 border-emerald-400/40 bg-emerald-950/20 p-3">
@@ -149,7 +149,7 @@ export function GuideSection() {
                 <span className="retro-copy-sm text-white">Ladino</span>
               </div>
               <p className="retro-copy-sm text-white/85">
-                Pode esquivar e ganha mais moedas quando escapa do sorteio.
+                Pode esquivar e ganha um bonus moderado de moedas quando escapa do sorteio.
               </p>
             </div>
             <div className="border-2 border-pink-400/40 bg-pink-950/20 p-3">
@@ -186,6 +186,23 @@ export function GuideSection() {
 
         <section className="retro-panel">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            ITENS E PREPARO
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              Itens de esquiva, recompensa e mitigacao devem ser usados antes do sorteio para ativar buffs.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Itens mais raros podem ficar armados e disparar automaticamente quando a condicao acontece.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Transferencias como Pao e Agua nunca permitem escolher o alvo: o sistema manda para outro participante elegivel aleatorio e mostra quem entrou no seu lugar.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             CATEGORIAS
           </h3>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -194,7 +211,7 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +10 XP e +5 $C. Participantes não selecionados: +5 XP
+                Sorteado: +8 XP e +4 $C. Participantes não selecionados: +4 XP
                 e -8 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-blue-200/90">

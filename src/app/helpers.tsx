@@ -2,7 +2,13 @@ import type { ReactNode } from "react";
 
 import { Crosshair, Heart, Shield, Wand2 } from "lucide-react";
 
-import type { BattleLog, Profile, ProfileClass, ShopItem } from "../types";
+import type {
+  BattleLog,
+  Profile,
+  ProfileClass,
+  ShopBanner,
+  ShopItem,
+} from "../types";
 import {
   APPRENTICE_UNLOCK_LEVEL,
   CUSTOM_TITLE_PREFIX,
@@ -97,17 +103,17 @@ export function getClassPowerText(profileClass: Profile["class"]) {
     case "aprendiz_guerreiro":
       return "Aprendiz: -20% de dano ruim enquanto treina.";
     case "aprendiz_mago":
-      return "Aprendiz: -10% na loja e treino arcano básico.";
+      return "Aprendiz: -8% na loja e treino arcano básico.";
     case "aprendiz_ladino":
-      return "Aprendiz: +10% SetorCoins quando não é sorteado.";
+      return "Aprendiz: +5% SetorCoins quando não é sorteado.";
     case "aprendiz_clerigo":
       return "Aprendiz: recuperação acelerada após ser sorteado no Pão.";
     case "guerreiro":
       return "Tanque: -40% de dano ruim e +5 XP por sorteio.";
     case "mago":
-      return "Arcano: -20% na loja e visão das filas e logs.";
+      return "Arcano: -15% na loja e visão das filas e logs.";
     case "ladino":
-      return "Esquiva: 5% de fuga e +25% SetorCoins quando não é sorteado.";
+      return "Esquiva: 5% de fuga e +15% SetorCoins quando não é sorteado.";
     case "clerigo":
       return "Suporte: aura de SetorCoins e recuperação pós-Pão melhorada.";
     default:
@@ -142,6 +148,17 @@ export function getItemEffectText(item: ShopItem) {
     return `Sorte +${metadata.luckBonus.toFixed(2)} por ${durationHours}h`;
   }
 
+  if (item.effect_code === "SKIP_AGUA_NEXT") {
+    return "Terceiriza a próxima Água para outro participante aleatório";
+  }
+
+  if (
+    item.effect_code === "AGUA_SHIELD" &&
+    typeof metadata.damageReduction === "number"
+  ) {
+    return `Reduz a próxima Água em ${metadata.damageReduction} HP`;
+  }
+
   if (
     item.effect_code === "SOLO_REWARD_BOOST" &&
     (typeof metadata.xpBonus === "number" ||
@@ -161,19 +178,63 @@ export function getItemEffectText(item: ShopItem) {
     return `Sorte +${profileModifiers.luck.toFixed(2)}`;
   }
 
+  if (item.effect_code === "AUTO_TRANSFER_PAO") {
+    return "Dispara sozinho no próximo Pão e transfere para outro participante";
+  }
+
+  if (item.effect_code === "AUTO_OUTSOURCE_AGUA") {
+    return "Dispara sozinho na próxima Água e terceiriza o turno";
+  }
+
+  if (
+    item.effect_code === "AUTO_BALDE_SHIELD" &&
+    typeof metadata.damageReduction === "number"
+  ) {
+    return `Dispara sozinho no próximo Balde e reduz ${metadata.damageReduction} HP`;
+  }
+
   return null;
+}
+
+export function getItemActivationType(item: ShopItem) {
+  const metadata =
+    item.metadata && typeof item.metadata === "object" ? item.metadata : {};
+  return metadata.activation === "auto" ? "auto" : "active";
+}
+
+export function getItemActivationLabel(item: ShopItem) {
+  return getItemActivationType(item) === "auto"
+    ? "Automático"
+    : "Usar antes";
 }
 
 export function getShopPullPrice(
   profile: Pick<Profile, "class"> | null | undefined,
   count: 1 | 10,
 ) {
-  const basePrice = count === 10 ? 180 : 20;
+  const basePrice = count === 10 ? 100 : 10;
 
   if (!profile) return basePrice;
-  if (profile.class === "mago") return Math.ceil(basePrice * 0.8);
-  if (profile.class === "aprendiz_mago") return Math.ceil(basePrice * 0.9);
+  if (profile.class === "mago") return Math.ceil(basePrice * 0.85);
+  if (profile.class === "aprendiz_mago") return Math.ceil(basePrice * 0.92);
   return basePrice;
+}
+
+export function getShopBannerLabel(banner: ShopBanner) {
+  return banner === "catastrophe" ? "Catástrofe" : "Padrão";
+}
+
+export function getShopPityBuffType(
+  banner: ShopBanner,
+  type: "rare" | "legendary",
+) {
+  if (banner === "catastrophe") {
+    return type === "rare"
+      ? "SHOP_PITY_RARE_CATASTROPHE"
+      : "SHOP_PITY_LEGENDARY_CATASTROPHE";
+  }
+
+  return type === "rare" ? "SHOP_PITY_RARE" : "SHOP_PITY_LEGENDARY";
 }
 
 export function getShopRarityLabel(rarity?: ShopItem["rarity"]) {
@@ -192,10 +253,11 @@ export function getShopRarityLabel(rarity?: ShopItem["rarity"]) {
 export function getShopPityCount(
   profile: Pick<Profile, "active_buffs"> | null | undefined,
   type: "rare" | "legendary",
+  banner: ShopBanner = "standard",
 ) {
   if (!profile || !Array.isArray(profile.active_buffs)) return 0;
 
-  const buffType = type === "rare" ? "SHOP_PITY_RARE" : "SHOP_PITY_LEGENDARY";
+  const buffType = getShopPityBuffType(banner, type);
   const pityBuff = profile.active_buffs.find((buff) => buff.type === buffType);
   return typeof pityBuff?.value === "number" && pityBuff.value > 0
     ? Math.floor(pityBuff.value)

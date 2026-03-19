@@ -3,6 +3,7 @@ import path from "path";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic";
 
 dotenv.config();
 
@@ -39,18 +40,27 @@ const SHOP_PRICE_OVERRIDES: Record<string, number> = {
   HEAL_PERCENT_50: 35,
   OUTSOURCE_AGUA: 180,
 };
-const SHOP_PULL_PRICE_SINGLE = 20;
-const SHOP_PULL_PRICE_MULTI = 180;
+const SHOP_PULL_PRICE_SINGLE = 10;
+const SHOP_PULL_PRICE_MULTI = 100;
 const SHOP_RARE_PITY_THRESHOLD = 10;
 const SHOP_LEGENDARY_PITY_THRESHOLD = 90;
 const SHOP_BANNER_RATES: Record<ShopItemRarity, number> = {
-  common: 0.65,
-  rare: 0.25,
-  epic: 0.09,
+  common: 0.88,
+  rare: 0.09,
+  epic: 0.024,
+  legendary: 0.006,
+};
+const SHOP_CATASTROPHE_BANNER_RATES: Record<ShopItemRarity, number> = {
+  common: 0.82,
+  rare: 0.12,
+  epic: 0.05,
   legendary: 0.01,
 };
 const SHOP_PITY_RARE_BUFF = "SHOP_PITY_RARE";
 const SHOP_PITY_LEGENDARY_BUFF = "SHOP_PITY_LEGENDARY";
+const SHOP_PITY_RARE_CATASTROPHE_BUFF = "SHOP_PITY_RARE_CATASTROPHE";
+const SHOP_PITY_LEGENDARY_CATASTROPHE_BUFF =
+  "SHOP_PITY_LEGENDARY_CATASTROPHE";
 const SHOP_PITY_EXPIRES_AT = "2099-12-31T23:59:59.999Z";
 
 const PROFILE_CLASSES = [
@@ -84,6 +94,8 @@ type ItemMetadata = {
   duration_hours?: number;
   xpBonus?: number;
   coinBonus?: number;
+  activation?: "active" | "auto";
+  damageReduction?: number;
   profileModifiers?: {
     passive_coin_multiplier?: number;
     temporary_coin_multiplier?: number;
@@ -94,6 +106,7 @@ type ItemMetadata = {
 };
 
 type ShopItemRarity = "common" | "rare" | "epic" | "legendary";
+type ShopBanner = "standard" | "catastrophe";
 
 type ShopItemRecord = {
   id: string;
@@ -316,18 +329,45 @@ function getEffectiveShopPrice(item: any) {
 }
 
 function getShopItemRarity(item: ShopItemRecord): ShopItemRarity {
+  const metadata = normalizeItemMetadata(item.metadata);
+  const multiplier =
+    typeof metadata.multiplier === "number" ? metadata.multiplier : 0;
+  const luckBonus =
+    typeof metadata.luckBonus === "number" ? metadata.luckBonus : 0;
+  const xpBonus = typeof metadata.xpBonus === "number" ? metadata.xpBonus : 0;
+  const coinBonus =
+    typeof metadata.coinBonus === "number" ? metadata.coinBonus : 0;
+
   switch (item.effect_code) {
     case "OUTSOURCE_AGUA":
       return "legendary";
+    case "AUTO_TRANSFER_PAO":
+      return "legendary";
+    case "AUTO_OUTSOURCE_AGUA":
+      return "epic";
+    case "AUTO_BALDE_SHIELD":
+      return "rare";
+    case "HEAL_100":
+      return "rare";
+    case "RELIEF_LUCK_BOOST":
+      return luckBonus >= 0.12 ? "epic" : luckBonus >= 0.08 ? "rare" : "common";
     case "TRANSFER_PAO":
       return "epic";
-    case "COIN_MAGNET":
-      return item.duration_minutes && item.duration_minutes >= 60
-        ? "epic"
-        : "rare";
-    case "SKIP_BALDE_NEXT":
-    case "SOLO_REWARD_BOOST":
+    case "SKIP_AGUA_NEXT":
+    case "AGUA_SHIELD":
       return "rare";
+    case "COIN_MAGNET":
+      if (multiplier >= 1.8 || (item.duration_minutes || 0) >= 90) {
+        return "legendary";
+      }
+      if (multiplier >= 1.5 || (item.duration_minutes || 0) >= 60) {
+        return "epic";
+      }
+      return "rare";
+    case "SKIP_BALDE_NEXT":
+      return "rare";
+    case "SOLO_REWARD_BOOST":
+      return xpBonus >= 18 || coinBonus >= 12 ? "legendary" : "epic";
     default:
       return "common";
   }
@@ -341,12 +381,33 @@ function normalizeShopItem(item: ShopItemRecord) {
   };
 }
 
+function getShopItemBanner(item: ReturnType<typeof normalizeShopItem>): ShopBanner {
+  const catastropheEffects = new Set([
+    "TRANSFER_PAO",
+    "AUTO_TRANSFER_PAO",
+    "SKIP_BALDE_NEXT",
+    "AUTO_BALDE_SHIELD",
+    "HEAL_PERCENT_50",
+    "HEAL_100",
+  ]);
+
+  if (
+    item.target_category === "pao" ||
+    item.target_category === "balde" ||
+    catastropheEffects.has(item.effect_code)
+  ) {
+    return "catastrophe";
+  }
+
+  return "standard";
+}
+
 function getShopPullPrice(profileClass: ProfileClass, count: 1 | 10) {
   const basePrice =
     count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE;
 
-  if (profileClass === "mago") return Math.ceil(basePrice * 0.8);
-  if (profileClass === "aprendiz_mago") return Math.ceil(basePrice * 0.9);
+  if (profileClass === "mago") return Math.ceil(basePrice * 0.85);
+  if (profileClass === "aprendiz_mago") return Math.ceil(basePrice * 0.92);
   return basePrice;
 }
 
@@ -355,6 +416,19 @@ function getPersistentPityCount(buffs: ActiveBuff[], type: string) {
   return typeof pityBuff?.value === "number" && pityBuff.value > 0
     ? Math.floor(pityBuff.value)
     : 0;
+}
+
+function getShopPityBuffType(
+  banner: ShopBanner,
+  type: "rare" | "legendary",
+) {
+  if (banner === "catastrophe") {
+    return type === "rare"
+      ? SHOP_PITY_RARE_CATASTROPHE_BUFF
+      : SHOP_PITY_LEGENDARY_CATASTROPHE_BUFF;
+  }
+
+  return type === "rare" ? SHOP_PITY_RARE_BUFF : SHOP_PITY_LEGENDARY_BUFF;
 }
 
 function upsertPersistentPityBuff(
@@ -386,16 +460,23 @@ function pickWeightedShopItem(items: ReturnType<typeof normalizeShopItem>[]) {
   return items[items.length - 1];
 }
 
-function pickShopRarity(forceRareOrBetter: boolean, forceLegendary: boolean) {
+function pickShopRarity(
+  forceRareOrBetter: boolean,
+  forceLegendary: boolean,
+  banner: ShopBanner,
+) {
   if (forceLegendary) return "legendary" as ShopItemRarity;
+
+  const baseRates =
+    banner === "catastrophe" ? SHOP_CATASTROPHE_BANNER_RATES : SHOP_BANNER_RATES;
 
   const rates = forceRareOrBetter
     ? {
-        rare: SHOP_BANNER_RATES.rare,
-        epic: SHOP_BANNER_RATES.epic,
-        legendary: SHOP_BANNER_RATES.legendary,
+        rare: baseRates.rare,
+        epic: baseRates.epic,
+        legendary: baseRates.legendary,
       }
-    : SHOP_BANNER_RATES;
+    : baseRates;
 
   const total = Object.values(rates).reduce((sum, value) => sum + value, 0);
   const array = new Uint32Array(1);
@@ -490,6 +571,16 @@ function processDrawOutcome({
     consumedBuffsByProfile.get(profileId)!.add(buffType);
   };
 
+  const pickReplacementWinner = (currentWinnerId: string) => {
+    const rerollPool = participantProfiles.filter(
+      (profile) =>
+        profile.id !== currentWinnerId && !resolvedWinnerIds.includes(profile.id),
+    );
+
+    if (rerollPool.length === 0) return null;
+    return rerollPool[randomIndex(rerollPool.length)];
+  };
+
   for (let index = 0; index < resolvedWinnerIds.length; index++) {
     const requestedWinnerId = resolvedWinnerIds[index];
     const requestedWinner = profileMap.get(requestedWinnerId);
@@ -531,38 +622,49 @@ function processDrawOutcome({
     }
 
     if (category === "agua" && hasBuff(activeBuffs, "OUTSOURCE_AGUA")) {
-      shouldReroll = true;
       consumeBuff(requestedWinner.id, "OUTSOURCE_AGUA");
-      logs.push({
-        event_type: "item_use",
-        category,
-        message: `${requestedWinner.name} terceirizou a Agua`,
-        primary_actor_id: requestedWinner.id,
-      });
+      const replacementWinner = pickReplacementWinner(requestedWinner.id);
+
+      if (replacementWinner) {
+        resolvedWinnerIds[index] = replacementWinner.id;
+        logs.push({
+          event_type: "item_use",
+          category,
+          message: `${requestedWinner.name} terceirizou a Agua para ${replacementWinner.name}`,
+          primary_actor_id: requestedWinner.id,
+          metadata: {
+            redirectedToProfileId: replacementWinner.id,
+            redirectedToProfileName: replacementWinner.name,
+          },
+        });
+        continue;
+      }
     }
 
     if (category === "pao" && hasBuff(activeBuffs, "TRANSFER_PAO")) {
-      shouldReroll = true;
       consumeBuff(requestedWinner.id, "TRANSFER_PAO");
-      logs.push({
-        event_type: "item_use",
-        category,
-        message: `${requestedWinner.name} transferiu o Pao de Queijo`,
-        primary_actor_id: requestedWinner.id,
-      });
+      const replacementWinner = pickReplacementWinner(requestedWinner.id);
+
+      if (replacementWinner) {
+        resolvedWinnerIds[index] = replacementWinner.id;
+        logs.push({
+          event_type: "item_use",
+          category,
+          message: `${requestedWinner.name} transferiu o Pao de Queijo para ${replacementWinner.name}`,
+          primary_actor_id: requestedWinner.id,
+          metadata: {
+            redirectedToProfileId: replacementWinner.id,
+            redirectedToProfileName: replacementWinner.name,
+          },
+        });
+        continue;
+      }
     }
 
     if (!shouldReroll) continue;
-
-    const rerollPool = participantProfiles.filter(
-      (profile) =>
-        profile.id !== requestedWinner.id &&
-        !resolvedWinnerIds.includes(profile.id),
-    );
-
-    if (rerollPool.length === 0) continue;
-
-    resolvedWinnerIds[index] = rerollPool[randomIndex(rerollPool.length)].id;
+    const replacementWinner = pickReplacementWinner(requestedWinner.id);
+    if (!replacementWinner) continue;
+    resolvedWinnerIds[index] = replacementWinner.id;
   }
 
   const clericWinnerIds = resolvedWinnerIds.filter((id) => {
@@ -1146,7 +1248,59 @@ async function createExpressApp() {
           icon: "Shield",
           min_level: 1,
           stackable: true,
-          metadata: { luckBonus: 0.08, duration_hours: 24 },
+          metadata: { activation: "active", luckBonus: 0.08, duration_hours: 24 },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Crachá de Prioridade",
+          description:
+            "Aumenta levemente sua chance de escapar de sorteios de risco por 12 horas.",
+          price: 40,
+          type: "consumable",
+          effect_code: "RELIEF_LUCK_BOOST",
+          icon: "Shield",
+          min_level: 1,
+          stackable: true,
+          metadata: { activation: "active", luckBonus: 0.04, duration_hours: 12 },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "VPN do Home Office",
+          description:
+            "Aumenta bastante sua chance de escapar de sorteios de risco por 48 horas.",
+          price: 130,
+          type: "rare",
+          effect_code: "RELIEF_LUCK_BOOST",
+          icon: "Shield",
+          min_level: 2,
+          stackable: true,
+          metadata: { activation: "active", luckBonus: 0.12, duration_hours: 48 },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Atestado de Agua",
+          description: "Prepara imunidade para a próxima Água e joga o turno para outro participante aleatório.",
+          price: 85,
+          type: "consumable",
+          effect_code: "SKIP_AGUA_NEXT",
+          icon: "Shield",
+          min_level: 1,
+          stackable: true,
+          target_category: "agua",
+          metadata: { activation: "active" },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Boia Corporativa",
+          description: "Reduz o impacto da próxima Água para você.",
+          price: 70,
+          type: "consumable",
+          effect_code: "AGUA_SHIELD",
+          icon: "Shield",
+          min_level: 1,
+          stackable: true,
+          target_category: "agua",
+          metadata: { activation: "active", damageReduction: 6 },
         },
         {
           id: crypto.randomUUID(),
@@ -1189,6 +1343,20 @@ async function createExpressApp() {
         },
         {
           id: crypto.randomUUID(),
+          name: "Imã de Moedas Turbo",
+          description:
+            "Dispara seus ganhos de SetorCoins por 90 minutos.",
+          price: 220,
+          type: "rare",
+          effect_code: "COIN_MAGNET",
+          icon: "Coins",
+          min_level: 3,
+          duration_minutes: 90,
+          metadata: { multiplier: 1.8 },
+          stackable: false,
+        },
+        {
+          id: crypto.randomUUID(),
           name: "Procuração do Pão",
           description:
             "Se você for sorteado no Pão, transfere o problema para outro participante.",
@@ -1199,6 +1367,7 @@ async function createExpressApp() {
           min_level: 2,
           stackable: true,
           target_category: "pao",
+          metadata: { activation: "active" },
         },
         {
           id: crypto.randomUUID(),
@@ -1212,6 +1381,46 @@ async function createExpressApp() {
           min_level: 3,
           stackable: true,
           target_category: "agua",
+          metadata: { activation: "active" },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Boia de Emergencia",
+          description: "Fica no inventário e terceiriza automaticamente a próxima Água em que você for sorteado.",
+          price: 165,
+          type: "rare",
+          effect_code: "AUTO_OUTSOURCE_AGUA",
+          icon: "RefreshCw",
+          min_level: 2,
+          stackable: true,
+          target_category: "agua",
+          metadata: { activation: "auto" },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Seguro Catastrofe",
+          description: "Fica no inventário e transfere automaticamente o próximo Pão para outro participante elegível.",
+          price: 230,
+          type: "rare",
+          effect_code: "AUTO_TRANSFER_PAO",
+          icon: "ScrollText",
+          min_level: 3,
+          stackable: true,
+          target_category: "pao",
+          metadata: { activation: "auto" },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Colete Anti-Balde",
+          description: "Fica no inventário e reduz automaticamente o dano do próximo Balde.",
+          price: 110,
+          type: "consumable",
+          effect_code: "AUTO_BALDE_SHIELD",
+          icon: "Shield",
+          min_level: 1,
+          stackable: true,
+          target_category: "balde",
+          metadata: { activation: "auto", damageReduction: 12 },
         },
         {
           id: crypto.randomUUID(),
@@ -1224,7 +1433,21 @@ async function createExpressApp() {
           icon: "BriefcaseBusiness",
           min_level: 1,
           stackable: true,
-          metadata: { xpBonus: 10, coinBonus: 6 },
+          metadata: { activation: "active", xpBonus: 10, coinBonus: 6 },
+          target_category: null,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Plantão Heroico",
+          description:
+            "No próximo sorteio Solo, você recebe um bônus absurdo de XP e moedas.",
+          price: 210,
+          type: "rare",
+          effect_code: "SOLO_REWARD_BOOST",
+          icon: "BriefcaseBusiness",
+          min_level: 3,
+          stackable: true,
+          metadata: { activation: "active", xpBonus: 18, coinBonus: 12 },
           target_category: null,
         },
       ];
@@ -1529,6 +1752,7 @@ async function createExpressApp() {
           exhaustion_threshold: 0.3,
           exhaustion_penalty_multiplier: 0.5,
           active_buffs: [],
+          daily_challenge_state: {},
           stat_points: 0,
           stat_foco: 0,
           stat_resiliencia: 0,
@@ -1816,6 +2040,8 @@ async function createExpressApp() {
       const profileId = String(req.body?.profileId || "");
       const rawCount = Number(req.body?.count);
       const count: 1 | 10 = rawCount === 10 ? 10 : 1;
+      const banner: ShopBanner =
+        req.body?.banner === "catastrophe" ? "catastrophe" : "standard";
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -1829,9 +2055,9 @@ async function createExpressApp() {
         .select("*");
       if (itemError) throw itemError;
 
-      const normalizedItems = (items || []).map((item: ShopItemRecord) =>
-        normalizeShopItem(item),
-      );
+      const normalizedItems = (items || [])
+        .map((item: ShopItemRecord) => normalizeShopItem(item))
+        .filter((item) => getShopItemBanner(item) === banner);
       if (normalizedItems.length === 0) {
         return res.status(400).json({ error: "Shop pool is empty" });
       }
@@ -1845,10 +2071,13 @@ async function createExpressApp() {
         ? [...profile.inventory]
         : [];
       let activeBuffs = normalizeBuffs(profile.active_buffs);
-      let pityToRare = getPersistentPityCount(activeBuffs, SHOP_PITY_RARE_BUFF);
+      let pityToRare = getPersistentPityCount(
+        activeBuffs,
+        getShopPityBuffType(banner, "rare"),
+      );
       let pityToLegendary = getPersistentPityCount(
         activeBuffs,
-        SHOP_PITY_LEGENDARY_BUFF,
+        getShopPityBuffType(banner, "legendary"),
       );
       const drops: Array<{
         item: ReturnType<typeof normalizeShopItem>;
@@ -1862,7 +2091,7 @@ async function createExpressApp() {
         const forceRareOrBetter =
           forceLegendary || pityToRare + 1 >= SHOP_RARE_PITY_THRESHOLD;
 
-        let rarity = pickShopRarity(forceRareOrBetter, forceLegendary);
+        let rarity = pickShopRarity(forceRareOrBetter, forceLegendary, banner);
         let pool = normalizedItems.filter((item) => item.rarity === rarity);
 
         if (pool.length === 0 && rarity === "legendary") {
@@ -1906,12 +2135,12 @@ async function createExpressApp() {
 
       activeBuffs = upsertPersistentPityBuff(
         activeBuffs,
-        SHOP_PITY_RARE_BUFF,
+        getShopPityBuffType(banner, "rare"),
         pityToRare,
       );
       activeBuffs = upsertPersistentPityBuff(
         activeBuffs,
-        SHOP_PITY_LEGENDARY_BUFF,
+        getShopPityBuffType(banner, "legendary"),
         pityToLegendary,
       );
 
@@ -1932,9 +2161,10 @@ async function createExpressApp() {
         {
           event_type: "gacha_pull",
           category: "system",
-          message: `Fez ${count} pull${count > 1 ? "s" : ""} no Banner do Setor`,
+          message: `Fez ${count} pull${count > 1 ? "s" : ""} no Banner ${banner === "catastrophe" ? "Catástrofe" : "Padrão"}`,
           primary_actor_id: profileId,
           metadata: {
+            banner,
             coinsChanged: -chargedPrice,
             count,
             pityToRare,
@@ -1950,6 +2180,7 @@ async function createExpressApp() {
 
       res.json({
         profile: updatedProfile,
+        banner,
         spentCoins: chargedPrice,
         totalPulls: count,
         pityToRare,
@@ -2111,6 +2342,12 @@ async function createExpressApp() {
           : 60;
       const itemMetadata = normalizeItemMetadata(item.metadata);
 
+      if (itemMetadata.activation === "auto") {
+        return res.status(400).json({
+          error: "Automatic items cannot be used manually",
+        });
+      }
+
       // Apply effect based on effect_code
       if (
         item.effect_code === "HEAL_50" ||
@@ -2134,6 +2371,30 @@ async function createExpressApp() {
         });
         updates.active_buffs = activeBuffs;
         logMessage = `Usou ${item.name} e ficará fora do próximo Balde`;
+      } else if (item.effect_code === "SKIP_AGUA_NEXT") {
+        activeBuffs.push({
+          type: "OUTSOURCE_AGUA",
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e terceirizará a próxima Água para outro participante aleatório`;
+      } else if (item.effect_code === "AGUA_SHIELD") {
+        const damageReduction =
+          typeof itemMetadata.damageReduction === "number" &&
+          itemMetadata.damageReduction > 0
+            ? itemMetadata.damageReduction
+            : 6;
+        activeBuffs.push({
+          type: "AGUA_SHIELD",
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          value: damageReduction,
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e reduzirá o impacto da próxima Água em ${damageReduction} HP`;
       } else if (item.effect_code === "COIN_MAGNET") {
         const magnetMultiplier =
           typeof itemMetadata.multiplier === "number" &&
@@ -2260,6 +2521,11 @@ async function createExpressApp() {
         .select("*");
       if (pErr) throw pErr;
 
+      const { data: shopItems, error: shopErr } = await supabase
+        .from("shop_items")
+        .select("id, name, effect_code, metadata");
+      if (shopErr) throw shopErr;
+
       const participantSet = new Set<string>(participants);
       if (category === "solo") {
         participantSet.clear();
@@ -2271,11 +2537,13 @@ async function createExpressApp() {
         logs,
         rewards,
         winnerIds: resolvedWinnerIds,
-      } = processDrawOutcome({
+      } = sharedProcessDrawOutcome({
         category,
         winnerIds,
         participants: Array.from(participantSet),
         profiles,
+        shopItems: shopItems || [],
+        enableDailyChallenges: true,
       });
 
       const { error: uErr } = await supabase.from("profiles").upsert(updates);

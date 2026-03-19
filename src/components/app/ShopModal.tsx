@@ -3,11 +3,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { Coins, Sparkles, ShoppingCart, X } from "lucide-react";
 
 import {
+  getItemActivationLabel,
+  getShopBannerLabel,
   getShopPityCount,
   getShopPullPrice,
   getShopRarityLabel,
 } from "../../app/helpers";
-import { Profile, ShopItem, ShopPullResult } from "../../types";
+import { Profile, ShopBanner, ShopItem, ShopPullResult } from "../../types";
 
 type ShopModalProps = {
   open: boolean;
@@ -17,13 +19,24 @@ type ShopModalProps = {
   getItemEffectText: (item: ShopItem) => string | null;
   onClose: () => void;
   onSelectProfile: (profileId: string) => void;
-  onPullItems: (profileId: string, count: 1 | 10) => Promise<ShopPullResult>;
+  onPullItems: (
+    profileId: string,
+    count: 1 | 10,
+    banner: ShopBanner,
+  ) => Promise<ShopPullResult>;
 };
 
-const BANNER_RATES = [
-  { rarity: "common", label: "Comum", chance: "65%" },
-  { rarity: "rare", label: "Raro", chance: "25%" },
-  { rarity: "epic", label: "Épico", chance: "9%" },
+const STANDARD_BANNER_RATES = [
+  { rarity: "common", label: "Comum", chance: "88%" },
+  { rarity: "rare", label: "Raro", chance: "9%" },
+  { rarity: "epic", label: "Épico", chance: "2.4%" },
+  { rarity: "legendary", label: "Lendário", chance: "0.6%" },
+] as const;
+
+const CATASTROPHE_BANNER_RATES = [
+  { rarity: "common", label: "Comum", chance: "82%" },
+  { rarity: "rare", label: "Raro", chance: "12%" },
+  { rarity: "epic", label: "Épico", chance: "5%" },
   { rarity: "legendary", label: "Lendário", chance: "1%" },
 ] as const;
 
@@ -46,32 +59,59 @@ export function ShopModal({
 }: ShopModalProps) {
   const [isPulling, setIsPulling] = useState(false);
   const [lastResult, setLastResult] = useState<ShopPullResult | null>(null);
+  const [selectedBanner, setSelectedBanner] = useState<ShopBanner>("standard");
 
   const selectedProfile =
     profiles.find((profile) => profile.id === selectedProfileId) || null;
   const singlePullPrice = getShopPullPrice(selectedProfile, 1);
   const multiPullPrice = getShopPullPrice(selectedProfile, 10);
   const currentRarePity =
-    lastResult?.pityToRare ?? getShopPityCount(selectedProfile, "rare");
+    lastResult?.banner === selectedBanner
+      ? lastResult.pityToRare
+      : getShopPityCount(selectedProfile, "rare", selectedBanner);
   const currentLegendaryPity =
-    lastResult?.pityToLegendary ??
-    getShopPityCount(selectedProfile, "legendary");
+    lastResult?.banner === selectedBanner
+      ? lastResult.pityToLegendary
+      : getShopPityCount(selectedProfile, "legendary", selectedBanner);
+
+  const bannerItems = useMemo(() => {
+    return shopItems.filter((item) => {
+      const catastropheEffects = new Set([
+        "TRANSFER_PAO",
+        "AUTO_TRANSFER_PAO",
+        "SKIP_BALDE_NEXT",
+        "AUTO_BALDE_SHIELD",
+        "HEAL_PERCENT_50",
+        "HEAL_100",
+      ]);
+      const isCatastrophe =
+        item.target_category === "pao" ||
+        item.target_category === "balde" ||
+        catastropheEffects.has(item.effect_code);
+      return selectedBanner === "catastrophe" ? isCatastrophe : !isCatastrophe;
+    });
+  }, [selectedBanner, shopItems]);
 
   const itemsByRarity = useMemo(() => {
-    return shopItems.reduce<Record<string, ShopItem[]>>((acc, item) => {
+    return bannerItems.reduce<Record<string, ShopItem[]>>((acc, item) => {
       const rarity = item.rarity || "common";
       if (!acc[rarity]) acc[rarity] = [];
       acc[rarity].push(item);
       return acc;
     }, {});
-  }, [shopItems]);
+  }, [bannerItems]);
+
+  const bannerRates =
+    selectedBanner === "catastrophe"
+      ? CATASTROPHE_BANNER_RATES
+      : STANDARD_BANNER_RATES;
 
   const handlePull = async (count: 1 | 10) => {
     if (!selectedProfileId || isPulling) return;
 
     setIsPulling(true);
     try {
-      const result = await onPullItems(selectedProfileId, count);
+      const result = await onPullItems(selectedProfileId, count, selectedBanner);
       setLastResult(result);
     } finally {
       setIsPulling(false);
@@ -87,7 +127,7 @@ export function ShopModal({
 
   useEffect(() => {
     setLastResult(null);
-  }, [selectedProfileId]);
+  }, [selectedProfileId, selectedBanner]);
 
   return (
     <AnimatePresence>
@@ -114,7 +154,9 @@ export function ShopModal({
                     Banner do Setor
                   </h3>
                   <p className="mt-2 text-[10px] uppercase tracking-[0.35em] text-zinc-400">
-                    Pulls com pity, pool rotativo e drop por raridade.
+                    {selectedBanner === "catastrophe"
+                      ? "Pool de crise para Pão, Balde e itens de salvamento."
+                      : "Pool geral para Água, economia, sorte e progressão."}
                   </p>
                 </div>
                 <button
@@ -128,6 +170,24 @@ export function ShopModal({
 
               <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="border-2 border-white/15 bg-black/45 p-4">
+                  <div className="mb-4 flex gap-2">
+                    {(["standard", "catastrophe"] as const).map((banner) => (
+                      <button
+                        key={banner}
+                        type="button"
+                        onClick={() => setSelectedBanner(banner)}
+                        className={`border-2 px-3 py-2 text-[10px] font-black uppercase tracking-[0.25em] ${
+                          selectedBanner === banner
+                            ? banner === "catastrophe"
+                              ? "border-red-300 bg-red-700 text-white"
+                              : "border-yellow-300 bg-yellow-600 text-black"
+                            : "border-zinc-800 bg-black text-zinc-400 hover:border-white hover:text-white"
+                        }`}
+                      >
+                        {getShopBannerLabel(banner)}
+                      </button>
+                    ))}
+                  </div>
                   <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     Invocador:
                   </label>
@@ -147,7 +207,7 @@ export function ShopModal({
                   </select>
 
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    {BANNER_RATES.map((entry) => (
+                    {bannerRates.map((entry) => (
                       <div
                         key={entry.rarity}
                         className={`border px-3 py-3 text-center ${rarityToneClassName[entry.rarity]}`}
@@ -160,7 +220,13 @@ export function ShopModal({
                         </p>
                       </div>
                     ))}
-                    <div className="border border-emerald-500/35 bg-emerald-950/35 px-3 py-3 text-center text-emerald-200">
+                    <div
+                      className={`border px-3 py-3 text-center ${
+                        selectedBanner === "catastrophe"
+                          ? "border-red-500/35 bg-red-950/35 text-red-200"
+                          : "border-emerald-500/35 bg-emerald-950/35 text-emerald-200"
+                      }`}
+                    >
                       <p className="text-[9px] font-black uppercase tracking-[0.3em]">
                         Garantia
                       </p>
@@ -255,7 +321,7 @@ export function ShopModal({
                 <div className="mb-4 flex items-center gap-2 text-white">
                   <Sparkles className="h-4 w-4 text-yellow-400" />
                   <h4 className="text-[11px] font-black uppercase tracking-[0.35em]">
-                    Pool do Banner
+                    Pool do Banner {getShopBannerLabel(selectedBanner)}
                   </h4>
                 </div>
 
@@ -279,6 +345,9 @@ export function ShopModal({
                                 <div>
                                   <p className="font-black uppercase tracking-wider text-white">
                                     {item.name}
+                                  </p>
+                                  <p className="mt-2 text-[9px] uppercase tracking-[0.25em] text-amber-300">
+                                    {getItemActivationLabel(item)}
                                   </p>
                                   <p className="mt-2 text-[10px] uppercase tracking-wider text-zinc-500">
                                     {item.description}
@@ -322,6 +391,12 @@ export function ShopModal({
                 ) : (
                   <div className="space-y-4">
                     <div className="border-2 border-white/15 bg-black/40 p-4 text-[10px] uppercase tracking-wider text-zinc-300">
+                      <p>
+                        Banner:{" "}
+                        <span className="font-black text-orange-300">
+                          {getShopBannerLabel(lastResult.banner)}
+                        </span>
+                      </p>
                       <p>
                         Gastou:{" "}
                         <span className="font-black text-yellow-300">
@@ -369,6 +444,9 @@ export function ShopModal({
                             <p className="mt-1 text-[9px] uppercase tracking-[0.25em] text-zinc-400">
                               {getShopRarityLabel(drop.rarity)}
                               {drop.isGuaranteed ? " • pity" : ""}
+                            </p>
+                            <p className="mt-2 text-[9px] uppercase tracking-[0.25em] text-amber-300">
+                              {getItemActivationLabel(drop.item)}
                             </p>
                             <p className="mt-3 text-[10px] uppercase tracking-wider text-zinc-500">
                               {drop.item.description}

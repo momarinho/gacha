@@ -2,6 +2,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { Package, X } from "lucide-react";
 
 import { Profile, ShopItem } from "../../types";
+import {
+  getItemActivationLabel,
+  getItemActivationType,
+} from "../../app/helpers";
 
 type InventoryModalProps = {
   open: boolean;
@@ -69,6 +73,7 @@ export function InventoryModal({
                     (si) => si.id === invItem.item_id,
                   );
                   if (!itemDetails) return null;
+                  const activationType = getItemActivationType(itemDetails);
 
                   return (
                     <div
@@ -82,6 +87,9 @@ export function InventoryModal({
                           </h4>
                           <span className="border border-zinc-700 bg-zinc-900 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-zinc-400">
                             {itemDetails.type}
+                          </span>
+                          <span className="border border-cyan-700 bg-cyan-950 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-cyan-300">
+                            {getItemActivationLabel(itemDetails)}
                           </span>
                           <span className="border border-indigo-500 bg-indigo-900 px-2 py-1 text-[8px] font-black text-indigo-400">
                             x{invItem.qty}
@@ -98,10 +106,11 @@ export function InventoryModal({
                       </div>
                       <div className="ml-4 flex flex-col items-end gap-2">
                         <button
+                          disabled={activationType === "auto"}
                           onClick={() => onUseItem(profile.id, itemDetails.id)}
-                          className="border-2 border-white bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-none hover:bg-emerald-500 active:translate-y-[2px] active:shadow-none"
+                          className="border-2 border-white bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-none hover:bg-emerald-500 active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:shadow-none"
                         >
-                          Usar
+                          {activationType === "auto" ? "Automático" : "Usar"}
                         </button>
                       </div>
                     </div>
