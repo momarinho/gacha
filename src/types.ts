@@ -171,7 +171,7 @@ export interface RoadmapItem {
   id: string;
   title: string;
   description: string | null;
-  status: "pending" | "in_progress" | "done";
+  status: "pending" | "in_progress" | "done" | "discarded";
   created_by: string | null;
   votes: number;
   created_at: string;

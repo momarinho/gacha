@@ -91,6 +91,7 @@ export function RoadmapSection({ profiles }: Props) {
   const pendingItems = items.filter(i => i.status === "pending" || !i.status);
   const inProgressItems = items.filter(i => i.status === "in_progress");
   const doneItems = items.filter(i => i.status === "done");
+  const discardedItems = items.filter(i => i.status === "discarded");
 
   return (
     <section className="glass-card flex min-h-[420px] flex-col p-5 lg:min-h-[calc(100vh-170px)] lg:p-6">
@@ -179,8 +180,8 @@ export function RoadmapSection({ profiles }: Props) {
           <p className="pixel-text text-[8px] animate-pulse text-white/50">Carregando quadro...</p>
         </div>
       ) : (
-        <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-3">
-          
+        <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-4">
+
           {/* TO DO */}
           <section
             className={buildColumnClassName("pending")}
@@ -275,6 +276,42 @@ export function RoadmapSection({ profiles }: Props) {
               <p className="retro-copy-sm mt-4 text-center text-white/40">Nenhum projeto finalizado ainda.</p>
             ) : (
               doneItems.map((item) => (
+                <RoadmapCard
+                  key={item.id}
+                  item={item}
+                  onVote={() => handleVote(item.id)}
+                  onDragStart={() => setDraggingItemId(item.id)}
+                  onDragEnd={() => {
+                    setDraggingItemId(null);
+                    setDragOverStatus(null);
+                  }}
+                />
+              ))
+            )}
+          </section>
+
+          {/* DISCARDED */}
+          <section
+            className={buildColumnClassName("discarded")}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverStatus("discarded");
+            }}
+            onDragLeave={() => {
+              if (dragOverStatus === "discarded") setDragOverStatus(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              void handleDropStatus("discarded");
+            }}
+          >
+            <div className="border-b-2 border-white/20 pb-2">
+              <h3 className="pixel-text text-[8px] text-rose-400">DESCARTADOS ({discardedItems.length})</h3>
+            </div>
+            {discardedItems.length === 0 ? (
+              <p className="retro-copy-sm mt-4 text-center text-white/40">Nenhuma ideia descartada.</p>
+            ) : (
+              discardedItems.map((item) => (
                 <RoadmapCard
                   key={item.id}
                   item={item}
