@@ -3,7 +3,6 @@ import path from "path";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic";
 
 dotenv.config();
 
@@ -16,6 +15,15 @@ const accessPassword = process.env.APP_ACCESS_PASSWORD?.trim() || "";
 let supabase: any = null;
 let db: any = null;
 let dbInitialized = false;
+let processDrawOutcomeFn: null | ((input: ProcessDrawInput) => ProcessDrawResult) =
+  null;
+
+async function getProcessDrawOutcome() {
+  if (processDrawOutcomeFn) return processDrawOutcomeFn;
+  const mod = await import("./drawLogic");
+  processDrawOutcomeFn = mod.processDrawOutcome;
+  return processDrawOutcomeFn;
+}
 
 const LADINO_DODGE_BASE = 0.05;
 const DEFAULT_RELIEF_LUCK_BONUS = 0.1;
@@ -210,7 +218,12 @@ function parseCookies(cookieHeader?: string) {
   return cookieHeader.split(";").reduce<Record<string, string>>((acc, part) => {
     const [rawKey, ...rawValue] = part.trim().split("=");
     if (!rawKey) return acc;
-    acc[rawKey] = decodeURIComponent(rawValue.join("="));
+    const encodedValue = rawValue.join("=");
+    try {
+      acc[rawKey] = decodeURIComponent(encodedValue);
+    } catch {
+      acc[rawKey] = encodedValue;
+    }
     return acc;
   }, {});
 }
@@ -2532,12 +2545,14 @@ async function createExpressApp() {
         participantSet.add(winnerIds[0]);
       }
 
+      const processDrawOutcome = await getProcessDrawOutcome();
+
       const {
         updates,
         logs,
         rewards,
         winnerIds: resolvedWinnerIds,
-      } = sharedProcessDrawOutcome({
+      } = processDrawOutcome({
         category,
         winnerIds,
         participants: Array.from(participantSet),
