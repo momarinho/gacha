@@ -14,6 +14,8 @@ export function RoadmapSection({ profiles }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<RoadmapItem["status"] | null>(null);
 
   useEffect(() => {
     fetchRoadmap();
@@ -57,6 +59,34 @@ export function RoadmapSection({ profiles }: Props) {
       console.error("Failed to vote", error);
     }
   };
+
+  const handleDropStatus = async (targetStatus: RoadmapItem["status"]) => {
+    if (!draggingItemId) return;
+    const draggedItem = items.find((item) => item.id === draggingItemId);
+    if (!draggedItem || draggedItem.status === targetStatus) {
+      setDraggingItemId(null);
+      setDragOverStatus(null);
+      return;
+    }
+
+    try {
+      const newItems = await api.updateRoadmapItemStatus(draggingItemId, targetStatus);
+      setItems(newItems);
+    } catch (error) {
+      console.error("Failed to move roadmap item", error);
+    } finally {
+      setDraggingItemId(null);
+      setDragOverStatus(null);
+    }
+  };
+
+  const buildColumnClassName = (status: RoadmapItem["status"]) =>
+    [
+      "flex flex-col gap-3 rounded border border-transparent p-2 transition-colors",
+      dragOverStatus === status
+        ? "border-blue-400/70 bg-blue-500/10"
+        : "bg-transparent",
+    ].join(" ");
 
   const pendingItems = items.filter(i => i.status === "pending" || !i.status);
   const inProgressItems = items.filter(i => i.status === "in_progress");
@@ -126,7 +156,7 @@ export function RoadmapSection({ profiles }: Props) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descreva melhor como funcionaria..."
               className="pixel-input mt-1 w-full custom-scrollbar"
-              rows={3}
+              rows={5}
             />
           </div>
           <div className="mt-4 flex justify-end gap-3">
@@ -152,7 +182,20 @@ export function RoadmapSection({ profiles }: Props) {
         <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-3">
           
           {/* TO DO */}
-          <section className="flex flex-col gap-3">
+          <section
+            className={buildColumnClassName("pending")}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverStatus("pending");
+            }}
+            onDragLeave={() => {
+              if (dragOverStatus === "pending") setDragOverStatus(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              void handleDropStatus("pending");
+            }}
+          >
             <div className="border-b-2 border-white/20 pb-2">
               <h3 className="pixel-text text-[8px] text-orange-400">EM PAUTA ({pendingItems.length})</h3>
             </div>
@@ -160,13 +203,35 @@ export function RoadmapSection({ profiles }: Props) {
               <p className="retro-copy-sm mt-4 text-center text-white/40">Nenhuma ideia pendente.</p>
             ) : (
               pendingItems.map((item) => (
-                <RoadmapCard key={item.id} item={item} onVote={() => handleVote(item.id)} />
+                <RoadmapCard
+                  key={item.id}
+                  item={item}
+                  onVote={() => handleVote(item.id)}
+                  onDragStart={() => setDraggingItemId(item.id)}
+                  onDragEnd={() => {
+                    setDraggingItemId(null);
+                    setDragOverStatus(null);
+                  }}
+                />
               ))
             )}
           </section>
 
           {/* IN PROGRESS */}
-          <section className="flex flex-col gap-3">
+          <section
+            className={buildColumnClassName("in_progress")}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverStatus("in_progress");
+            }}
+            onDragLeave={() => {
+              if (dragOverStatus === "in_progress") setDragOverStatus(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              void handleDropStatus("in_progress");
+            }}
+          >
             <div className="border-b-2 border-white/20 pb-2">
               <h3 className="pixel-text text-[8px] text-blue-400">EM ANDAMENTO ({inProgressItems.length})</h3>
             </div>
@@ -174,13 +239,35 @@ export function RoadmapSection({ profiles }: Props) {
               <p className="retro-copy-sm mt-4 text-center text-white/40">Nada sendo feito no momento.</p>
             ) : (
               inProgressItems.map((item) => (
-                <RoadmapCard key={item.id} item={item} onVote={() => handleVote(item.id)} />
+                <RoadmapCard
+                  key={item.id}
+                  item={item}
+                  onVote={() => handleVote(item.id)}
+                  onDragStart={() => setDraggingItemId(item.id)}
+                  onDragEnd={() => {
+                    setDraggingItemId(null);
+                    setDragOverStatus(null);
+                  }}
+                />
               ))
             )}
           </section>
 
           {/* DONE */}
-          <section className="flex flex-col gap-3">
+          <section
+            className={buildColumnClassName("done")}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverStatus("done");
+            }}
+            onDragLeave={() => {
+              if (dragOverStatus === "done") setDragOverStatus(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              void handleDropStatus("done");
+            }}
+          >
             <div className="border-b-2 border-white/20 pb-2">
               <h3 className="pixel-text text-[8px] text-emerald-400">CONCLUIDO ({doneItems.length})</h3>
             </div>
@@ -188,7 +275,16 @@ export function RoadmapSection({ profiles }: Props) {
               <p className="retro-copy-sm mt-4 text-center text-white/40">Nenhum projeto finalizado ainda.</p>
             ) : (
               doneItems.map((item) => (
-                <RoadmapCard key={item.id} item={item} onVote={() => handleVote(item.id)} />
+                <RoadmapCard
+                  key={item.id}
+                  item={item}
+                  onVote={() => handleVote(item.id)}
+                  onDragStart={() => setDraggingItemId(item.id)}
+                  onDragEnd={() => {
+                    setDraggingItemId(null);
+                    setDragOverStatus(null);
+                  }}
+                />
               ))
             )}
           </section>
@@ -199,14 +295,25 @@ export function RoadmapSection({ profiles }: Props) {
   );
 }
 
-const RoadmapCard: React.FC<{ item: RoadmapItem; onVote: () => void }> = ({ item, onVote }) => {
+const RoadmapCard: React.FC<{
+  item: RoadmapItem;
+  onVote: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}> = ({ item, onVote, onDragStart, onDragEnd }) => {
   return (
-    <div className="border-2 border-white/20 bg-black/40 p-3 hover:border-white/40 transition-colors">
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className="cursor-grab border-2 border-white/20 bg-black/40 p-3 transition-colors hover:border-white/40 active:cursor-grabbing"
+      title="Arraste para mover de fase"
+    >
       <div className="flex justify-between items-start gap-2">
-        <h4 className="retro-copy-sm font-bold text-white">{item.title}</h4>
+        <h4 className="retro-copy-sm text-[12px] font-bold text-white">{item.title}</h4>
       </div>
       {item.description && (
-        <p className="retro-copy-sm mt-2 line-clamp-3 text-[10px] text-white/70">{item.description}</p>
+        <p className="retro-copy-sm mt-2 whitespace-pre-wrap text-[11px] leading-relaxed text-white/75">{item.description}</p>
       )}
       
       <div className="mt-3 flex items-center justify-between border-t-2 border-white/10 pt-2">

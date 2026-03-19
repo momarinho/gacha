@@ -70,6 +70,7 @@ const SHOP_PITY_RARE_CATASTROPHE_BUFF = "SHOP_PITY_RARE_CATASTROPHE";
 const SHOP_PITY_LEGENDARY_CATASTROPHE_BUFF =
   "SHOP_PITY_LEGENDARY_CATASTROPHE";
 const SHOP_PITY_EXPIRES_AT = "2099-12-31T23:59:59.999Z";
+const ROADMAP_STATUSES = ["pending", "in_progress", "done"] as const;
 
 const PROFILE_CLASSES = [
   "novato",
@@ -1970,6 +1971,15 @@ async function createExpressApp() {
           .status(501)
           .json({ error: "Not implemented for SQLite yet" });
       const { status } = req.body;
+      if (
+        typeof status !== "string" ||
+        !ROADMAP_STATUSES.includes(status as (typeof ROADMAP_STATUSES)[number])
+      ) {
+        return res.status(400).json({
+          error: "Invalid roadmap status",
+          allowed: ROADMAP_STATUSES,
+        });
+      }
       const { error } = await supabase
         .from("roadmap")
         .update({ status })

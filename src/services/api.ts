@@ -295,7 +295,7 @@ export const api = {
   },
   updateRoadmapItemStatus: async (
     id: string,
-    status: string,
+    status: RoadmapItem["status"],
   ): Promise<RoadmapItem[]> => {
     const res = await fetch(`${API_BASE}/roadmap/${id}`, {
       method: "PUT",
