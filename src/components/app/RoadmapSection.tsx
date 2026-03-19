@@ -16,6 +16,7 @@ export function RoadmapSection({ profiles }: Props) {
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<RoadmapItem["status"] | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRoadmap();
@@ -43,6 +44,7 @@ export function RoadmapSection({ profiles }: Props) {
         selectedProfileId,
       );
       setItems(newItems);
+      setActionError(null);
       setIsAdding(false);
       setTitle("");
       setDescription("");
@@ -55,6 +57,7 @@ export function RoadmapSection({ profiles }: Props) {
     try {
       const newItems = await api.voteRoadmapItem(id);
       setItems(newItems);
+      setActionError(null);
     } catch (error) {
       console.error("Failed to vote", error);
     }
@@ -72,8 +75,12 @@ export function RoadmapSection({ profiles }: Props) {
     try {
       const newItems = await api.updateRoadmapItemStatus(draggingItemId, targetStatus);
       setItems(newItems);
+      setActionError(null);
     } catch (error) {
       console.error("Failed to move roadmap item", error);
+      setActionError(
+        "Nao foi possivel mover a ideia. Se falhou ao ir para DESCARTADOS, aplique a migration de status no Supabase.",
+      );
     } finally {
       setDraggingItemId(null);
       setDragOverStatus(null);
@@ -181,6 +188,11 @@ export function RoadmapSection({ profiles }: Props) {
         </div>
       ) : (
         <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 xl:grid-cols-4">
+          {actionError ? (
+            <p className="retro-copy-sm col-span-full border border-rose-400/50 bg-rose-950/20 px-3 py-2 text-rose-200">
+              {actionError}
+            </p>
+          ) : null}
 
           {/* TO DO */}
           <section

@@ -1991,6 +1991,18 @@ async function createExpressApp() {
         .order("votes", { ascending: false });
       res.json(all || []);
     } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code?: string }).code === "23514"
+      ) {
+        return res.status(400).json({
+          error: "Roadmap status rejected by database constraint",
+          details:
+            "Run the roadmap discarded migration so status 'discarded' is accepted.",
+        });
+      }
       res
         .status(500)
         .json({ error: "Internal Server Error", details: String(error) });
