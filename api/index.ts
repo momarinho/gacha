@@ -21,20 +21,46 @@ let processDrawOutcomeFn:
 
 async function getProcessDrawOutcome() {
   if (processDrawOutcomeFn) return processDrawOutcomeFn;
-  let mod;
-  try {
-    // Primary import path (development / build that keeps api/drawLogic)
-    mod = await import("./drawLogic");
-  } catch (err) {
-    // Fallback import for deployment layouts where the compiled module lives under ../shared
-    // (Some bundlers / deployment environments may place the shared module alongside index)
-    // eslint-disable-next-line no-console
-    console.warn(
-      "Primary drawLogic import failed, attempting fallback import to ../shared/drawLogic:",
-      err,
-    );
-    mod = await import("../shared/drawLogic");
+
+  // Try multiple candidate module paths to support different runtime/bundle layouts.
+  // Order is: development primary, common bundle layouts, then other relative variants.
+  const candidates = [
+    "./drawLogic",
+    "./drawLogic.js",
+    "../shared/drawLogic",
+    "../shared/drawLogic.js",
+    "./shared/drawLogic",
+    "./shared/drawLogic.js",
+  ];
+
+  let mod: any = null;
+  let lastErr: unknown = null;
+
+  for (const candidate of candidates) {
+    try {
+      mod = await import(candidate);
+      if (mod && mod.processDrawOutcome) {
+        if (candidate !== candidates[0]) {
+          // eslint-disable-next-line no-console
+          console.warn("drawLogic imported from fallback path:", candidate);
+        }
+        break;
+      }
+    } catch (err) {
+      lastErr = err;
+      // try next candidate
+    }
   }
+
+  if (!mod || !mod.processDrawOutcome) {
+    // eslint-disable-next-line no-console
+    console.error(
+      "Failed to import drawLogic from any candidate path. Last error:",
+      lastErr,
+    );
+    throw lastErr || new Error("Could not import drawLogic module");
+  }
+
   processDrawOutcomeFn = mod.processDrawOutcome;
   return processDrawOutcomeFn;
 }
