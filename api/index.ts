@@ -3,6 +3,7 @@ import path from "path";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic";
 
 dotenv.config();
 
@@ -15,55 +16,6 @@ const accessPassword = process.env.APP_ACCESS_PASSWORD?.trim() || "";
 let supabase: any = null;
 let db: any = null;
 let dbInitialized = false;
-let processDrawOutcomeFn:
-  | null
-  | ((input: ProcessDrawInput) => ProcessDrawResult) = null;
-
-async function getProcessDrawOutcome() {
-  if (processDrawOutcomeFn) return processDrawOutcomeFn;
-
-  // Try multiple candidate module paths to support different runtime/bundle layouts.
-  // Order is: development primary, common bundle layouts, then other relative variants.
-  const candidates = [
-    "./drawLogic",
-    "./drawLogic.js",
-    "../shared/drawLogic",
-    "../shared/drawLogic.js",
-    "./shared/drawLogic",
-    "./shared/drawLogic.js",
-  ];
-
-  let mod: any = null;
-  let lastErr: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      mod = await import(candidate);
-      if (mod && mod.processDrawOutcome) {
-        if (candidate !== candidates[0]) {
-          // eslint-disable-next-line no-console
-          console.warn("drawLogic imported from fallback path:", candidate);
-        }
-        break;
-      }
-    } catch (err) {
-      lastErr = err;
-      // try next candidate
-    }
-  }
-
-  if (!mod || !mod.processDrawOutcome) {
-    // eslint-disable-next-line no-console
-    console.error(
-      "Failed to import drawLogic from any candidate path. Last error:",
-      lastErr,
-    );
-    throw lastErr || new Error("Could not import drawLogic module");
-  }
-
-  processDrawOutcomeFn = mod.processDrawOutcome;
-  return processDrawOutcomeFn;
-}
 
 const LADINO_DODGE_BASE = 0.05;
 const DEFAULT_RELIEF_LUCK_BONUS = 0.1;
@@ -2801,14 +2753,12 @@ async function createExpressApp() {
         });
       }
 
-      const processDrawOutcome = await getProcessDrawOutcome();
-
       const {
         updates,
         logs,
         rewards,
         winnerIds: resolvedWinnerIds,
-      } = processDrawOutcome({
+      } = sharedProcessDrawOutcome({
         category,
         winnerIds: requestedWinnerIds,
         participants: Array.from(participantSet),
