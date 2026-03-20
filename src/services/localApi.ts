@@ -94,7 +94,7 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-mogado-badge",
       name: "Selo Mogado",
-      description: "Aplica o status Mogado em você, reduzindo aleatoriamente um status por 12 horas.",
+      description: "Aplica o status Mogado nos outros jogadores, reduzindo aleatoriamente um status por 12 horas.",
       price: 30,
       type: "consumable",
       rarity: "common",
@@ -660,20 +660,28 @@ export const localApi = {
             }))
         : [];
       const debuffPool = metadataOptions.length > 0 ? metadataOptions : [...DEFAULT_MOGADO_OPTIONS];
-      const randomArray = new Uint32Array(1);
-      crypto.getRandomValues(randomArray);
-      const pickedDebuff = debuffPool[randomArray[0] % debuffPool.length];
+      const targets = db.profiles.filter((candidate) => candidate.id !== profileId);
 
-      activeBuffs.push({
-        type: "MOGADO",
-        expiresAt: new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString(),
-        metadata: {
-          targetStat: pickedDebuff.targetStat,
-          amount: pickedDebuff.amount,
-        },
-      });
-      profile.active_buffs = activeBuffs;
-      logMessage = `Usou ${item.name} e ficou mogado: -${pickedDebuff.amount} em ${pickedDebuff.label ?? pickedDebuff.targetStat} por ${durationHours}h`;
+      for (const target of targets) {
+        const targetBuffs = Array.isArray(target.active_buffs) ? [...target.active_buffs] : [];
+        const randomArray = new Uint32Array(1);
+        crypto.getRandomValues(randomArray);
+        const pickedDebuff = debuffPool[randomArray[0] % debuffPool.length];
+
+        targetBuffs.push({
+          type: "MOGADO",
+          expiresAt: new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString(),
+          metadata: {
+            targetStat: pickedDebuff.targetStat,
+            amount: pickedDebuff.amount,
+          },
+        });
+        target.active_buffs = targetBuffs;
+      }
+
+      logMessage = targets.length > 0
+        ? `Usou ${item.name} e aplicou Mogado em ${targets.length} jogador(es) por ${durationHours}h`
+        : `Usou ${item.name}, mas não havia outros jogadores para receber Mogado`;
     } else if (item.effect_code === "TRANSFER_PAO" || item.effect_code === "OUTSOURCE_AGUA") {
       activeBuffs.push({
         type: item.effect_code === "OUTSOURCE_AGUA" ? "OUTSOURCE_AGUA" : "TRANSFER_PAO",

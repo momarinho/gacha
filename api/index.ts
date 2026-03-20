@@ -1295,7 +1295,7 @@ async function createExpressApp() {
           id: crypto.randomUUID(),
           name: "Selo Mogado",
           description:
-            "Aplica o status Mogado em você, reduzindo aleatoriamente um status por 12 horas.",
+            "Aplica o status Mogado nos outros jogadores, reduzindo aleatoriamente um status por 12 horas.",
           price: 30,
           type: "consumable",
           effect_code: "MOGADO_DEBUFF",
@@ -2402,6 +2402,10 @@ async function createExpressApp() {
       let updates: any = { inventory };
       let activeBuffs = purgeExpiredBuffs(normalizeBuffs(profile.active_buffs));
       let logMessage = `Usou ${item.name}`;
+      let logMetadata: Record<string, unknown> = {
+        itemId,
+        effect: item.effect_code,
+      };
       const itemDurationMinutes =
         typeof item.duration_minutes === "number" && item.duration_minutes > 0
           ? item.duration_minutes
@@ -2524,20 +2528,43 @@ async function createExpressApp() {
           metadataOptions.length > 0
             ? metadataOptions
             : [...DEFAULT_MOGADO_OPTIONS];
-        const pickedDebuff = debuffPool[randomIndex(debuffPool.length)];
+        const { data: targetProfiles, error: targetErr } = await supabase
+          .from("profiles")
+          .select("id, active_buffs")
+          .neq("id", profileId);
+        if (targetErr) throw targetErr;
 
-        activeBuffs.push({
-          type: "MOGADO",
-          expiresAt: new Date(
-            Date.now() + durationHours * 60 * 60 * 1000,
-          ).toISOString(),
-          metadata: {
-            targetStat: pickedDebuff.targetStat,
-            amount: pickedDebuff.amount,
-          },
-        });
-        updates.active_buffs = activeBuffs;
-        logMessage = `Usou ${item.name} e ficou mogado: -${pickedDebuff.amount} em ${pickedDebuff.label ?? pickedDebuff.targetStat} por ${durationHours}h`;
+        const targets = Array.isArray(targetProfiles) ? targetProfiles : [];
+        await Promise.all(
+          targets.map(async (targetProfile: any) => {
+            const targetActiveBuffs = purgeExpiredBuffs(
+              normalizeBuffs(targetProfile.active_buffs),
+            );
+            const pickedDebuff = debuffPool[randomIndex(debuffPool.length)];
+            targetActiveBuffs.push({
+              type: "MOGADO",
+              expiresAt: new Date(
+                Date.now() + durationHours * 60 * 60 * 1000,
+              ).toISOString(),
+              metadata: {
+                targetStat: pickedDebuff.targetStat,
+                amount: pickedDebuff.amount,
+              },
+            });
+
+            const { error: updateTargetErr } = await supabase
+              .from("profiles")
+              .update({ active_buffs: targetActiveBuffs })
+              .eq("id", targetProfile.id);
+            if (updateTargetErr) throw updateTargetErr;
+          }),
+        );
+
+        logMetadata.affectedTargets = targets.length;
+        logMessage =
+          targets.length > 0
+            ? `Usou ${item.name} e aplicou Mogado em ${targets.length} jogador(es) por ${durationHours}h`
+            : `Usou ${item.name}, mas não havia outros jogadores para receber Mogado`;
       } else if (
         item.effect_code === "TRANSFER_PAO" ||
         item.effect_code === "OUTSOURCE_AGUA"
@@ -2599,7 +2626,7 @@ async function createExpressApp() {
           category: "system",
           message: logMessage,
           primary_actor_id: profileId,
-          metadata: { itemId, effect: item.effect_code },
+          metadata: logMetadata,
         },
       ]);
 

@@ -175,7 +175,7 @@ export function getItemEffectText(item: ShopItem) {
       typeof metadata.duration_hours === "number" && metadata.duration_hours > 0
         ? metadata.duration_hours
         : 12;
-    return `Aplica Mogado: debuff aleatório de status por ${durationHours}h`;
+    return `Aplica Mogado nos outros jogadores: debuff aleatório de status por ${durationHours}h`;
   }
 
   if (typeof profileModifiers.passive_coin_multiplier === "number") {
