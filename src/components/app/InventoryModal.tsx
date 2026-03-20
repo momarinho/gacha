@@ -92,7 +92,7 @@ export function InventoryModal({
                             {getItemActivationLabel(itemDetails)}
                           </span>
                           <span className="border border-indigo-500 bg-indigo-900 px-2 py-1 text-[8px] font-black text-indigo-400">
-                            x{invItem.qty}
+                            x{(invItem as any)?.qty ?? 1}
                           </span>
                         </div>
                         <p className="mt-2 text-[10px] uppercase tracking-wider text-zinc-500">

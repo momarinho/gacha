@@ -322,7 +322,7 @@ export function processDrawOutcome({
       (entry) => entry.item_id === itemId,
     );
     if (inventoryIndex === -1) return;
-    inventory[inventoryIndex].qty -= 1;
+    inventory[inventoryIndex].qty = (inventory[inventoryIndex].qty ?? 1) - 1;
     if (inventory[inventoryIndex].qty <= 0) {
       inventory.splice(inventoryIndex, 1);
     }

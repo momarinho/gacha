@@ -68,7 +68,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-luck-8",
       name: "Capa de Fuga",
-      description: "Aumenta sua chance de escapar de sorteios de risco por 24 horas.",
+      description:
+        "Aumenta sua chance de escapar de sorteios de risco por 24 horas.",
       price: 60,
       type: "consumable",
       rarity: "rare",
@@ -81,7 +82,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-luck-4",
       name: "Crachá de Prioridade",
-      description: "Aumenta levemente sua chance de escapar de sorteios de risco por 12 horas.",
+      description:
+        "Aumenta levemente sua chance de escapar de sorteios de risco por 12 horas.",
       price: 40,
       type: "consumable",
       rarity: "common",
@@ -94,7 +96,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-mogado-badge",
       name: "Selo Mogado",
-      description: "Aplica o status Mogado nos outros jogadores, reduzindo aleatoriamente um status por 12 horas.",
+      description:
+        "Aplica o status Mogado nos outros jogadores, reduzindo aleatoriamente um status por 12 horas.",
       price: 30,
       type: "consumable",
       rarity: "common",
@@ -111,7 +114,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-luck-12",
       name: "VPN do Home Office",
-      description: "Aumenta bastante sua chance de escapar de sorteios de risco por 48 horas.",
+      description:
+        "Aumenta bastante sua chance de escapar de sorteios de risco por 48 horas.",
       price: 130,
       type: "rare",
       rarity: "epic",
@@ -124,7 +128,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-skip-agua",
       name: "Atestado de Agua",
-      description: "Prepara imunidade para a próxima Água e joga o turno para outro participante aleatório.",
+      description:
+        "Prepara imunidade para a próxima Água e joga o turno para outro participante aleatório.",
       price: 85,
       type: "consumable",
       rarity: "rare",
@@ -166,7 +171,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-coin-lite",
       name: "Imã de Moedas Lite",
-      description: "Aumenta modestamente seus ganhos de SetorCoins por 30 minutos.",
+      description:
+        "Aumenta modestamente seus ganhos de SetorCoins por 30 minutos.",
       price: 95,
       type: "passive",
       rarity: "rare",
@@ -208,7 +214,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-transfer-pao",
       name: "Procuração do Pão",
-      description: "Se você for sorteado no Pão, transfere o problema para outro participante.",
+      description:
+        "Se você for sorteado no Pão, transfere o problema para outro participante.",
       price: 140,
       type: "rare",
       rarity: "epic",
@@ -222,7 +229,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-outsource-agua",
       name: "Contrato de Terceirização",
-      description: "Se você for sorteado na Água, tenta terceirizar o turno para outro participante.",
+      description:
+        "Se você for sorteado na Água, tenta terceirizar o turno para outro participante.",
       price: 180,
       type: "rare",
       rarity: "legendary",
@@ -236,7 +244,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-auto-outsource-agua",
       name: "Boia de Emergencia",
-      description: "Fica no inventário e terceiriza automaticamente a próxima Água em que você for sorteado.",
+      description:
+        "Fica no inventário e terceiriza automaticamente a próxima Água em que você for sorteado.",
       price: 165,
       type: "rare",
       rarity: "epic",
@@ -250,7 +259,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-auto-transfer-pao",
       name: "Seguro Catastrofe",
-      description: "Fica no inventário e transfere automaticamente o próximo Pão para outro participante elegível.",
+      description:
+        "Fica no inventário e transfere automaticamente o próximo Pão para outro participante elegível.",
       price: 230,
       type: "rare",
       rarity: "legendary",
@@ -264,7 +274,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-auto-balde-shield",
       name: "Colete Anti-Balde",
-      description: "Fica no inventário e reduz automaticamente o dano do próximo Balde.",
+      description:
+        "Fica no inventário e reduz automaticamente o dano do próximo Balde.",
       price: 110,
       type: "consumable",
       rarity: "rare",
@@ -278,7 +289,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-solo-boost",
       name: "Vale Hora Extra",
-      description: "No próximo sorteio Solo, você recebe bônus extra de XP e moedas.",
+      description:
+        "No próximo sorteio Solo, você recebe bônus extra de XP e moedas.",
       price: 160,
       type: "rare",
       rarity: "epic",
@@ -291,7 +303,8 @@ function makeShopItems(): ShopItem[] {
     {
       id: "shop-solo-boost-big",
       name: "Plantão Heroico",
-      description: "No próximo sorteio Solo, você recebe um bônus absurdo de XP e moedas.",
+      description:
+        "No próximo sorteio Solo, você recebe um bônus absurdo de XP e moedas.",
       price: 210,
       type: "rare",
       rarity: "legendary",
@@ -392,15 +405,28 @@ function getPityBuffType(banner: ShopBanner, type: "rare" | "legendary") {
   return type === "rare" ? "SHOP_PITY_RARE" : "SHOP_PITY_LEGENDARY";
 }
 
-function getPityCount(profile: Profile, banner: ShopBanner, type: "rare" | "legendary") {
+function getPityCount(
+  profile: Profile,
+  banner: ShopBanner,
+  type: "rare" | "legendary",
+) {
   const buffType = getPityBuffType(banner, type);
   const pityBuff = profile.active_buffs.find((buff) => buff.type === buffType);
-  return typeof pityBuff?.value === "number" ? Math.max(0, Math.floor(pityBuff.value)) : 0;
+  return typeof pityBuff?.value === "number"
+    ? Math.max(0, Math.floor(pityBuff.value))
+    : 0;
 }
 
-function setPityCount(profile: Profile, banner: ShopBanner, type: "rare" | "legendary", value: number) {
+function setPityCount(
+  profile: Profile,
+  banner: ShopBanner,
+  type: "rare" | "legendary",
+  value: number,
+) {
   const buffType = getPityBuffType(banner, type);
-  profile.active_buffs = profile.active_buffs.filter((buff) => buff.type !== buffType);
+  profile.active_buffs = profile.active_buffs.filter(
+    (buff) => buff.type !== buffType,
+  );
   profile.active_buffs.push({
     type: buffType,
     expiresAt: SHOP_PITY_EXPIRES_AT,
@@ -442,11 +468,19 @@ function pickWeightedItem(items: ShopItem[]) {
   return items[items.length - 1];
 }
 
-function pickRarity(banner: ShopBanner, forceRareOrBetter: boolean, forceLegendary: boolean) {
+function pickRarity(
+  banner: ShopBanner,
+  forceRareOrBetter: boolean,
+  forceLegendary: boolean,
+) {
   if (forceLegendary) return "legendary" as const;
   const baseRates = SHOP_BANNER_RATES[banner];
   const rates = forceRareOrBetter
-    ? { rare: baseRates.rare, epic: baseRates.epic, legendary: baseRates.legendary }
+    ? {
+        rare: baseRates.rare,
+        epic: baseRates.epic,
+        legendary: baseRates.legendary,
+      }
     : baseRates;
   const total = Object.values(rates).reduce((sum, value) => sum + value, 0);
   const array = new Uint32Array(1);
@@ -459,37 +493,61 @@ function pickRarity(banner: ShopBanner, forceRareOrBetter: boolean, forceLegenda
   return forceRareOrBetter ? "rare" : "common";
 }
 
-function applyProfileModifiersFromItem(currentProfile: Profile, metadata: Record<string, any>, updates: Partial<Profile>) {
+function applyProfileModifiersFromItem(
+  currentProfile: Profile,
+  metadata: Record<string, any>,
+  updates: Partial<Profile>,
+) {
   const modifiers = metadata.profileModifiers;
   if (!modifiers || typeof modifiers !== "object") return updates;
-  if (typeof modifiers.passive_coin_multiplier === "number" && modifiers.passive_coin_multiplier > 0) {
+  if (
+    typeof modifiers.passive_coin_multiplier === "number" &&
+    modifiers.passive_coin_multiplier > 0
+  ) {
     updates.passive_coin_multiplier = Number(
-      ((currentProfile.passive_coin_multiplier || 1) * modifiers.passive_coin_multiplier).toFixed(2),
+      (
+        (currentProfile.passive_coin_multiplier || 1) *
+        modifiers.passive_coin_multiplier
+      ).toFixed(2),
     );
   }
-  if (typeof modifiers.temporary_coin_multiplier === "number" && modifiers.temporary_coin_multiplier > 0) {
+  if (
+    typeof modifiers.temporary_coin_multiplier === "number" &&
+    modifiers.temporary_coin_multiplier > 0
+  ) {
     updates.temporary_coin_multiplier = Number(
-      ((currentProfile.temporary_coin_multiplier || 1) * modifiers.temporary_coin_multiplier).toFixed(2),
+      (
+        (currentProfile.temporary_coin_multiplier || 1) *
+        modifiers.temporary_coin_multiplier
+      ).toFixed(2),
     );
   }
   if (typeof modifiers.exhaustion_threshold === "number") {
     updates.exhaustion_threshold = modifiers.exhaustion_threshold;
   }
   if (typeof modifiers.exhaustion_penalty_multiplier === "number") {
-    updates.exhaustion_penalty_multiplier = modifiers.exhaustion_penalty_multiplier;
+    updates.exhaustion_penalty_multiplier =
+      modifiers.exhaustion_penalty_multiplier;
   }
   if (typeof modifiers.luck === "number") {
-    updates.luck = Number(((currentProfile.luck || 0) + modifiers.luck).toFixed(3));
+    updates.luck = Number(
+      ((currentProfile.luck || 0) + modifiers.luck).toFixed(3),
+    );
   }
   return updates;
 }
 
 function buildTitlesResponse(profiles: Profile[]): SocialTitlesResponse {
   return {
-    titlesByProfileId: profiles.reduce<Record<string, string[]>>((acc, profile) => {
-      acc[profile.id] = profile.titles.filter((title) => !title.startsWith(CUSTOM_TITLE_PREFIX));
-      return acc;
-    }, {}),
+    titlesByProfileId: profiles.reduce<Record<string, string[]>>(
+      (acc, profile) => {
+        acc[profile.id] = profile.titles.filter(
+          (title) => !title.startsWith(CUSTOM_TITLE_PREFIX),
+        );
+        return acc;
+      },
+      {},
+    ),
   };
 }
 
@@ -559,7 +617,14 @@ export const localApi = {
     const db = loadDb();
     return buildTitlesResponse(db.profiles);
   },
-  allocateStat(profileId: string, stat: "stat_foco" | "stat_resiliencia" | "stat_networking" | "stat_malandragem"): Profile {
+  allocateStat(
+    profileId: string,
+    stat:
+      | "stat_foco"
+      | "stat_resiliencia"
+      | "stat_networking"
+      | "stat_malandragem",
+  ): Profile {
     const db = loadDb();
     const profile = getProfileOrThrow(db, profileId);
     if ((profile.stat_points || 0) <= 0) throw new Error("No stat points");
@@ -580,8 +645,10 @@ export const localApi = {
     if (profile.coins < chargedPrice) throw new Error("Not enough coins");
     if (profile.level < item.min_level) throw new Error("Level too low");
     profile.coins -= chargedPrice;
-    const existing = profile.inventory.find((entry) => entry.item_id === itemId);
-    if (existing) existing.qty += 1;
+    const existing = profile.inventory.find(
+      (entry) => entry.item_id === itemId,
+    );
+    if (existing) existing.qty = (existing.qty ?? 1) + 1;
     else profile.inventory.push({ item_id: itemId, qty: 1 });
     addLog(db, {
       event_type: "item_buy",
@@ -597,17 +664,29 @@ export const localApi = {
     const db = loadDb();
     const profile = getProfileOrThrow(db, profileId);
     const item = getItemOrThrow(db, itemId);
-    const metadata = item.metadata && typeof item.metadata === "object" ? item.metadata : {};
-    if (metadata.activation === "auto") throw new Error("Automatic items cannot be used manually");
-    const inventoryEntry = profile.inventory.find((entry) => entry.item_id === itemId);
-    if (!inventoryEntry || inventoryEntry.qty <= 0) throw new Error("Item not found in inventory");
-    inventoryEntry.qty -= 1;
+    const metadata =
+      item.metadata && typeof item.metadata === "object" ? item.metadata : {};
+    if (metadata.activation === "auto")
+      throw new Error("Automatic items cannot be used manually");
+    const inventoryEntry = profile.inventory.find(
+      (entry) => entry.item_id === itemId,
+    );
+    if (!inventoryEntry || inventoryEntry.qty <= 0)
+      throw new Error("Item not found in inventory");
+    inventoryEntry.qty = (inventoryEntry.qty ?? 1) - 1;
     if (inventoryEntry.qty === 0) {
-      profile.inventory = profile.inventory.filter((entry) => entry.item_id !== itemId);
+      profile.inventory = profile.inventory.filter(
+        (entry) => entry.item_id !== itemId,
+      );
     }
     let logMessage = `Usou ${item.name}`;
-    const activeBuffs = Array.isArray(profile.active_buffs) ? [...profile.active_buffs] : [];
-    const durationMinutes = typeof item.duration_minutes === "number" && item.duration_minutes > 0 ? item.duration_minutes : 60;
+    const activeBuffs = Array.isArray(profile.active_buffs)
+      ? [...profile.active_buffs]
+      : [];
+    const durationMinutes =
+      typeof item.duration_minutes === "number" && item.duration_minutes > 0
+        ? item.duration_minutes
+        : 60;
     if (item.effect_code === "HEAL_PERCENT_50") {
       const recoveredHp = Math.max(1, Math.ceil(profile.max_hp * 0.5));
       profile.hp = Math.min(profile.max_hp, profile.hp + recoveredHp);
@@ -616,61 +695,118 @@ export const localApi = {
       profile.hp = Math.min(profile.max_hp, profile.hp + 100);
       logMessage = `Usou ${item.name} e recuperou 100 HP`;
     } else if (item.effect_code === "SKIP_BALDE_NEXT") {
-      activeBuffs.push({ type: "SKIP_BALDE", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() });
+      activeBuffs.push({
+        type: "SKIP_BALDE",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e ficará fora do próximo Balde`;
     } else if (item.effect_code === "SKIP_AGUA_NEXT") {
-      activeBuffs.push({ type: "OUTSOURCE_AGUA", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() });
+      activeBuffs.push({
+        type: "OUTSOURCE_AGUA",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e terceirizará a próxima Água para outro participante aleatório`;
     } else if (item.effect_code === "AGUA_SHIELD") {
-      const damageReduction = typeof metadata.damageReduction === "number" ? metadata.damageReduction : 6;
-      activeBuffs.push({ type: "AGUA_SHIELD", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), value: damageReduction });
+      const damageReduction =
+        typeof metadata.damageReduction === "number"
+          ? metadata.damageReduction
+          : 6;
+      activeBuffs.push({
+        type: "AGUA_SHIELD",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        value: damageReduction,
+      });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e reduzirá o impacto da próxima Água em ${damageReduction} HP`;
     } else if (item.effect_code === "COIN_MAGNET") {
-      const multiplier = typeof metadata.multiplier === "number" && metadata.multiplier > 1 ? metadata.multiplier : COIN_MAGNET_MULTIPLIER;
-      activeBuffs.push({ type: "COIN_MAGNET", expiresAt: new Date(Date.now() + durationMinutes * 60 * 1000).toISOString(), value: multiplier });
+      const multiplier =
+        typeof metadata.multiplier === "number" && metadata.multiplier > 1
+          ? metadata.multiplier
+          : COIN_MAGNET_MULTIPLIER;
+      activeBuffs.push({
+        type: "COIN_MAGNET",
+        expiresAt: new Date(
+          Date.now() + durationMinutes * 60 * 1000,
+        ).toISOString(),
+        value: multiplier,
+      });
       profile.active_buffs = activeBuffs;
       profile.temporary_coin_multiplier = multiplier;
       logMessage = `Usou ${item.name} e aumentou seus ganhos de SetorCoins por ${durationMinutes} min`;
     } else if (item.effect_code === "RELIEF_LUCK_BOOST") {
-      const luckBonus = typeof metadata.luckBonus === "number" ? metadata.luckBonus : DEFAULT_RELIEF_LUCK_BONUS;
-      const durationHours = typeof metadata.duration_hours === "number" ? metadata.duration_hours : 24;
-      activeBuffs.push({ type: "RELIEF_LUCK", expiresAt: new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString(), value: luckBonus });
+      const luckBonus =
+        typeof metadata.luckBonus === "number"
+          ? metadata.luckBonus
+          : DEFAULT_RELIEF_LUCK_BONUS;
+      const durationHours =
+        typeof metadata.duration_hours === "number"
+          ? metadata.duration_hours
+          : 24;
+      activeBuffs.push({
+        type: "RELIEF_LUCK",
+        expiresAt: new Date(
+          Date.now() + durationHours * 60 * 60 * 1000,
+        ).toISOString(),
+        value: luckBonus,
+      });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e ganhou +${luckBonus.toFixed(2)} de sorte por ${durationHours}h`;
     } else if (item.effect_code === "MOGADO_DEBUFF") {
       const durationHours =
-        typeof metadata.duration_hours === "number" && metadata.duration_hours > 0
+        typeof metadata.duration_hours === "number" &&
+        metadata.duration_hours > 0
           ? metadata.duration_hours
           : DEFAULT_MOGADO_DURATION_HOURS;
       const metadataOptions = Array.isArray(metadata.debuffOptions)
         ? metadata.debuffOptions
-            .filter((entry): entry is { targetStat: string; amount: number; label?: string } => {
-              if (!entry || typeof entry !== "object") return false;
-              const targetStat = (entry as { targetStat?: unknown }).targetStat;
-              const amount = (entry as { amount?: unknown }).amount;
-              return typeof targetStat === "string" && typeof amount === "number" && amount > 0;
-            })
+            .filter(
+              (
+                entry,
+              ): entry is {
+                targetStat: string;
+                amount: number;
+                label?: string;
+              } => {
+                if (!entry || typeof entry !== "object") return false;
+                const targetStat = (entry as { targetStat?: unknown })
+                  .targetStat;
+                const amount = (entry as { amount?: unknown }).amount;
+                return (
+                  typeof targetStat === "string" &&
+                  typeof amount === "number" &&
+                  amount > 0
+                );
+              },
+            )
             .map((entry) => ({
               targetStat: entry.targetStat,
               amount: entry.amount,
               label: entry.label,
             }))
         : [];
-      const debuffPool = metadataOptions.length > 0 ? metadataOptions : [...DEFAULT_MOGADO_OPTIONS];
-      const targets = db.profiles.filter((candidate) => candidate.id !== profileId);
+      const debuffPool =
+        metadataOptions.length > 0
+          ? metadataOptions
+          : [...DEFAULT_MOGADO_OPTIONS];
+      const targets = db.profiles.filter(
+        (candidate) => candidate.id !== profileId,
+      );
 
       for (const target of targets) {
-        const targetBuffs = Array.isArray(target.active_buffs) ? [...target.active_buffs] : [];
+        const targetBuffs = Array.isArray(target.active_buffs)
+          ? [...target.active_buffs]
+          : [];
         const randomArray = new Uint32Array(1);
         crypto.getRandomValues(randomArray);
         const pickedDebuff = debuffPool[randomArray[0] % debuffPool.length];
 
         targetBuffs.push({
           type: "MOGADO",
-          expiresAt: new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString(),
+          expiresAt: new Date(
+            Date.now() + durationHours * 60 * 60 * 1000,
+          ).toISOString(),
           metadata: {
             targetStat: pickedDebuff.targetStat,
             amount: pickedDebuff.amount,
@@ -679,23 +815,41 @@ export const localApi = {
         target.active_buffs = targetBuffs;
       }
 
-      logMessage = targets.length > 0
-        ? `Usou ${item.name} e aplicou Mogado em ${targets.length} jogador(es) por ${durationHours}h`
-        : `Usou ${item.name}, mas não havia outros jogadores para receber Mogado`;
-    } else if (item.effect_code === "TRANSFER_PAO" || item.effect_code === "OUTSOURCE_AGUA") {
+      logMessage =
+        targets.length > 0
+          ? `Usou ${item.name} e aplicou Mogado em ${targets.length} jogador(es) por ${durationHours}h`
+          : `Usou ${item.name}, mas não havia outros jogadores para receber Mogado`;
+    } else if (
+      item.effect_code === "TRANSFER_PAO" ||
+      item.effect_code === "OUTSOURCE_AGUA"
+    ) {
       activeBuffs.push({
-        type: item.effect_code === "OUTSOURCE_AGUA" ? "OUTSOURCE_AGUA" : "TRANSFER_PAO",
+        type:
+          item.effect_code === "OUTSOURCE_AGUA"
+            ? "OUTSOURCE_AGUA"
+            : "TRANSFER_PAO",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       });
       profile.active_buffs = activeBuffs;
-      logMessage = item.effect_code === "OUTSOURCE_AGUA"
-        ? `Usou ${item.name} e terceirizará a próxima Água se for sorteado`
-        : `Usou ${item.name} e transferirá o próximo Pão se for sorteado`;
+      logMessage =
+        item.effect_code === "OUTSOURCE_AGUA"
+          ? `Usou ${item.name} e terceirizará a próxima Água se for sorteado`
+          : `Usou ${item.name} e transferirá o próximo Pão se for sorteado`;
     } else if (item.effect_code === "SOLO_REWARD_BOOST") {
-      const xpBonus = typeof metadata.xpBonus === "number" ? metadata.xpBonus : 10;
-      const coinBonus = typeof metadata.coinBonus === "number" ? metadata.coinBonus : 6;
-      activeBuffs.push({ type: "SOLO_XP_BONUS", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), value: xpBonus });
-      activeBuffs.push({ type: "SOLO_COIN_BONUS", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), value: coinBonus });
+      const xpBonus =
+        typeof metadata.xpBonus === "number" ? metadata.xpBonus : 10;
+      const coinBonus =
+        typeof metadata.coinBonus === "number" ? metadata.coinBonus : 6;
+      activeBuffs.push({
+        type: "SOLO_XP_BONUS",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        value: xpBonus,
+      });
+      activeBuffs.push({
+        type: "SOLO_COIN_BONUS",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        value: coinBonus,
+      });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e preparou bonus para o próximo sorteio Solo`;
     }
@@ -710,18 +864,31 @@ export const localApi = {
     saveDb(db);
     return clone(profile);
   },
-  pullShopItems(profileId: string, count: 1 | 10, banner: ShopBanner): ShopPullResult {
+  pullShopItems(
+    profileId: string,
+    count: 1 | 10,
+    banner: ShopBanner,
+  ): ShopPullResult {
     const db = loadDb();
     const profile = getProfileOrThrow(db, profileId);
-    const poolItems = db.shopItems.filter((item) => getBannerForItem(item) === banner);
+    const poolItems = db.shopItems.filter(
+      (item) => getBannerForItem(item) === banner,
+    );
     if (poolItems.length === 0) throw new Error("Shop pool is empty");
-    const chargedPrice = profile.class === "mago"
-      ? Math.ceil((count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE) * 0.85)
-      : profile.class === "aprendiz_mago"
-        ? Math.ceil((count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE) * 0.92)
-        : count === 10
-          ? SHOP_PULL_PRICE_MULTI
-          : SHOP_PULL_PRICE_SINGLE;
+    const chargedPrice =
+      profile.class === "mago"
+        ? Math.ceil(
+            (count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE) *
+              0.85,
+          )
+        : profile.class === "aprendiz_mago"
+          ? Math.ceil(
+              (count === 10 ? SHOP_PULL_PRICE_MULTI : SHOP_PULL_PRICE_SINGLE) *
+                0.92,
+            )
+          : count === 10
+            ? SHOP_PULL_PRICE_MULTI
+            : SHOP_PULL_PRICE_SINGLE;
     if (profile.coins < chargedPrice) throw new Error("Not enough coins");
 
     let pityToRare = getPityCount(profile, banner, "rare");
@@ -729,8 +896,10 @@ export const localApi = {
     const drops: ShopPullResult["drops"] = [];
 
     for (let index = 0; index < count; index++) {
-      const forceLegendary = pityToLegendary + 1 >= SHOP_LEGENDARY_PITY_THRESHOLD;
-      const forceRareOrBetter = forceLegendary || pityToRare + 1 >= SHOP_RARE_PITY_THRESHOLD;
+      const forceLegendary =
+        pityToLegendary + 1 >= SHOP_LEGENDARY_PITY_THRESHOLD;
+      const forceRareOrBetter =
+        forceLegendary || pityToRare + 1 >= SHOP_RARE_PITY_THRESHOLD;
       let rarity = pickRarity(banner, forceRareOrBetter, forceLegendary);
       let pool = poolItems.filter((item) => item.rarity === rarity);
       if (pool.length === 0 && rarity === "legendary") {
@@ -747,13 +916,16 @@ export const localApi = {
       }
       if (pool.length === 0) pool = poolItems;
       const awardedItem = pickWeightedItem(pool);
-      const existing = profile.inventory.find((entry) => entry.item_id === awardedItem.id);
-      if (existing) existing.qty += 1;
+      const existing = profile.inventory.find(
+        (entry) => entry.item_id === awardedItem.id,
+      );
+      if (existing) existing.qty = (existing.qty ?? 1) + 1;
       else profile.inventory.push({ item_id: awardedItem.id, qty: 1 });
       drops.push({
         item: clone(awardedItem),
         rarity: awardedItem.rarity || rarity,
-        isGuaranteed: forceLegendary || (forceRareOrBetter && rarity !== "common"),
+        isGuaranteed:
+          forceLegendary || (forceRareOrBetter && rarity !== "common"),
       });
       pityToRare = rarity === "common" ? pityToRare + 1 : 0;
       pityToLegendary = rarity === "legendary" ? 0 : pityToLegendary + 1;
@@ -787,7 +959,11 @@ export const localApi = {
       drops,
     };
   },
-  processDraw(category: string, winnerIds: string[], participants: string[]): ProcessDrawResponse {
+  processDraw(
+    category: string,
+    winnerIds: string[],
+    participants: string[],
+  ): ProcessDrawResponse {
     const db = loadDb();
     const participantSet = new Set(participants);
     if (category === "solo" && winnerIds[0]) {

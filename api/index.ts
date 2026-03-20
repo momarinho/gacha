@@ -2204,7 +2204,7 @@ async function createExpressApp() {
         );
 
         if (existingItem) {
-          existingItem.qty += 1;
+          existingItem.qty = (existingItem.qty || 1) + 1;
         } else {
           inventory.push({ item_id: awardedItem.id, qty: 1 });
         }
@@ -2346,7 +2346,7 @@ async function createExpressApp() {
       const existingItem = inventory.find((i: any) => i.item_id === itemId);
 
       if (existingItem) {
-        existingItem.qty += 1;
+        existingItem.qty = (existingItem.qty || 1) + 1;
       } else {
         inventory.push({ item_id: itemId, qty: 1 });
       }
