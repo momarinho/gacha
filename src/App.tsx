@@ -5,6 +5,7 @@ import {
   BattleLog,
   DrawRewardSummary,
   MageInsights,
+  ProcessDrawResponse,
   Profile,
   ProfileClass,
   ShopBanner,
@@ -701,6 +702,26 @@ export default function App() {
     setBattleLogs((currentLogs) => [newLog, ...currentLogs]);
   };
 
+  const applyProcessedDraw = (
+    result: ProcessDrawResponse,
+    fallbackWinnerNames: string[],
+  ) => {
+    if (!Array.isArray(result.updates) || result.updates.length === 0) {
+      throw new Error(
+        "Resposta de sorteio invalida: atualizacoes de perfil vazias.",
+      );
+    }
+
+    const resolvedNames = resolveWinnerNames(result.winnerIds, result.updates);
+    const winnerNames = resolvedNames.some((name) => name === "Desconhecido")
+      ? fallbackWinnerNames
+      : resolvedNames;
+
+    setProfiles(result.updates);
+    setLastDrawRewards(result.rewards || []);
+    return winnerNames;
+  };
+
   const drawWinner = (type: "pao" | "agua" | "balde" | "geral" | "solo") => {
     if (profiles.length === 0) return;
 
@@ -743,11 +764,7 @@ export default function App() {
               [winner.id],
               eligibleProfiles.map((p) => p.id),
             );
-            setProfiles(result.updates);
-            setPaoDeQueijoWinners(
-              resolveWinnerNames(result.winnerIds, result.updates),
-            );
-            setLastDrawRewards(result.rewards || []);
+            setPaoDeQueijoWinners(applyProcessedDraw(result, [winner.name]));
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -801,11 +818,9 @@ export default function App() {
               selectedWinners.map((w) => w.id),
               eligibleProfiles.map((p) => p.id),
             );
-            setProfiles(result.updates);
             setAguaWinners(
-              resolveWinnerNames(result.winnerIds, result.updates),
+              applyProcessedDraw(result, selectedWinners.map((w) => w.name)),
             );
-            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -850,11 +865,7 @@ export default function App() {
               [winner.id],
               eligibleProfiles.map((p) => p.id),
             );
-            setProfiles(result.updates);
-            setBaldeWinners(
-              resolveWinnerNames(result.winnerIds, result.updates),
-            );
-            setLastDrawRewards(result.rewards || []);
+            setBaldeWinners(applyProcessedDraw(result, [winner.name]));
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -899,11 +910,7 @@ export default function App() {
               [winner.id],
               eligibleProfiles.map((p) => p.id),
             );
-            setProfiles(result.updates);
-            setGeralWinners(
-              resolveWinnerNames(result.winnerIds, result.updates),
-            );
-            setLastDrawRewards(result.rewards || []);
+            setGeralWinners(applyProcessedDraw(result, [winner.name]));
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -946,11 +953,9 @@ export default function App() {
               [selectedProfile.id],
               [selectedProfile.id],
             );
-            setProfiles(result.updates);
             setSoloWinners(
-              resolveWinnerNames(result.winnerIds, result.updates),
+              applyProcessedDraw(result, [selectedProfile.name]),
             );
-            setLastDrawRewards(result.rewards || []);
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),

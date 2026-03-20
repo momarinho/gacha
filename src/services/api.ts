@@ -19,6 +19,27 @@ function shouldFallback(status: number) {
   return status === 501 || status === 500;
 }
 
+async function readApiErrorMessage(response: Response, fallback: string) {
+  try {
+    const payload = await response.json();
+    const details =
+      payload?.details && typeof payload.details === "string"
+        ? ` - ${payload.details}`
+        : "";
+    const hint =
+      payload?.hint && typeof payload.hint === "string"
+        ? ` (${payload.hint})`
+        : "";
+    const errorText =
+      payload?.error && typeof payload.error === "string"
+        ? payload.error
+        : fallback;
+    return `${errorText}${details}${hint}`;
+  } catch {
+    return fallback;
+  }
+}
+
 export const api = {
   getAccessStatus: async (): Promise<{
     enabled: boolean;
@@ -248,23 +269,31 @@ export const api = {
     winnerIds: string[],
     participants: string[],
   ): Promise<ProcessDrawResponse> => {
-    if (useLocalFallback) return localApi.processDraw(category, winnerIds, participants);
+    if (useLocalFallback)
+      return localApi.processDraw(category, winnerIds, participants);
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE}/draw/process`, {
+      res = await fetch(`${API_BASE}/draw/process`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ category, winnerIds, participants }),
       });
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.processDraw(category, winnerIds, participants);
-      }
-      if (!res.ok) throw new Error("Failed to process draw");
-      return res.json();
     } catch {
       useLocalFallback = true;
       return localApi.processDraw(category, winnerIds, participants);
     }
+
+    if (shouldFallback(res.status)) {
+      useLocalFallback = true;
+      return localApi.processDraw(category, winnerIds, participants);
+    }
+
+    if (!res.ok) {
+      const message = await readApiErrorMessage(res, "Failed to process draw");
+      throw new Error(message);
+    }
+
+    return res.json();
   },
 
   // Roadmap

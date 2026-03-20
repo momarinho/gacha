@@ -206,6 +206,13 @@ type ProcessDrawInput = {
   winnerIds: string[];
   participants: string[];
   profiles: DrawProfile[];
+  shopItems?: Array<{
+    id: string;
+    name: string;
+    effect_code: string;
+    metadata?: ItemMetadata;
+  }>;
+  enableDailyChallenges?: boolean;
   now?: Date;
   randomChance?: (chance: number) => boolean;
   randomIndex?: (max: number) => number;
@@ -2649,20 +2656,86 @@ async function createExpressApp() {
 
       const { category, winnerIds, participants } = req.body;
 
+      const validCategories = ["pao", "agua", "balde", "geral", "solo"];
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ error: "Invalid draw category" });
+      }
+
+      if (!Array.isArray(winnerIds) || winnerIds.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "winnerIds must be a non-empty array" });
+      }
+
+      if (!Array.isArray(participants)) {
+        return res.status(400).json({ error: "participants must be an array" });
+      }
+
+      const normalizedWinnerIds = winnerIds
+        .filter(
+          (id: unknown): id is string =>
+            typeof id === "string" && id.trim().length > 0,
+        )
+        .map((id: string) => id.trim());
+      const normalizedParticipants = participants
+        .filter(
+          (id: unknown): id is string =>
+            typeof id === "string" && id.trim().length > 0,
+        )
+        .map((id: string) => id.trim());
+
+      if (normalizedWinnerIds.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "winnerIds contains no valid profile ids" });
+      }
+
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
         .select("*");
       if (pErr) throw pErr;
+
+      if (!Array.isArray(profiles) || profiles.length === 0) {
+        return res.status(409).json({
+          error: "No profiles available to process draw",
+          details:
+            "A API nao conseguiu ler perfis do banco. Verifique permissao/RLS e chave do Supabase.",
+        });
+      }
+
+      const profileIds = new Set<string>(profiles.map((profile: any) => profile.id));
+      const requestedWinnerIds = normalizedWinnerIds.filter((id) =>
+        profileIds.has(id),
+      );
+      const missingWinnerIds = normalizedWinnerIds.filter(
+        (id) => !profileIds.has(id),
+      );
+
+      if (requestedWinnerIds.length === 0) {
+        return res.status(409).json({
+          error: "None of the requested winnerIds exist in profiles",
+          missingWinnerIds,
+        });
+      }
+
+      const participantSet = new Set<string>(
+        normalizedParticipants.filter((id) => profileIds.has(id)),
+      );
 
       const { data: shopItems, error: shopErr } = await supabase
         .from("shop_items")
         .select("id, name, effect_code, metadata");
       if (shopErr) throw shopErr;
 
-      const participantSet = new Set<string>(participants);
       if (category === "solo") {
         participantSet.clear();
-        participantSet.add(winnerIds[0]);
+        participantSet.add(requestedWinnerIds[0]);
+      }
+
+      if (participantSet.size === 0) {
+        return res.status(409).json({
+          error: "No valid participants found for draw",
+        });
       }
 
       const processDrawOutcome = await getProcessDrawOutcome();
@@ -2674,18 +2747,39 @@ async function createExpressApp() {
         winnerIds: resolvedWinnerIds,
       } = processDrawOutcome({
         category,
-        winnerIds,
+        winnerIds: requestedWinnerIds,
         participants: Array.from(participantSet),
         profiles,
         shopItems: shopItems || [],
         enableDailyChallenges: true,
       });
 
+      if (!updates.length) {
+        return res.status(409).json({
+          error: "Draw processing returned no profile updates",
+          details:
+            "Resultado invalido para sincronizacao: nenhuma atualizacao de perfil foi gerada.",
+        });
+      }
+
+      const unresolvedWinnerIds = resolvedWinnerIds.filter(
+        (id) => !updates.some((profile) => profile.id === id),
+      );
+      if (unresolvedWinnerIds.length > 0) {
+        return res.status(409).json({
+          error: "Draw produced unresolved winner ids",
+          unresolvedWinnerIds,
+        });
+      }
+
       const { error: uErr } = await supabase.from("profiles").upsert(updates);
       if (uErr) throw uErr;
 
       if (logs.length > 0) {
-        await supabase.from("battle_logs").insert(logs);
+        const { error: logErr } = await supabase.from("battle_logs").insert(logs);
+        if (logErr) {
+          console.error("Failed to persist draw logs:", logErr);
+        }
       }
 
       res.json({
@@ -2693,11 +2787,26 @@ async function createExpressApp() {
         updates,
         winnerIds: resolvedWinnerIds,
         rewards,
+        warnings:
+          missingWinnerIds.length > 0
+            ? [{ type: "missing_winner_ids", ids: missingWinnerIds }]
+            : [],
       });
     } catch (error) {
+      const errorMessage = String(error);
+      const isLikelyClassConstraintMismatch =
+        errorMessage.includes("profiles_class_check") &&
+        errorMessage.includes("violates check constraint");
+
       res
         .status(500)
-        .json({ error: "Internal Server Error", details: String(error) });
+        .json({
+          error: "Internal Server Error",
+          details: errorMessage,
+          hint: isLikelyClassConstraintMismatch
+            ? "Constraint de classe desatualizada no banco. Rode supabase_phase3_reconcile.sql para incluir classes aprendiz_* no profiles_class_check."
+            : undefined,
+        });
     }
   });
 
