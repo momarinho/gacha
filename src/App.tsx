@@ -722,6 +722,11 @@ export default function App() {
     return winnerNames;
   };
 
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error instanceof Error && error.message) return error.message;
+    return fallback;
+  };
+
   const drawWinner = (type: "pao" | "agua" | "balde" | "geral" | "solo") => {
     if (profiles.length === 0) return;
 
@@ -772,6 +777,7 @@ export default function App() {
             setBattleLogs(logs);
           } catch (err) {
             console.error("Failed to process RPG draw", err);
+            alert(getErrorMessage(err, "Falha ao processar sorteio oficial."));
           }
         }
       }, interval);
@@ -828,6 +834,7 @@ export default function App() {
             setBattleLogs(logs);
           } catch (err) {
             console.error("Failed to process RPG draw", err);
+            alert(getErrorMessage(err, "Falha ao processar sorteio oficial."));
           }
         }
       }, interval);
@@ -873,6 +880,7 @@ export default function App() {
             setBattleLogs(logs);
           } catch (err) {
             console.error("Failed to process RPG draw", err);
+            alert(getErrorMessage(err, "Falha ao processar sorteio oficial."));
           }
         }
       }, interval);
@@ -918,6 +926,7 @@ export default function App() {
             setBattleLogs(logs);
           } catch (err) {
             console.error("Failed to process RPG draw", err);
+            alert(getErrorMessage(err, "Falha ao processar sorteio oficial."));
           }
         }
       }, interval);
@@ -963,6 +972,7 @@ export default function App() {
             setBattleLogs(logs);
           } catch (err) {
             console.error("Failed to process RPG draw", err);
+            alert(getErrorMessage(err, "Falha ao processar sorteio oficial."));
           }
         }
       }, interval);

@@ -16,7 +16,9 @@ const API_BASE = "/api";
 let useLocalFallback = false;
 
 function shouldFallback(status: number) {
-  return status === 501 || status === 500;
+  // Only persistently switch to local mode when backend explicitly says
+  // the feature is not implemented for the active provider.
+  return status === 501;
 }
 
 async function readApiErrorMessage(response: Response, fallback: string) {
@@ -72,18 +74,13 @@ export const api = {
   // Profiles
   getProfiles: async (): Promise<Profile[]> => {
     if (useLocalFallback) return localApi.getProfiles();
-    try {
-      const res = await fetch(`${API_BASE}/profiles`);
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.getProfiles();
-      }
-      if (!res.ok) throw new Error("Failed to fetch profiles");
-      return res.json();
-    } catch {
+    const res = await fetch(`${API_BASE}/profiles`);
+    if (shouldFallback(res.status)) {
       useLocalFallback = true;
       return localApi.getProfiles();
     }
+    if (!res.ok) throw new Error("Failed to fetch profiles");
+    return res.json();
   },
   createProfile: async (profile: Partial<Profile>): Promise<Profile> => {
     if (useLocalFallback) return localApi.createProfile(profile);
@@ -144,18 +141,13 @@ export const api = {
   // Shop
   getShopItems: async (): Promise<ShopItem[]> => {
     if (useLocalFallback) return localApi.getShopItems();
-    try {
-      const res = await fetch(`${API_BASE}/shop`);
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.getShopItems();
-      }
-      if (!res.ok) throw new Error("Failed to fetch shop items");
-      return res.json();
-    } catch {
+    const res = await fetch(`${API_BASE}/shop`);
+    if (shouldFallback(res.status)) {
       useLocalFallback = true;
       return localApi.getShopItems();
     }
+    if (!res.ok) throw new Error("Failed to fetch shop items");
+    return res.json();
   },
   pullShopItems: async (
     profileId: string,
@@ -222,18 +214,13 @@ export const api = {
   // Logs
   getLogs: async (): Promise<BattleLog[]> => {
     if (useLocalFallback) return localApi.getLogs();
-    try {
-      const res = await fetch(`${API_BASE}/logs`);
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.getLogs();
-      }
-      if (!res.ok) throw new Error("Failed to fetch logs");
-      return res.json();
-    } catch {
+    const res = await fetch(`${API_BASE}/logs`);
+    if (shouldFallback(res.status)) {
       useLocalFallback = true;
       return localApi.getLogs();
     }
+    if (!res.ok) throw new Error("Failed to fetch logs");
+    return res.json();
   },
   getMageInsights: async (profileId: string): Promise<MageInsights> => {
     const res = await fetch(
@@ -249,18 +236,13 @@ export const api = {
   },
   getTitles: async (): Promise<SocialTitlesResponse> => {
     if (useLocalFallback) return localApi.getTitles();
-    try {
-      const res = await fetch(`${API_BASE}/social/titles`);
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.getTitles();
-      }
-      if (!res.ok) throw new Error("Failed to fetch titles");
-      return res.json();
-    } catch {
+    const res = await fetch(`${API_BASE}/social/titles`);
+    if (shouldFallback(res.status)) {
       useLocalFallback = true;
       return localApi.getTitles();
     }
+    if (!res.ok) throw new Error("Failed to fetch titles");
+    return res.json();
   },
 
   // Process Draw
@@ -279,8 +261,7 @@ export const api = {
         body: JSON.stringify({ category, winnerIds, participants }),
       });
     } catch {
-      useLocalFallback = true;
-      return localApi.processDraw(category, winnerIds, participants);
+      throw new Error("Failed to reach draw processing endpoint");
     }
 
     if (shouldFallback(res.status)) {
