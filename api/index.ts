@@ -15,12 +15,26 @@ const accessPassword = process.env.APP_ACCESS_PASSWORD?.trim() || "";
 let supabase: any = null;
 let db: any = null;
 let dbInitialized = false;
-let processDrawOutcomeFn: null | ((input: ProcessDrawInput) => ProcessDrawResult) =
-  null;
+let processDrawOutcomeFn:
+  | null
+  | ((input: ProcessDrawInput) => ProcessDrawResult) = null;
 
 async function getProcessDrawOutcome() {
   if (processDrawOutcomeFn) return processDrawOutcomeFn;
-  const mod = await import("./drawLogic");
+  let mod;
+  try {
+    // Primary import path (development / build that keeps api/drawLogic)
+    mod = await import("./drawLogic");
+  } catch (err) {
+    // Fallback import for deployment layouts where the compiled module lives under ../shared
+    // (Some bundlers / deployment environments may place the shared module alongside index)
+    // eslint-disable-next-line no-console
+    console.warn(
+      "Primary drawLogic import failed, attempting fallback import to ../shared/drawLogic:",
+      err,
+    );
+    mod = await import("../shared/drawLogic");
+  }
   processDrawOutcomeFn = mod.processDrawOutcome;
   return processDrawOutcomeFn;
 }
@@ -74,10 +88,14 @@ const SHOP_CATASTROPHE_BANNER_RATES: Record<ShopItemRarity, number> = {
 const SHOP_PITY_RARE_BUFF = "SHOP_PITY_RARE";
 const SHOP_PITY_LEGENDARY_BUFF = "SHOP_PITY_LEGENDARY";
 const SHOP_PITY_RARE_CATASTROPHE_BUFF = "SHOP_PITY_RARE_CATASTROPHE";
-const SHOP_PITY_LEGENDARY_CATASTROPHE_BUFF =
-  "SHOP_PITY_LEGENDARY_CATASTROPHE";
+const SHOP_PITY_LEGENDARY_CATASTROPHE_BUFF = "SHOP_PITY_LEGENDARY_CATASTROPHE";
 const SHOP_PITY_EXPIRES_AT = "2099-12-31T23:59:59.999Z";
-const ROADMAP_STATUSES = ["pending", "in_progress", "done", "discarded"] as const;
+const ROADMAP_STATUSES = [
+  "pending",
+  "in_progress",
+  "done",
+  "discarded",
+] as const;
 
 const PROFILE_CLASSES = [
   "novato",
@@ -416,7 +434,9 @@ function normalizeShopItem(item: ShopItemRecord) {
   };
 }
 
-function getShopItemBanner(item: ReturnType<typeof normalizeShopItem>): ShopBanner {
+function getShopItemBanner(
+  item: ReturnType<typeof normalizeShopItem>,
+): ShopBanner {
   const catastropheEffects = new Set([
     "TRANSFER_PAO",
     "AUTO_TRANSFER_PAO",
@@ -453,10 +473,7 @@ function getPersistentPityCount(buffs: ActiveBuff[], type: string) {
     : 0;
 }
 
-function getShopPityBuffType(
-  banner: ShopBanner,
-  type: "rare" | "legendary",
-) {
+function getShopPityBuffType(banner: ShopBanner, type: "rare" | "legendary") {
   if (banner === "catastrophe") {
     return type === "rare"
       ? SHOP_PITY_RARE_CATASTROPHE_BUFF
@@ -503,7 +520,9 @@ function pickShopRarity(
   if (forceLegendary) return "legendary" as ShopItemRarity;
 
   const baseRates =
-    banner === "catastrophe" ? SHOP_CATASTROPHE_BANNER_RATES : SHOP_BANNER_RATES;
+    banner === "catastrophe"
+      ? SHOP_CATASTROPHE_BANNER_RATES
+      : SHOP_BANNER_RATES;
 
   const rates = forceRareOrBetter
     ? {
@@ -609,7 +628,8 @@ function processDrawOutcome({
   const pickReplacementWinner = (currentWinnerId: string) => {
     const rerollPool = participantProfiles.filter(
       (profile) =>
-        profile.id !== currentWinnerId && !resolvedWinnerIds.includes(profile.id),
+        profile.id !== currentWinnerId &&
+        !resolvedWinnerIds.includes(profile.id),
     );
 
     if (rerollPool.length === 0) return null;
@@ -1283,7 +1303,11 @@ async function createExpressApp() {
           icon: "Shield",
           min_level: 1,
           stackable: true,
-          metadata: { activation: "active", luckBonus: 0.08, duration_hours: 24 },
+          metadata: {
+            activation: "active",
+            luckBonus: 0.08,
+            duration_hours: 24,
+          },
         },
         {
           id: crypto.randomUUID(),
@@ -1296,7 +1320,11 @@ async function createExpressApp() {
           icon: "Shield",
           min_level: 1,
           stackable: true,
-          metadata: { activation: "active", luckBonus: 0.04, duration_hours: 12 },
+          metadata: {
+            activation: "active",
+            luckBonus: 0.04,
+            duration_hours: 12,
+          },
         },
         {
           id: crypto.randomUUID(),
@@ -1326,12 +1354,17 @@ async function createExpressApp() {
           icon: "Shield",
           min_level: 2,
           stackable: true,
-          metadata: { activation: "active", luckBonus: 0.12, duration_hours: 48 },
+          metadata: {
+            activation: "active",
+            luckBonus: 0.12,
+            duration_hours: 48,
+          },
         },
         {
           id: crypto.randomUUID(),
           name: "Atestado de Agua",
-          description: "Prepara imunidade para a próxima Água e joga o turno para outro participante aleatório.",
+          description:
+            "Prepara imunidade para a próxima Água e joga o turno para outro participante aleatório.",
           price: 85,
           type: "consumable",
           effect_code: "SKIP_AGUA_NEXT",
@@ -1396,8 +1429,7 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Imã de Moedas Turbo",
-          description:
-            "Dispara seus ganhos de SetorCoins por 90 minutos.",
+          description: "Dispara seus ganhos de SetorCoins por 90 minutos.",
           price: 220,
           type: "rare",
           effect_code: "COIN_MAGNET",
@@ -1438,7 +1470,8 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Boia de Emergencia",
-          description: "Fica no inventário e terceiriza automaticamente a próxima Água em que você for sorteado.",
+          description:
+            "Fica no inventário e terceiriza automaticamente a próxima Água em que você for sorteado.",
           price: 165,
           type: "rare",
           effect_code: "AUTO_OUTSOURCE_AGUA",
@@ -1451,7 +1484,8 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Seguro Catastrofe",
-          description: "Fica no inventário e transfere automaticamente o próximo Pão para outro participante elegível.",
+          description:
+            "Fica no inventário e transfere automaticamente o próximo Pão para outro participante elegível.",
           price: 230,
           type: "rare",
           effect_code: "AUTO_TRANSFER_PAO",
@@ -1464,7 +1498,8 @@ async function createExpressApp() {
         {
           id: crypto.randomUUID(),
           name: "Colete Anti-Balde",
-          description: "Fica no inventário e reduz automaticamente o dano do próximo Balde.",
+          description:
+            "Fica no inventário e reduz automaticamente o dano do próximo Balde.",
           price: 110,
           type: "consumable",
           effect_code: "AUTO_BALDE_SHIELD",
@@ -2703,7 +2738,9 @@ async function createExpressApp() {
         });
       }
 
-      const profileIds = new Set<string>(profiles.map((profile: any) => profile.id));
+      const profileIds = new Set<string>(
+        profiles.map((profile: any) => profile.id),
+      );
       const requestedWinnerIds = normalizedWinnerIds.filter((id) =>
         profileIds.has(id),
       );
@@ -2776,7 +2813,9 @@ async function createExpressApp() {
       if (uErr) throw uErr;
 
       if (logs.length > 0) {
-        const { error: logErr } = await supabase.from("battle_logs").insert(logs);
+        const { error: logErr } = await supabase
+          .from("battle_logs")
+          .insert(logs);
         if (logErr) {
           console.error("Failed to persist draw logs:", logErr);
         }
@@ -2798,15 +2837,13 @@ async function createExpressApp() {
         errorMessage.includes("profiles_class_check") &&
         errorMessage.includes("violates check constraint");
 
-      res
-        .status(500)
-        .json({
-          error: "Internal Server Error",
-          details: errorMessage,
-          hint: isLikelyClassConstraintMismatch
-            ? "Constraint de classe desatualizada no banco. Rode supabase_phase3_reconcile.sql para incluir classes aprendiz_* no profiles_class_check."
-            : undefined,
-        });
+      res.status(500).json({
+        error: "Internal Server Error",
+        details: errorMessage,
+        hint: isLikelyClassConstraintMismatch
+          ? "Constraint de classe desatualizada no banco. Rode supabase_phase3_reconcile.sql para incluir classes aprendiz_* no profiles_class_check."
+          : undefined,
+      });
     }
   });
 
