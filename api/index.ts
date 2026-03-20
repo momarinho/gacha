@@ -3,7 +3,8 @@ import path from "path";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic";
+// Import using .js extension for ESM module resolution in Vercel environments
+import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic.js";
 
 dotenv.config();
 

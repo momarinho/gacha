@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { processDrawOutcome } from "../shared/drawLogic";
+import { processDrawOutcome } from "../shared/drawLogic.js";
 import type { Profile } from "../src/types";
 
 function makeProfile(

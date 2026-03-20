@@ -2,7 +2,7 @@ import {
   applyDailyChallengeEvent,
   type DailyChallengeState,
   getBusinessDateKey,
-} from "./dailyChallenges";
+} from "./dailyChallenges.js";
 
 type ProfileClass =
   | "novato"
@@ -186,7 +186,11 @@ function getMogadoDebuffValue(
   targetStat: MogadoTargetStat,
 ) {
   return buffs.reduce((sum, buff) => {
-    if (buff.type !== "MOGADO" || !buff.metadata || typeof buff.metadata !== "object") {
+    if (
+      buff.type !== "MOGADO" ||
+      !buff.metadata ||
+      typeof buff.metadata !== "object"
+    ) {
       return sum;
     }
     const metadata = buff.metadata as Record<string, unknown>;
@@ -250,7 +254,7 @@ function getDodgeChance(
   if (profileClass === "ladino") {
     return Math.min(
       MAX_DODGE_CHANCE,
-      LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat
+      LADINO_DODGE_BASE + normalizedLuck + reliefLuckBonus + malandragemStat,
     );
   }
 
@@ -314,7 +318,9 @@ export function processDrawOutcome({
 
   const consumeInventoryItem = (profileId: string, itemId: string) => {
     const inventory = profileInventoryMap.get(profileId) || [];
-    const inventoryIndex = inventory.findIndex((entry) => entry.item_id === itemId);
+    const inventoryIndex = inventory.findIndex(
+      (entry) => entry.item_id === itemId,
+    );
     if (inventoryIndex === -1) return;
     inventory[inventoryIndex].qty -= 1;
     if (inventory[inventoryIndex].qty <= 0) {
@@ -325,7 +331,8 @@ export function processDrawOutcome({
   const pickReplacementWinner = (currentWinnerId: string) => {
     const rerollPool = participantProfiles.filter(
       (profile) =>
-        profile.id !== currentWinnerId && !resolvedWinnerIds.includes(profile.id),
+        profile.id !== currentWinnerId &&
+        !resolvedWinnerIds.includes(profile.id),
     );
 
     if (rerollPool.length === 0) return null;
@@ -456,7 +463,10 @@ export function processDrawOutcome({
       if (catastropheInsurance) {
         const replacementWinner = pickReplacementWinner(requestedWinner.id);
         if (replacementWinner) {
-          consumeInventoryItem(requestedWinner.id, catastropheInsurance.item.id);
+          consumeInventoryItem(
+            requestedWinner.id,
+            catastropheInsurance.item.id,
+          );
           resolvedWinnerIds[index] = replacementWinner.id;
           logs.push({
             event_type: "item_use",
@@ -625,7 +635,10 @@ export function processDrawOutcome({
           addXp("Base do sorteio (BALDE) - sorteado", 30);
           addCoins("Base do sorteio (BALDE) - sorteado", 15);
         } else {
-          const antiBucketVest = getAutoInventoryItem(p.id, "AUTO_BALDE_SHIELD");
+          const antiBucketVest = getAutoInventoryItem(
+            p.id,
+            "AUTO_BALDE_SHIELD",
+          );
           if (antiBucketVest) {
             const damageReduction =
               typeof antiBucketVest.item.metadata?.damageReduction === "number"

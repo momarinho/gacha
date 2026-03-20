@@ -5,7 +5,7 @@ import {
   applyDailyChallengeEvent,
   getDailyChallengeForDate,
   normalizeDailyChallengeState,
-} from "../shared/dailyChallenges";
+} from "../shared/dailyChallenges.js";
 
 function findDateKeyForChallenge(challengeId: string) {
   for (let day = 1; day <= 31; day++) {
