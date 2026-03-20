@@ -114,6 +114,12 @@ type ProcessDrawResult = {
   winnerIds: string[];
 };
 
+type MogadoTargetStat =
+  | "stat_foco"
+  | "stat_networking"
+  | "stat_malandragem"
+  | "luck";
+
 const BUSINESS_TIMEZONE = "America/Sao_Paulo";
 const LADINO_DODGE_BASE = 0.05;
 const MAX_DODGE_CHANCE = 0.35;
@@ -173,6 +179,24 @@ function getBuffValue(buffs: ActiveBuff[], type: string) {
 
 function hasBuff(buffs: ActiveBuff[], type: string) {
   return buffs.some((buff) => buff.type === type);
+}
+
+function getMogadoDebuffValue(
+  buffs: ActiveBuff[],
+  targetStat: MogadoTargetStat,
+) {
+  return buffs.reduce((sum, buff) => {
+    if (buff.type !== "MOGADO" || !buff.metadata || typeof buff.metadata !== "object") {
+      return sum;
+    }
+    const metadata = buff.metadata as Record<string, unknown>;
+    if (metadata.targetStat !== targetStat) return sum;
+    const amount = metadata.amount;
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+      return sum;
+    }
+    return sum + amount;
+  }, 0);
 }
 
 function normalizeTitles(titles: unknown) {
@@ -331,11 +355,20 @@ export function processDrawOutcome({
     }
 
     if (["pao", "agua", "balde"].includes(category)) {
+      const effectiveWinnerLuck = Math.max(
+        0,
+        requestedWinner.luck - getMogadoDebuffValue(activeBuffs, "luck"),
+      );
+      const effectiveWinnerMalandragem = Math.max(
+        0,
+        (requestedWinner.stat_malandragem || 0) -
+          getMogadoDebuffValue(activeBuffs, "stat_malandragem"),
+      );
       const dodgeChance = getDodgeChance(
         requestedWinner.class,
-        requestedWinner.luck,
+        effectiveWinnerLuck,
         activeBuffs,
-        requestedWinner.stat_malandragem || 0,
+        effectiveWinnerMalandragem,
       );
 
       if (dodgeChance > 0 && randomChance(dodgeChance)) {
@@ -466,7 +499,16 @@ export function processDrawOutcome({
     let titles = normalizeTitles(p.titles);
     const xpBreakdown: RewardBreakdownItem[] = [];
     const coinBreakdown: RewardBreakdownItem[] = [];
-    const focoBonus = (p.stat_foco || 0) * 0.5;
+    const effectiveFoco = Math.max(
+      0,
+      (p.stat_foco || 0) - getMogadoDebuffValue(activeBuffs, "stat_foco"),
+    );
+    const effectiveNetworking = Math.max(
+      0,
+      (p.stat_networking || 0) -
+        getMogadoDebuffValue(activeBuffs, "stat_networking"),
+    );
+    const focoBonus = effectiveFoco * 0.5;
 
     const addXp = (label: string, value: number) => {
       if (value === 0) return;
@@ -537,7 +579,7 @@ export function processDrawOutcome({
       );
     }
 
-    const networkingBonus = (p.stat_networking || 0) * 0.003;
+    const networkingBonus = effectiveNetworking * 0.003;
     const {
       passive: passiveCoinMultiplier,
       temporary: temporaryCoinMultiplier,

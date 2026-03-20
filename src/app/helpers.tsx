@@ -170,6 +170,14 @@ export function getItemEffectText(item: ShopItem) {
     return `Próximo Solo: +${xpBonus} XP e +${coinBonus} $C`;
   }
 
+  if (item.effect_code === "MOGADO_DEBUFF") {
+    const durationHours =
+      typeof metadata.duration_hours === "number" && metadata.duration_hours > 0
+        ? metadata.duration_hours
+        : 12;
+    return `Aplica Mogado: debuff aleatório de status por ${durationHours}h`;
+  }
+
   if (typeof profileModifiers.passive_coin_multiplier === "number") {
     return `Economia passiva x${profileModifiers.passive_coin_multiplier.toFixed(2)}`;
   }

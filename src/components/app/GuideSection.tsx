@@ -13,7 +13,7 @@ export function GuideSection() {
               COMO JOGAR
             </h2>
             <p className="retro-copy-sm mt-2 text-white/75">
-              GUIA RÁPIDO DO SISTEMA, CLASSES E LOJA
+              GUIA RAPIDO DO SISTEMA, CLASSES, LOJA E ROADMAP
             </p>
           </div>
         </div>
@@ -399,6 +399,29 @@ export function GuideSection() {
 
         <section className="retro-panel xl:col-span-2">
           <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
+            ROADMAP DO SETOR
+          </h3>
+          <div className="mt-4 space-y-3">
+            <p className="retro-copy-sm text-white/85">
+              O roadmap funciona como um quadro Kanban de ideias do grupo.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              Os cards podem ser arrastados entre as fases EM PAUTA, EM
+              ANDAMENTO, CONCLUIDO e DESCARTADOS.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              DESCARTADOS guarda propostas que nao vao seguir agora, mas podem
+              voltar para outra fase quando o contexto mudar.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              O texto da proposta pode ser mais detalhado para registrar
+              criterios, riscos e escopo antes de iniciar.
+            </p>
+          </div>
+        </section>
+
+        <section className="retro-panel xl:col-span-2">
+          <h3 className="pixel-text text-[8px] text-[var(--color-snes-gold)]">
             FLUXO RECOMENDADO
           </h3>
           <div className="mt-4 space-y-3">
@@ -418,6 +441,10 @@ export function GuideSection() {
             <p className="retro-copy-sm text-white/85">
               5. O fluxo padrão usa participação contínua. O grupo não é
               eliminado por ciclo.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              6. No roadmap, mova cada proposta de fase por arrastar e soltar,
+              inclusive para DESCARTADOS quando a ideia nao for priorizada.
             </p>
           </div>
         </section>

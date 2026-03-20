@@ -27,6 +27,13 @@ async function getProcessDrawOutcome() {
 
 const LADINO_DODGE_BASE = 0.05;
 const DEFAULT_RELIEF_LUCK_BONUS = 0.1;
+const DEFAULT_MOGADO_DURATION_HOURS = 12;
+const DEFAULT_MOGADO_OPTIONS = [
+  { targetStat: "stat_foco", amount: 4, label: "Foco" },
+  { targetStat: "stat_networking", amount: 4, label: "Networking" },
+  { targetStat: "stat_malandragem", amount: 4, label: "Malandragem" },
+  { targetStat: "luck", amount: 0.04, label: "Sorte" },
+] as const;
 const GUERREIRO_PASSIVE_XP = 5;
 const CLERIGO_GROUP_COINS = 3;
 const COIN_MAGNET_MULTIPLIER = 1.5;
@@ -105,6 +112,11 @@ type ItemMetadata = {
   coinBonus?: number;
   activation?: "active" | "auto";
   damageReduction?: number;
+  debuffOptions?: Array<{
+    targetStat?: string;
+    amount?: number;
+    label?: string;
+  }>;
   profileModifiers?: {
     passive_coin_multiplier?: number;
     temporary_coin_multiplier?: number;
@@ -353,6 +365,8 @@ function getShopItemRarity(item: ShopItemRecord): ShopItemRarity {
     typeof metadata.coinBonus === "number" ? metadata.coinBonus : 0;
 
   switch (item.effect_code) {
+    case "MOGADO_DEBUFF":
+      return "common";
     case "OUTSOURCE_AGUA":
       return "legendary";
     case "AUTO_TRANSFER_PAO":
@@ -1276,6 +1290,23 @@ async function createExpressApp() {
           min_level: 1,
           stackable: true,
           metadata: { activation: "active", luckBonus: 0.04, duration_hours: 12 },
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Selo Mogado",
+          description:
+            "Aplica o status Mogado em você, reduzindo aleatoriamente um status por 12 horas.",
+          price: 30,
+          type: "consumable",
+          effect_code: "MOGADO_DEBUFF",
+          icon: "Wand2",
+          min_level: 1,
+          stackable: true,
+          metadata: {
+            activation: "active",
+            duration_hours: 12,
+            debuffOptions: DEFAULT_MOGADO_OPTIONS,
+          },
         },
         {
           id: crypto.randomUUID(),
@@ -2467,6 +2498,46 @@ async function createExpressApp() {
         });
         updates.active_buffs = activeBuffs;
         logMessage = `Usou ${item.name} e ganhou +${luckBonus.toFixed(2)} de sorte por ${durationHours}h`;
+      } else if (item.effect_code === "MOGADO_DEBUFF") {
+        const durationHours =
+          typeof itemMetadata.duration_hours === "number" &&
+          itemMetadata.duration_hours > 0
+            ? itemMetadata.duration_hours
+            : DEFAULT_MOGADO_DURATION_HOURS;
+        const metadataOptions = Array.isArray(itemMetadata.debuffOptions)
+          ? itemMetadata.debuffOptions
+              .filter((entry) => {
+                if (!entry || typeof entry !== "object") return false;
+                return (
+                  typeof entry.targetStat === "string" &&
+                  typeof entry.amount === "number" &&
+                  entry.amount > 0
+                );
+              })
+              .map((entry) => ({
+                targetStat: entry.targetStat as string,
+                amount: entry.amount as number,
+                label: entry.label,
+              }))
+          : [];
+        const debuffPool =
+          metadataOptions.length > 0
+            ? metadataOptions
+            : [...DEFAULT_MOGADO_OPTIONS];
+        const pickedDebuff = debuffPool[randomIndex(debuffPool.length)];
+
+        activeBuffs.push({
+          type: "MOGADO",
+          expiresAt: new Date(
+            Date.now() + durationHours * 60 * 60 * 1000,
+          ).toISOString(),
+          metadata: {
+            targetStat: pickedDebuff.targetStat,
+            amount: pickedDebuff.amount,
+          },
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e ficou mogado: -${pickedDebuff.amount} em ${pickedDebuff.label ?? pickedDebuff.targetStat} por ${durationHours}h`;
       } else if (
         item.effect_code === "TRANSFER_PAO" ||
         item.effect_code === "OUTSOURCE_AGUA"

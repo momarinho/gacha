@@ -218,6 +218,34 @@ test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   assert.equal(dodgerUpdate.xp, 5);
 });
 
+test("status mogado reduz malandragem efetiva e pode impedir esquiva", () => {
+  const mogadoDodger = makeProfile("mogado", {
+    stat_malandragem: 25,
+    active_buffs: [
+      {
+        type: "MOGADO",
+        expiresAt: "2099-12-31T23:59:59.999Z",
+        metadata: { targetStat: "stat_malandragem", amount: 15 },
+      },
+    ],
+  });
+  const fallback = makeProfile("fallback");
+
+  const result = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["mogado"],
+    participants: ["mogado", "fallback"],
+    profiles: [mogadoDodger, fallback],
+    now: weekdayNow,
+    randomChance: (chance) => chance >= 0.1,
+    randomIndex: () => 0,
+  });
+
+  assert.deepEqual(result.winnerIds, ["mogado"]);
+  const fallbackUpdate = getProfile(result.updates, "fallback");
+  assert.equal(fallbackUpdate.hp, 92);
+});
+
 test("guerreiro reduz dano e exaustao reduz moedas", () => {
   const warrior = makeProfile("warrior", {
     class: "guerreiro",
