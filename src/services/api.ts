@@ -126,7 +126,9 @@ export const api = {
   deleteProfile: async (id: string): Promise<void> => {
     if (useLocalFallback) return localApi.deleteProfile(id);
     try {
-      const res = await fetch(`${API_BASE}/profiles/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/profiles/${id}`, {
+        method: "DELETE",
+      });
       if (shouldFallback(res.status)) {
         useLocalFallback = true;
         return localApi.deleteProfile(id);
@@ -154,7 +156,8 @@ export const api = {
     count: 1 | 10,
     banner: ShopBanner,
   ): Promise<ShopPullResult> => {
-    if (useLocalFallback) return localApi.pullShopItems(profileId, count, banner);
+    if (useLocalFallback)
+      return localApi.pullShopItems(profileId, count, banner);
     try {
       const res = await fetch(`${API_BASE}/shop/pull`, {
         method: "POST",
@@ -193,22 +196,28 @@ export const api = {
   },
   useItem: async (profileId: string, itemId: string): Promise<Profile> => {
     if (useLocalFallback) return localApi.useItem(profileId, itemId);
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE}/inventory/use`, {
+      res = await fetch(`${API_BASE}/inventory/use`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profileId, itemId }),
       });
-      if (shouldFallback(res.status)) {
-        useLocalFallback = true;
-        return localApi.useItem(profileId, itemId);
-      }
-      if (!res.ok) throw new Error("Failed to use item");
-      return res.json();
     } catch {
+      throw new Error("Failed to reach item usage endpoint");
+    }
+
+    if (shouldFallback(res.status)) {
       useLocalFallback = true;
       return localApi.useItem(profileId, itemId);
     }
+
+    if (!res.ok) {
+      const message = await readApiErrorMessage(res, "Failed to use item");
+      throw new Error(message);
+    }
+
+    return res.json();
   },
 
   // Logs

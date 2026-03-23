@@ -50,18 +50,25 @@ export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
                 className={`flex h-11 w-11 items-center justify-center border-2 border-white ${
                   entry.event_type === "draw_result"
                     ? "bg-[var(--color-snes-gold)] text-slate-950"
-                    : entry.event_type === "training_draw"
-                      ? "bg-yellow-500 text-slate-950"
-                      : entry.event_type === "level_up"
-                        ? "bg-emerald-600 text-white"
-                        : ["item_buy", "gacha_pull"].includes(entry.event_type)
-                          ? "bg-blue-600 text-white"
-                          : "bg-black/40 text-white"
+                    : entry.event_type === "draw_rewards"
+                      ? "bg-blue-500 text-slate-950"
+                      : entry.event_type === "training_draw"
+                        ? "bg-yellow-500 text-slate-950"
+                        : entry.event_type === "level_up"
+                          ? "bg-emerald-600 text-white"
+                          : ["item_buy", "gacha_pull"].includes(
+                                entry.event_type,
+                              )
+                            ? "bg-blue-600 text-white"
+                            : "bg-black/40 text-white"
                 }`}
               >
                 {["draw_result", "training_draw"].includes(
                   entry.event_type,
                 ) && <Star className="h-4 w-4" />}
+                {entry.event_type === "draw_rewards" && (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
                 {entry.event_type === "level_up" && (
                   <CheckCircle2 className="h-4 w-4" />
                 )}
@@ -70,6 +77,7 @@ export function HistorySection({ battleLogs, onClear }: HistorySectionProps) {
                 )}
                 {![
                   "draw_result",
+                  "draw_rewards",
                   "training_draw",
                   "level_up",
                   "item_buy",

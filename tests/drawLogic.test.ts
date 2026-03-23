@@ -187,6 +187,63 @@ test("solo afeta apenas o perfil selecionado", () => {
   assert.equal(otherUpdate.coins, 0);
 });
 
+test("solo nao conta como participacao oficial no desafio diario", () => {
+  const selected = makeProfile("selected");
+
+  const result = processDrawOutcome({
+    category: "solo",
+    winnerIds: ["selected"],
+    participants: ["selected"],
+    profiles: [selected],
+    now: new Date("2026-03-23T12:00:00-03:00"),
+    enableDailyChallenges: true,
+  });
+
+  const selectedReward = result.rewards.find(
+    (reward) => reward.profileId === "selected",
+  );
+  assert.ok(selectedReward, "selected reward not found");
+  assert.equal(selectedReward.xpGain, 11);
+  assert.equal(selectedReward.coinGain, 8);
+  assert.equal(
+    selectedReward.xpBreakdown.some((entry) =>
+      entry.label.includes("Desafio Diario: Bater O Ponto"),
+    ),
+    false,
+  );
+});
+
+test("historico registra ganhos de xp e moedas por perfil no sorteio", () => {
+  const winner = makeProfile("winner");
+  const other = makeProfile("other");
+
+  const result = processDrawOutcome({
+    category: "balde",
+    winnerIds: ["winner"],
+    participants: ["winner", "other"],
+    profiles: [winner, other],
+    now: weekdayNow,
+  });
+
+  const winnerRewardLog = result.logs.find(
+    (log) =>
+      log.event_type === "draw_rewards" && log.primary_actor_id === "winner",
+  );
+  const otherRewardLog = result.logs.find(
+    (log) =>
+      log.event_type === "draw_rewards" && log.primary_actor_id === "other",
+  );
+
+  assert.ok(winnerRewardLog, "winner reward log not found");
+  assert.ok(otherRewardLog, "other reward log not found");
+  assert.deepEqual(winnerRewardLog.metadata?.xpGain, 33);
+  assert.deepEqual(winnerRewardLog.metadata?.coinGain, 15);
+  assert.match(winnerRewardLog.message, /\+33 XP e \+15 \$C no BALDE/);
+  assert.deepEqual(otherRewardLog.metadata?.xpGain, 11);
+  assert.deepEqual(otherRewardLog.metadata?.coinGain, 0);
+  assert.match(otherRewardLog.message, /\+11 XP no BALDE/);
+});
+
 test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   const dodger = makeProfile("dodger", {
     stat_malandragem: 100,

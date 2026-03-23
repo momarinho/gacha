@@ -208,6 +208,18 @@ function normalizeTitles(titles: unknown) {
   return titles.filter((title): title is string => typeof title === "string");
 }
 
+function formatRewardMessage(
+  profileName: string,
+  category: DrawCategory,
+  xpGain: number,
+  coinGain: number,
+) {
+  const gains: string[] = [];
+  if (xpGain > 0) gains.push(`+${xpGain} XP`);
+  if (coinGain > 0) gains.push(`+${coinGain} $C`);
+  return `${profileName} recebeu ${gains.join(" e ")} no ${category.toUpperCase()}`;
+}
+
 function resolveCoinMultipliers(
   buffs: ActiveBuff[],
   passiveMultiplier: number,
@@ -765,7 +777,7 @@ export function processDrawOutcome({
     if (enableDailyChallenges) {
       const dailyChallengeEvents = [];
 
-      if (isParticipant) {
+      if (isParticipant && category !== "solo") {
         dailyChallengeEvents.push({ type: "official_participation" as const });
       }
       if (category === "solo" && isWinner) {
@@ -904,6 +916,23 @@ export function processDrawOutcome({
         xpBreakdown,
         coinBreakdown,
       });
+
+      if (xpChange > 0 || coinsChange > 0) {
+        logs.push({
+          event_type: "draw_rewards",
+          category,
+          message: formatRewardMessage(p.name, category, xpChange, coinsChange),
+          primary_actor_id: p.id,
+          metadata: {
+            category,
+            isWinner,
+            xpGain: xpChange,
+            coinGain: coinsChange,
+            xpBreakdown,
+            coinBreakdown,
+          },
+        });
+      }
     }
   }
 

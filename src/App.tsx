@@ -610,7 +610,11 @@ export default function App() {
       setBattleLogs(logs);
     } catch (err) {
       console.error("Failed to use item", err);
-      alert("Falha ao usar item.");
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Falha ao usar item.";
+      alert(message);
     }
   };
 
@@ -825,7 +829,10 @@ export default function App() {
               eligibleProfiles.map((p) => p.id),
             );
             setAguaWinners(
-              applyProcessedDraw(result, selectedWinners.map((w) => w.name)),
+              applyProcessedDraw(
+                result,
+                selectedWinners.map((w) => w.name),
+              ),
             );
             const [logs] = await Promise.all([
               api.getLogs(),
@@ -962,9 +969,7 @@ export default function App() {
               [selectedProfile.id],
               [selectedProfile.id],
             );
-            setSoloWinners(
-              applyProcessedDraw(result, [selectedProfile.name]),
-            );
+            setSoloWinners(applyProcessedDraw(result, [selectedProfile.name]));
             const [logs] = await Promise.all([
               api.getLogs(),
               refreshSocialData(),
@@ -1053,15 +1058,15 @@ export default function App() {
 
   const participantHomeSection = (
     <ParticipantHomeSection
-        profiles={profiles}
-        highestLevel={highestLevel}
-        profilesLoadError={profilesLoadError}
-        dailyChallenge={{
-          title: dailyChallengeTemplate.title,
-          description: `${dailyChallengeTemplate.description} Recompensa: +${dailyChallengeTemplate.rewardXp} XP e +${dailyChallengeTemplate.rewardCoins} $C.`,
-          completedCount: dailyChallengeCompletedCount,
-        }}
-        newName={newName}
+      profiles={profiles}
+      highestLevel={highestLevel}
+      profilesLoadError={profilesLoadError}
+      dailyChallenge={{
+        title: dailyChallengeTemplate.title,
+        description: `${dailyChallengeTemplate.description} Recompensa: +${dailyChallengeTemplate.rewardXp} XP e +${dailyChallengeTemplate.rewardCoins} $C.`,
+        completedCount: dailyChallengeCompletedCount,
+      }}
+      newName={newName}
       titleDrafts={titleDrafts}
       titlesByProfileId={titlesByProfileId}
       selectedMageId={selectedMageId}
