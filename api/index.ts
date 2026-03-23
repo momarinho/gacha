@@ -2689,17 +2689,21 @@ async function createExpressApp() {
           );
 
           inventory.push({ item_id: stolenEntry.item_id, qty: 1 });
-          updates.inventory = inventory.reduce<any[]>((acc, entry) => {
-            const existing = acc.find(
+          const mergedInventory: Array<{ item_id: string; qty: number }> = [];
+          for (const entry of inventory) {
+            const existing = mergedInventory.find(
               (candidate) => candidate.item_id === entry.item_id,
             );
             if (existing) {
               existing.qty += entry.qty ?? 1;
             } else {
-              acc.push({ item_id: entry.item_id, qty: entry.qty ?? 1 });
+              mergedInventory.push({
+                item_id: entry.item_id,
+                qty: entry.qty ?? 1,
+              });
             }
-            return acc;
-          }, []);
+          }
+          updates.inventory = mergedInventory;
 
           const { error: updateTargetErr } = await supabase
             .from("profiles")
@@ -2707,12 +2711,7 @@ async function createExpressApp() {
             .eq("id", target.id);
           if (updateTargetErr) throw updateTargetErr;
 
-          const stolenItemName = shopItems.find(
-            (shopItem: any) => shopItem.id === stolenEntry.item_id,
-          )?.name;
-          logMessage = stolenItemName
-            ? `Usou ${item.name} e roubou ${stolenItemName} de ${target.name}`
-            : `Usou ${item.name} e roubou um item de ${target.name}`;
+          logMessage = `Usou ${item.name} e roubou o item ${stolenEntry.item_id} de ${target.name}`;
         }
       }
       updates = applyProfileModifiersFromItem(profile, itemMetadata, updates);
