@@ -1,4 +1,5 @@
 import { processDrawOutcome } from "../../shared/drawLogic";
+import { getBannerForShopItem } from "../../shared/shopBannerLogic";
 import { CUSTOM_TITLE_PREFIX } from "../app/constants";
 import type {
   BattleLog,
@@ -314,6 +315,34 @@ function makeShopItems(): ShopItem[] {
       stackable: true,
       metadata: { activation: "active", xpBonus: 18, coinBonus: 12 },
     },
+    {
+      id: "shop-fura-olho",
+      name: "Fura Olho",
+      description:
+        "Se voce participar de uma roleta e nao for sorteado, rouba a recompensa base de quem foi sorteado.",
+      price: 190,
+      type: "rare",
+      rarity: "epic",
+      effect_code: "FURA_OLHO",
+      icon: "Eye",
+      min_level: 2,
+      stackable: true,
+      metadata: { activation: "active" },
+    },
+    {
+      id: "shop-briga",
+      name: "Briga",
+      description:
+        "Rouba um item aleatorio do inventario de outra pessoa imediatamente.",
+      price: 170,
+      type: "rare",
+      rarity: "epic",
+      effect_code: "STEAL_INVENTORY_ITEM",
+      icon: "Swords",
+      min_level: 2,
+      stackable: true,
+      metadata: { activation: "active" },
+    },
   ];
 }
 
@@ -435,22 +464,7 @@ function setPityCount(
 }
 
 function getBannerForItem(item: ShopItem): ShopBanner {
-  const catastropheEffects = new Set([
-    "TRANSFER_PAO",
-    "AUTO_TRANSFER_PAO",
-    "SKIP_BALDE_NEXT",
-    "AUTO_BALDE_SHIELD",
-    "HEAL_PERCENT_50",
-    "HEAL_100",
-  ]);
-  if (
-    item.target_category === "pao" ||
-    item.target_category === "balde" ||
-    catastropheEffects.has(item.effect_code)
-  ) {
-    return "catastrophe";
-  }
-  return "standard";
+  return getBannerForShopItem(item);
 }
 
 function pickWeightedItem(items: ShopItem[]) {
@@ -852,6 +866,50 @@ export const localApi = {
       });
       profile.active_buffs = activeBuffs;
       logMessage = `Usou ${item.name} e preparou bonus para o próximo sorteio Solo`;
+    } else if (item.effect_code === "FURA_OLHO") {
+      activeBuffs.push({
+        type: "FURA_OLHO",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      });
+      profile.active_buffs = activeBuffs;
+      logMessage = `Usou ${item.name} e tentará roubar a próxima recompensa de sorteado`;
+    } else if (item.effect_code === "STEAL_INVENTORY_ITEM") {
+      const targets = db.profiles.filter(
+        (candidate) =>
+          candidate.id !== profileId &&
+          Array.isArray(candidate.inventory) &&
+          candidate.inventory.some((entry) => (entry.qty ?? 0) > 0),
+      );
+      if (targets.length === 0) {
+        logMessage = `Usou ${item.name}, mas não havia inventários para roubar`;
+      } else {
+        const randomTarget = new Uint32Array(1);
+        crypto.getRandomValues(randomTarget);
+        const target = targets[randomTarget[0] % targets.length];
+        const availableEntries = target.inventory.filter(
+          (entry) => (entry.qty ?? 0) > 0,
+        );
+        const randomEntry = new Uint32Array(1);
+        crypto.getRandomValues(randomEntry);
+        const stolenEntry =
+          availableEntries[randomEntry[0] % availableEntries.length];
+        const existingEntry = profile.inventory.find(
+          (entry) => entry.item_id === stolenEntry.item_id,
+        );
+        if (existingEntry) {
+          existingEntry.qty = (existingEntry.qty ?? 0) + 1;
+        } else {
+          profile.inventory.push({ item_id: stolenEntry.item_id, qty: 1 });
+        }
+        stolenEntry.qty = (stolenEntry.qty ?? 1) - 1;
+        target.inventory = target.inventory.filter((entry) => entry.qty > 0);
+        const stolenItem = db.shopItems.find(
+          (shopItem) => shopItem.id === stolenEntry.item_id,
+        );
+        logMessage = stolenItem
+          ? `Usou ${item.name} e roubou ${stolenItem.name} de ${target.name}`
+          : `Usou ${item.name} e roubou um item de ${target.name}`;
+      }
     }
     applyProfileModifiersFromItem(profile, metadata, profile);
     addLog(db, {

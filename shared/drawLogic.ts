@@ -138,6 +138,21 @@ const SOLO_COIN_GAIN = 8;
 const LEVEL_UP_COIN_REWARD = 20;
 const WEEKDAY_PASSIVE_RECOVERY_RATIO = 0.1;
 
+function getWinnerBaseReward(category: DrawCategory) {
+  switch (category) {
+    case "agua":
+      return { xp: 8, coins: 4 };
+    case "balde":
+      return { xp: 30, coins: 15 };
+    case "geral":
+      return { xp: 0, coins: 5 };
+    case "solo":
+      return { xp: SOLO_XP_GAIN, coins: SOLO_COIN_GAIN };
+    default:
+      return { xp: 0, coins: 0 };
+  }
+}
+
 function getXpRequiredForLevel(level: number) {
   return 100 + Math.max(0, level - 1) * 25;
 }
@@ -308,6 +323,7 @@ export function processDrawOutcome({
   const { dateKey: weekdayRecoveryKey, isWeekday: isWeekdayForRecovery } =
     getBusinessDayState(now);
   const dailyChallengeDateKey = getBusinessDateKey(now, BUSINESS_TIMEZONE);
+  const furaOlhoAssignments = new Map<string, string>();
 
   const consumeBuff = (profileId: string, buffType: string) => {
     if (!consumedBuffsByProfile.has(profileId)) {
@@ -502,6 +518,42 @@ export function processDrawOutcome({
     resolvedWinnerIds[index] = replacementWinner.id;
   }
 
+  if (category !== "pao" && category !== "solo") {
+    const eligibleThieves = participantProfiles
+      .filter((profile) => !resolvedWinnerIds.includes(profile.id))
+      .filter((profile) =>
+        hasBuff(
+          purgeExpiredBuffs(
+            normalizeBuffs(profile.active_buffs),
+            now.getTime(),
+          ),
+          "FURA_OLHO",
+        ),
+      );
+
+    for (const winnerId of resolvedWinnerIds) {
+      const winnerReward = getWinnerBaseReward(category);
+      if (winnerReward.xp <= 0 && winnerReward.coins <= 0) continue;
+      const thief = eligibleThieves.shift();
+      if (!thief) break;
+      furaOlhoAssignments.set(winnerId, thief.id);
+      consumeBuff(thief.id, "FURA_OLHO");
+      const winner = profileMap.get(winnerId);
+      if (winner) {
+        logs.push({
+          event_type: "item_use",
+          category,
+          message: `${thief.name} ativou Fura Olho e roubou a recompensa de ${winner.name}`,
+          primary_actor_id: thief.id,
+          metadata: {
+            redirectedFromProfileId: winner.id,
+            redirectedFromProfileName: winner.name,
+          },
+        });
+      }
+    }
+  }
+
   const clericWinnerIds = resolvedWinnerIds.filter((id) => {
     const profile = profileMap.get(id);
     return profile?.class === "clerigo";
@@ -631,8 +683,10 @@ export function processDrawOutcome({
         }
       } else if (category === "agua") {
         if (isWinner) {
-          addXp("Base do sorteio (AGUA) - sorteado", 8);
-          addCoins("Base do sorteio (AGUA) - sorteado", 4);
+          if (!furaOlhoAssignments.has(p.id)) {
+            addXp("Base do sorteio (AGUA) - sorteado", 8);
+            addCoins("Base do sorteio (AGUA) - sorteado", 4);
+          }
         } else {
           const aguaShield = getBuffValue(activeBuffs, "AGUA_SHIELD");
           hpChange = -Math.max(0, AGUA_HP_LOSS - aguaShield);
@@ -641,11 +695,22 @@ export function processDrawOutcome({
             addXp("Boia Corporativa", 2);
           }
           addXp("Base do sorteio (AGUA) - participante", 4);
+          if (
+            resolvedWinnerIds.some(
+              (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
+            )
+          ) {
+            const stolenReward = getWinnerBaseReward(category);
+            addXp("Fura Olho", stolenReward.xp);
+            addCoins("Fura Olho", stolenReward.coins);
+          }
         }
       } else if (category === "balde") {
         if (isWinner) {
-          addXp("Base do sorteio (BALDE) - sorteado", 30);
-          addCoins("Base do sorteio (BALDE) - sorteado", 15);
+          if (!furaOlhoAssignments.has(p.id)) {
+            addXp("Base do sorteio (BALDE) - sorteado", 30);
+            addCoins("Base do sorteio (BALDE) - sorteado", 15);
+          }
         } else {
           const antiBucketVest = getAutoInventoryItem(
             p.id,
@@ -671,12 +736,31 @@ export function processDrawOutcome({
             hpChange = -BALDE_HP_LOSS;
           }
           addXp("Base do sorteio (BALDE) - participante", 10);
+          if (
+            resolvedWinnerIds.some(
+              (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
+            )
+          ) {
+            const stolenReward = getWinnerBaseReward(category);
+            addXp("Fura Olho", stolenReward.xp);
+            addCoins("Fura Olho", stolenReward.coins);
+          }
         }
       } else if (category === "geral") {
         if (!isWinner) {
           hpChange = -GERAL_HP_LOSS;
+          if (
+            resolvedWinnerIds.some(
+              (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
+            )
+          ) {
+            const stolenReward = getWinnerBaseReward(category);
+            addCoins("Fura Olho", stolenReward.coins);
+          }
         }
-        addCoins("Base do sorteio (GERAL)", 5);
+        if (!isWinner || !furaOlhoAssignments.has(p.id)) {
+          addCoins("Base do sorteio (GERAL)", 5);
+        }
       } else if (category === "solo") {
         if (isWinner) {
           addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);

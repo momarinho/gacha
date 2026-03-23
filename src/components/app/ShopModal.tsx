@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Coins, Sparkles, ShoppingCart, X } from "lucide-react";
 
+import { getBannerForShopItem } from "../../../shared/shopBannerLogic";
 import {
   getItemActivationLabel,
   getShopBannerLabel,
@@ -76,18 +77,7 @@ export function ShopModal({
 
   const bannerItems = useMemo(() => {
     return shopItems.filter((item) => {
-      const catastropheEffects = new Set([
-        "TRANSFER_PAO",
-        "AUTO_TRANSFER_PAO",
-        "SKIP_BALDE_NEXT",
-        "AUTO_BALDE_SHIELD",
-        "HEAL_PERCENT_50",
-        "HEAL_100",
-      ]);
-      const isCatastrophe =
-        item.target_category === "pao" ||
-        item.target_category === "balde" ||
-        catastropheEffects.has(item.effect_code);
+      const isCatastrophe = getBannerForShopItem(item) === "catastrophe";
       return selectedBanner === "catastrophe" ? isCatastrophe : !isCatastrophe;
     });
   }, [selectedBanner, shopItems]);
@@ -111,7 +101,11 @@ export function ShopModal({
 
     setIsPulling(true);
     try {
-      const result = await onPullItems(selectedProfileId, count, selectedBanner);
+      const result = await onPullItems(
+        selectedProfileId,
+        count,
+        selectedBanner,
+      );
       setLastResult(result);
     } finally {
       setIsPulling(false);

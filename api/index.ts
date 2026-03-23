@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 // Import using .js extension for ESM module resolution in Vercel environments
 import { processDrawOutcome as sharedProcessDrawOutcome } from "../shared/drawLogic.js";
+import { getBannerForShopItem } from "../shared/shopBannerLogic.js";
 
 dotenv.config();
 
@@ -400,6 +401,9 @@ function getShopItemRarity(item: ShopItemRecord): ShopItemRarity {
       return "rare";
     case "SOLO_REWARD_BOOST":
       return xpBonus >= 18 || coinBonus >= 12 ? "legendary" : "epic";
+    case "FURA_OLHO":
+    case "STEAL_INVENTORY_ITEM":
+      return "epic";
     default:
       return "common";
   }
@@ -416,24 +420,7 @@ function normalizeShopItem(item: ShopItemRecord) {
 function getShopItemBanner(
   item: ReturnType<typeof normalizeShopItem>,
 ): ShopBanner {
-  const catastropheEffects = new Set([
-    "TRANSFER_PAO",
-    "AUTO_TRANSFER_PAO",
-    "SKIP_BALDE_NEXT",
-    "AUTO_BALDE_SHIELD",
-    "HEAL_PERCENT_50",
-    "HEAL_100",
-  ]);
-
-  if (
-    item.target_category === "pao" ||
-    item.target_category === "balde" ||
-    catastropheEffects.has(item.effect_code)
-  ) {
-    return "catastrophe";
-  }
-
-  return "standard";
+  return getBannerForShopItem(item);
 }
 
 function getShopPullPrice(profileClass: ProfileClass, count: 1 | 10) {
@@ -1514,6 +1501,34 @@ async function createExpressApp() {
           min_level: 3,
           stackable: true,
           metadata: { activation: "active", xpBonus: 18, coinBonus: 12 },
+          target_category: null,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Fura Olho",
+          description:
+            "Se voce participar de uma roleta e nao for sorteado, rouba a recompensa base de quem foi sorteado.",
+          price: 190,
+          type: "rare",
+          effect_code: "FURA_OLHO",
+          icon: "Eye",
+          min_level: 2,
+          stackable: true,
+          metadata: { activation: "active" },
+          target_category: null,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Briga",
+          description:
+            "Rouba um item aleatorio do inventario de outra pessoa imediatamente.",
+          price: 170,
+          type: "rare",
+          effect_code: "STEAL_INVENTORY_ITEM",
+          icon: "Swords",
+          min_level: 2,
+          stackable: true,
+          metadata: { activation: "active" },
           target_category: null,
         },
       ];
@@ -2628,6 +2643,77 @@ async function createExpressApp() {
         });
         updates.active_buffs = activeBuffs;
         logMessage = `Usou ${item.name} e preparou bonus para o próximo sorteio Solo`;
+      } else if (item.effect_code === "FURA_OLHO") {
+        activeBuffs.push({
+          type: "FURA_OLHO",
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        });
+        updates.active_buffs = activeBuffs;
+        logMessage = `Usou ${item.name} e tentará roubar a próxima recompensa de sorteado`;
+      } else if (item.effect_code === "STEAL_INVENTORY_ITEM") {
+        const { data: targetProfiles, error: targetErr } = await supabase
+          .from("profiles")
+          .select("id, name, inventory")
+          .neq("id", profileId);
+        if (targetErr) throw targetErr;
+
+        const targets = (
+          Array.isArray(targetProfiles) ? targetProfiles : []
+        ).filter(
+          (candidate: any) =>
+            Array.isArray(candidate.inventory) &&
+            candidate.inventory.some((entry: any) => (entry.qty ?? 0) > 0),
+        );
+
+        if (targets.length === 0) {
+          logMessage = `Usou ${item.name}, mas não havia inventários para roubar`;
+        } else {
+          const target = targets[randomIndex(targets.length)];
+          const targetInventory = Array.isArray(target.inventory)
+            ? [...target.inventory]
+            : [];
+          const availableEntries = targetInventory.filter(
+            (entry: any) => (entry.qty ?? 0) > 0,
+          );
+          const stolenEntry =
+            availableEntries[randomIndex(availableEntries.length)];
+          const targetEntryIndex = targetInventory.findIndex(
+            (entry: any) => entry.item_id === stolenEntry.item_id,
+          );
+          targetInventory[targetEntryIndex].qty =
+            (targetInventory[targetEntryIndex].qty ?? 1) - 1;
+          const sanitizedTargetInventory = targetInventory.filter(
+            (entry: any) => (entry.qty ?? 0) > 0,
+          );
+
+          inventory.push({ item_id: stolenEntry.item_id, qty: 1 });
+          updates.inventory = inventory.reduce<any[]>((acc, entry) => {
+            const existing = acc.find(
+              (candidate) => candidate.item_id === entry.item_id,
+            );
+            if (existing) {
+              existing.qty += entry.qty ?? 1;
+            } else {
+              acc.push({ item_id: entry.item_id, qty: entry.qty ?? 1 });
+            }
+            return acc;
+          }, []);
+
+          const { error: updateTargetErr } = await supabase
+            .from("profiles")
+            .update({ inventory: sanitizedTargetInventory })
+            .eq("id", target.id);
+          if (updateTargetErr) throw updateTargetErr;
+
+          const stolenItemName = shopItems.find(
+            (shopItem: any) => shopItem.id === stolenEntry.item_id,
+          )?.name;
+          logMessage = stolenItemName
+            ? `Usou ${item.name} e roubou ${stolenItemName} de ${target.name}`
+            : `Usou ${item.name} e roubou um item de ${target.name}`;
+        }
       }
       updates = applyProfileModifiersFromItem(profile, itemMetadata, updates);
       // Add more effects as needed

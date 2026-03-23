@@ -178,6 +178,14 @@ export function getItemEffectText(item: ShopItem) {
     return `Aplica Mogado nos outros jogadores: debuff aleatório de status por ${durationHours}h`;
   }
 
+  if (item.effect_code === "FURA_OLHO") {
+    return "Na próxima derrota em roleta, rouba a recompensa base do sorteado";
+  }
+
+  if (item.effect_code === "STEAL_INVENTORY_ITEM") {
+    return "Rouba imediatamente um item aleatório do inventário de outro jogador";
+  }
+
   if (typeof profileModifiers.passive_coin_multiplier === "number") {
     return `Economia passiva x${profileModifiers.passive_coin_multiplier.toFixed(2)}`;
   }
@@ -211,9 +219,7 @@ export function getItemActivationType(item: ShopItem) {
 }
 
 export function getItemActivationLabel(item: ShopItem) {
-  return getItemActivationType(item) === "auto"
-    ? "Automático"
-    : "Usar antes";
+  return getItemActivationType(item) === "auto" ? "Automático" : "Usar antes";
 }
 
 export function getShopPullPrice(

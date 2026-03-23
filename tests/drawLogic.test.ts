@@ -244,6 +244,41 @@ test("historico registra ganhos de xp e moedas por perfil no sorteio", () => {
   assert.match(otherRewardLog.message, /\+11 XP no BALDE/);
 });
 
+test("fura olho rouba a recompensa base do sorteado no balde", () => {
+  const winner = makeProfile("winner");
+  const thief = makeProfile("thief", {
+    active_buffs: [
+      {
+        type: "FURA_OLHO",
+        expiresAt: "2099-12-31T23:59:59.999Z",
+      },
+    ],
+  });
+
+  const result = processDrawOutcome({
+    category: "balde",
+    winnerIds: ["winner"],
+    participants: ["winner", "thief"],
+    profiles: [winner, thief],
+    now: weekdayNow,
+  });
+
+  const winnerUpdate = getProfile(result.updates, "winner");
+  const thiefUpdate = getProfile(result.updates, "thief");
+
+  assert.equal(winnerUpdate.xp, 0);
+  assert.equal(winnerUpdate.coins, 0);
+  assert.equal(thiefUpdate.xp, 44);
+  assert.equal(thiefUpdate.coins, 15);
+  assert.match(
+    result.logs.find(
+      (log) =>
+        log.primary_actor_id === "thief" && log.event_type === "item_use",
+    )?.message ?? "",
+    /Fura Olho e roubou a recompensa de Profile winner/,
+  );
+});
+
 test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   const dodger = makeProfile("dodger", {
     stat_malandragem: 100,
