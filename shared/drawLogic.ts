@@ -135,8 +135,8 @@ const GERAL_HP_LOSS = 5;
 const SOLO_HP_LOSS = 3;
 const SOLO_XP_GAIN = 10;
 const SOLO_COIN_GAIN = 8;
-const SOLO_XP_BONUS = 4;
-const SOLO_COIN_BONUS = 2;
+const SOLO_XP_BONUS = 6;
+const SOLO_COIN_BONUS = 3;
 const LEVEL_UP_COIN_REWARD = 20;
 const WEEKDAY_PASSIVE_RECOVERY_RATIO = 0.1;
 
@@ -150,7 +150,7 @@ function getParticipantCountXpBonus(
   if (extraParticipants === 0) return 0;
 
   const cappedExtraParticipants = Math.min(extraParticipants, 6);
-  return cappedExtraParticipants * 3;
+  return cappedExtraParticipants * 4;
 }
 
 function getWinnerBaseReward(category: DrawCategory) {
@@ -244,10 +244,15 @@ function formatRewardMessage(
   xpGain: number,
   coinGain: number,
 ) {
+  const rewardSummary = formatRewardSummary(xpGain, coinGain);
+  return `${profileName} recebeu ${rewardSummary} no ${category.toUpperCase()}`;
+}
+
+function formatRewardSummary(xpGain: number, coinGain: number) {
   const gains: string[] = [];
   if (xpGain > 0) gains.push(`+${xpGain} XP`);
   if (coinGain > 0) gains.push(`+${coinGain} $C`);
-  return `${profileName} recebeu ${gains.join(" e ")} no ${category.toUpperCase()}`;
+  return gains.join(" e ");
 }
 
 function resolveCoinMultipliers(
@@ -1058,7 +1063,7 @@ export function processDrawOutcome({
         coinBreakdown,
       });
 
-      if (xpChange > 0 || coinsChange > 0) {
+      if ((xpChange > 0 || coinsChange > 0) && !isWinner) {
         logs.push({
           event_type: "draw_rewards",
           category,
@@ -1087,12 +1092,26 @@ export function processDrawOutcome({
   }
 
   for (const winnerId of resolvedWinnerIds) {
+    const winnerReward = rewards.find(
+      (reward) => reward.profileId === winnerId && reward.category === category,
+    );
+    const rewardSummary =
+      winnerReward && (winnerReward.xpGain > 0 || winnerReward.coinGain > 0)
+        ? formatRewardSummary(winnerReward.xpGain, winnerReward.coinGain)
+        : null;
+
     logs.push({
       event_type: "draw_result",
       category,
-      message: `Sorteado para ${category.toUpperCase()}`,
+      message: rewardSummary
+        ? `Sorteado para ${category.toUpperCase()} e recebeu ${rewardSummary}`
+        : `Sorteado para ${category.toUpperCase()}`,
       primary_actor_id: winnerId,
-      metadata: { participantsCount: participants.length },
+      metadata: {
+        participantsCount: participants.length,
+        xpGain: winnerReward?.xpGain ?? 0,
+        coinGain: winnerReward?.coinGain ?? 0,
+      },
     });
   }
 

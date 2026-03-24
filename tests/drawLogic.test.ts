@@ -180,8 +180,8 @@ test("solo afeta apenas o perfil selecionado", () => {
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(selectedUpdate.hp, 100);
-  assert.equal(selectedUpdate.xp, 16);
-  assert.equal(selectedUpdate.coins, 10);
+  assert.equal(selectedUpdate.xp, 18);
+  assert.equal(selectedUpdate.coins, 11);
   assert.equal(otherUpdate.hp, 100);
   assert.equal(otherUpdate.xp, 0);
   assert.equal(otherUpdate.coins, 0);
@@ -225,10 +225,10 @@ test("xp cresce moderadamente com a quantidade de participantes no sorteio", () 
   const otherThreeUpdate = getProfile(resultThree.updates, "other-three-a");
   const otherFiveUpdate = getProfile(resultFive.updates, "other-five-a");
 
-  assert.equal(winnerThreeUpdate.xp, 13);
-  assert.equal(winnerFiveUpdate.xp, 19);
-  assert.equal(otherThreeUpdate.xp, 8);
-  assert.equal(otherFiveUpdate.xp, 15);
+  assert.equal(winnerThreeUpdate.xp, 14);
+  assert.equal(winnerFiveUpdate.xp, 22);
+  assert.equal(otherThreeUpdate.xp, 9);
+  assert.equal(otherFiveUpdate.xp, 18);
 });
 
 test("geral usa o mesmo bonus de participantes dos outros sorteios coletivos", () => {
@@ -249,8 +249,8 @@ test("geral usa o mesmo bonus de participantes dos outros sorteios coletivos", (
   const winnerUpdate = getProfile(result.updates, "winner");
   const otherUpdate = getProfile(result.updates, "other-a");
 
-  assert.equal(winnerUpdate.xp, 10);
-  assert.equal(otherUpdate.xp, 10);
+  assert.equal(winnerUpdate.xp, 14);
+  assert.equal(otherUpdate.xp, 14);
   assert.equal(winnerUpdate.coins, 5);
   assert.equal(otherUpdate.coins, 5);
 });
@@ -271,8 +271,8 @@ test("solo nao conta como participacao oficial no desafio diario", () => {
     (reward) => reward.profileId === "selected",
   );
   assert.ok(selectedReward, "selected reward not found");
-  assert.equal(selectedReward.xpGain, 16);
-  assert.equal(selectedReward.coinGain, 10);
+  assert.equal(selectedReward.xpGain, 18);
+  assert.equal(selectedReward.coinGain, 11);
   assert.equal(
     selectedReward.xpBreakdown.some((entry) =>
       entry.label.includes("Desafio Diario: Bater O Ponto"),
@@ -295,7 +295,7 @@ test("historico registra ganhos de xp e moedas por perfil no sorteio", () => {
 
   const winnerRewardLog = result.logs.find(
     (log) =>
-      log.event_type === "draw_rewards" && log.primary_actor_id === "winner",
+      log.event_type === "draw_result" && log.primary_actor_id === "winner",
   );
   const otherRewardLog = result.logs.find(
     (log) =>
@@ -306,7 +306,10 @@ test("historico registra ganhos de xp e moedas por perfil no sorteio", () => {
   assert.ok(otherRewardLog, "other reward log not found");
   assert.deepEqual(winnerRewardLog.metadata?.xpGain, 33);
   assert.deepEqual(winnerRewardLog.metadata?.coinGain, 15);
-  assert.match(winnerRewardLog.message, /\+33 XP e \+15 \$C no BALDE/);
+  assert.match(
+    winnerRewardLog.message,
+    /Sorteado para BALDE e recebeu \+33 XP e \+15 \$C/,
+  );
   assert.deepEqual(otherRewardLog.metadata?.xpGain, 11);
   assert.deepEqual(otherRewardLog.metadata?.coinGain, 0);
   assert.match(otherRewardLog.message, /\+11 XP no BALDE/);

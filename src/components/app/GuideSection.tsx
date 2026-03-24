@@ -67,6 +67,11 @@ export function GuideSection() {
             <p className="retro-copy-sm text-white/85">
               Toda subida de nível também concede +3 pontos de atributo.
             </p>
+            <p className="retro-copy-sm text-white/85">
+              Sorteios coletivos escalam XP por participação: acima de 2
+              pessoas, cada participante extra adiciona +4 XP, com teto de +24
+              XP.
+            </p>
           </div>
         </section>
 
@@ -113,7 +118,8 @@ export function GuideSection() {
                   MALANDRAGEM
                 </div>
                 <p className="retro-copy-sm mt-2 text-white/85">
-                  +0.4% de chance de esquiva por ponto, com teto de esquiva total.
+                  +0.4% de chance de esquiva por ponto, com teto de esquiva
+                  total.
                 </p>
               </div>
             </div>
@@ -149,7 +155,8 @@ export function GuideSection() {
                 <span className="retro-copy-sm text-white">Ladino</span>
               </div>
               <p className="retro-copy-sm text-white/85">
-                Pode esquivar e ganha um bonus moderado de moedas quando escapa do sorteio.
+                Pode esquivar e ganha um bonus moderado de moedas quando escapa
+                do sorteio.
               </p>
             </div>
             <div className="border-2 border-pink-400/40 bg-pink-950/20 p-3">
@@ -190,13 +197,17 @@ export function GuideSection() {
           </h3>
           <div className="mt-4 space-y-3">
             <p className="retro-copy-sm text-white/85">
-              Itens de esquiva, recompensa e mitigacao devem ser usados antes do sorteio para ativar buffs.
+              Itens de esquiva, recompensa e mitigacao devem ser usados antes do
+              sorteio para ativar buffs.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Itens mais raros podem ficar armados e disparar automaticamente quando a condicao acontece.
+              Itens mais raros podem ficar armados e disparar automaticamente
+              quando a condicao acontece.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Transferencias como Pao e Agua nunca permitem escolher o alvo: o sistema manda para outro participante elegivel aleatorio e mostra quem entrou no seu lugar.
+              Transferencias como Pao e Agua nunca permitem escolher o alvo: o
+              sistema manda para outro participante elegivel aleatorio e mostra
+              quem entrou no seu lugar.
             </p>
           </div>
         </section>
@@ -211,8 +222,11 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +8 XP e +4 $C. Participantes não selecionados: +4 XP
-                e -8 HP.
+                Sorteado: +8 XP e +4 $C. Participantes não selecionados: +4 XP e
+                -8 HP.
+              </p>
+              <p className="retro-copy-sm mt-2 text-white/70">
+                Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
               </p>
               <p className="retro-copy-sm mt-2 text-blue-200/90">
                 O dano agora vai para quem participou e nao foi selecionado.
@@ -226,6 +240,9 @@ export function GuideSection() {
                 Sorteado: +30 XP e +15 $C. Participantes nao selecionados: +10
                 XP e -18 HP.
               </p>
+              <p className="retro-copy-sm mt-2 text-white/70">
+                Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
+              </p>
               <p className="retro-copy-sm mt-2 text-purple-200/90">
                 O sorteado leva a recompensa; o resto absorve o desgaste.
               </p>
@@ -238,6 +255,9 @@ export function GuideSection() {
                 Participantes nao selecionados: +20 XP, +10 $C, -25 HP e sorte
                 temporaria. O sorteado escapa do dano.
               </p>
+              <p className="retro-copy-sm mt-2 text-white/70">
+                Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
+              </p>
               <p className="retro-copy-sm mt-2 text-orange-200/90">
                 Continua sendo o evento mais pesado do setor.
               </p>
@@ -247,8 +267,8 @@ export function GuideSection() {
                 GERAL
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Todos ganham +5 $C. Participantes nao selecionados ainda perdem
-                -5 HP.
+                Todos ganham +5 $C e também recebem o mesmo bônus de escala de
+                XP. Participantes nao selecionados ainda perdem -5 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-emerald-200/90">
                 O selecionado so recebe a recompensa base.
@@ -292,11 +312,15 @@ export function GuideSection() {
             <p className="retro-copy-sm text-white/85">
               Ganhos base por sorteio: PAO +10 $C para nao sorteados, AGUA +5 $C
               para sorteado, BALDE +15 $C para sorteado, GERAL +5 $C para todos
-              e SOLO +8 $C para o selecionado.
+              e SOLO +11 $C para o selecionado.
             </p>
             <p className="retro-copy-sm text-white/85">
               Moedas extras ainda podem ser alteradas por Ladino, Clerigo, Ima
               de Moedas, descontos de Mago e penalidade por exaustao.
+            </p>
+            <p className="retro-copy-sm text-white/85">
+              O Solo hoje entrega +10 XP e +8 $C de base, mais bônus fixo de +6
+              XP e +3 $C.
             </p>
           </div>
         </section>
