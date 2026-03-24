@@ -47,6 +47,8 @@ const FINAL_CLASS_UNLOCK_LEVEL = 5;
 const CUSTOM_TITLE_PREFIX = "custom:";
 const SHOP_PRICE_OVERRIDES: Record<string, number> = {
   HEAL_PERCENT_50: 35,
+  HEAL_100: 55,
+  HEAL_PERCENT_25: 20,
   OUTSOURCE_AGUA: 180,
 };
 const SHOP_PULL_PRICE_SINGLE = 10;
@@ -1238,8 +1240,8 @@ async function createExpressApp() {
       const items = [
         {
           id: crypto.randomUUID(),
-          name: "Café Expresso",
-          description: "Recupera 50% do HP/Sanidade instantaneamente.",
+          name: "Curativo Leve",
+          description: "Recupera 25% do HP instantaneamente.",
           price: 35,
           type: "consumable",
           effect_code: "HEAL_PERCENT_50",
@@ -1249,7 +1251,29 @@ async function createExpressApp() {
         },
         {
           id: crypto.randomUUID(),
-          name: "Band-Aid Corporativo",
+          name: "Curativo Rápido",
+          description: "Recupera 25 HP instantaneamente.",
+          price: 20,
+          type: "consumable",
+          effect_code: "HEAL_PERCENT_25",
+          icon: "Bandage",
+          min_level: 1,
+          stackable: true,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Band-Aid Corporativo Premium",
+          description: "Recupera 100 HP instantaneamente.",
+          price: 55,
+          type: "consumable",
+          effect_code: "HEAL_100",
+          icon: "HeartPulse",
+          min_level: 1,
+          stackable: true,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Band-Aid Corporativo Premium",
           description: "Recupera 100 HP instantaneamente.",
           price: 55,
           type: "consumable",
@@ -2460,6 +2484,10 @@ async function createExpressApp() {
         item.effect_code === "HEAL_PERCENT_50"
       ) {
         const recoveredHp = Math.max(1, Math.ceil(profile.max_hp * 0.5));
+        updates.hp = Math.min(profile.max_hp, profile.hp + recoveredHp);
+        logMessage = `Usou ${item.name} e recuperou ${recoveredHp} HP`;
+      } else if (item.effect_code === "HEAL_PERCENT_25") {
+        const recoveredHp = Math.max(1, Math.ceil(profile.max_hp * 0.25));
         updates.hp = Math.min(profile.max_hp, profile.hp + recoveredHp);
         logMessage = `Usou ${item.name} e recuperou ${recoveredHp} HP`;
       } else if (item.effect_code === "HEAL_100") {

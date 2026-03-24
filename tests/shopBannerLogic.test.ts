@@ -21,7 +21,31 @@ test("itens de pao e balde vao para o banner catastrofe", () => {
   );
 });
 
-test("itens de agua, solo e economia vao para o banner padrao", () => {
+test("itens de agua, solo, economia e cura vao para o banner padrao", () => {
+  assert.equal(
+    getBannerForShopItem({
+      effect_code: "HEAL_PERCENT_25",
+      target_category: null,
+    }),
+    "standard",
+  );
+
+  assert.equal(
+    getBannerForShopItem({
+      effect_code: "HEAL_PERCENT_50",
+      target_category: null,
+    }),
+    "standard",
+  );
+
+  assert.equal(
+    getBannerForShopItem({
+      effect_code: "HEAL_100",
+      target_category: null,
+    }),
+    "standard",
+  );
+
   assert.equal(
     getBannerForShopItem({
       effect_code: "OUTSOURCE_AGUA",

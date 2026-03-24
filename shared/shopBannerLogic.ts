@@ -11,7 +11,6 @@ const CATASTROPHE_EFFECTS = new Set([
   "SKIP_BALDE_NEXT",
   "AUTO_BALDE_SHIELD",
   "HEAL_PERCENT_50",
-  "HEAL_100",
 ]);
 
 export function getBannerForShopItem(item: BannerItemShape): ShopBanner {

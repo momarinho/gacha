@@ -3,7 +3,8 @@ begin;
 update shop_items
 set
   price = 35,
-  description = 'Recupera 50% do HP/Sanidade instantaneamente.',
+  description = 'Recupera 25% do HP instantaneamente.',
+  name = 'Curativo Leve',
   type = 'consumable',
   effect_code = 'HEAL_PERCENT_50',
   icon = 'Coffee',
@@ -13,6 +14,69 @@ set
   stackable = true,
   target_category = null
 where effect_code = 'HEAL_PERCENT_50';
+
+insert into shop_items (
+  id,
+  name,
+  description,
+  price,
+  type,
+  effect_code,
+  icon,
+  min_level,
+  duration_minutes,
+  metadata,
+  stackable,
+  target_category
+)
+select
+  gen_random_uuid(),
+  'Curativo Rápido',
+  'Recupera 25 HP instantaneamente.',
+  20,
+  'consumable',
+  'HEAL_PERCENT_25',
+  'Bandage',
+  1,
+  null,
+  '{}'::jsonb,
+  true,
+  null
+where not exists (
+  select 1 from shop_items where effect_code = 'HEAL_PERCENT_25'
+);
+
+insert into shop_items (
+  id,
+  name,
+  description,
+  price,
+  type,
+  effect_code,
+  icon,
+  min_level,
+  duration_minutes,
+  metadata,
+  stackable,
+  target_category
+)
+select
+  gen_random_uuid(),
+  'Band-Aid Corporativo Premium',
+  'Recupera 100 HP instantaneamente.',
+  55,
+  'consumable',
+  'HEAL_100',
+  'HeartPulse',
+  1,
+  null,
+  '{"activation": "active"}'::jsonb,
+  true,
+  null
+where not exists (
+  select 1 from shop_items where effect_code = 'HEAL_100'
+);
+
 
 update shop_items
 set
@@ -56,36 +120,7 @@ set
   target_category = 'agua'
 where effect_code = 'OUTSOURCE_AGUA';
 
-insert into shop_items (
-  id,
-  name,
-  description,
-  price,
-  type,
-  effect_code,
-  icon,
-  min_level,
-  duration_minutes,
-  metadata,
-  stackable,
-  target_category
-)
-select
-  gen_random_uuid(),
-  'Band-Aid Corporativo',
-  'Recupera 100 HP instantaneamente.',
-  55,
-  'consumable',
-  'HEAL_100',
-  'HeartPulse',
-  1,
-  null,
-  '{"activation": "active"}'::jsonb,
-  true,
-  null
-where not exists (
-  select 1 from shop_items where name = 'Band-Aid Corporativo'
-);
+
 
 insert into shop_items (
   id,

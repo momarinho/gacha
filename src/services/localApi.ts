@@ -42,8 +42,8 @@ function makeShopItems(): ShopItem[] {
   return [
     {
       id: "shop-heal-50",
-      name: "Café Expresso",
-      description: "Recupera 50% do HP/Sanidade instantaneamente.",
+      name: "Curativo Leve",
+      description: "Recupera 25% do HP instantaneamente.",
       price: 35,
       type: "consumable",
       rarity: "common",
@@ -54,8 +54,21 @@ function makeShopItems(): ShopItem[] {
       metadata: { activation: "active" },
     },
     {
+      id: "shop-heal-25",
+      name: "Curativo Rápido",
+      description: "Recupera 25 HP instantaneamente.",
+      price: 20,
+      type: "consumable",
+      rarity: "common",
+      effect_code: "HEAL_PERCENT_25",
+      icon: "Bandage",
+      min_level: 1,
+      stackable: true,
+      metadata: { activation: "active" },
+    },
+    {
       id: "shop-heal-100",
-      name: "Band-Aid Corporativo",
+      name: "Band-Aid Corporativo Premium",
       description: "Recupera 100 HP instantaneamente.",
       price: 55,
       type: "consumable",
@@ -414,6 +427,7 @@ function getItemOrThrow(db: LocalDb, itemId: string) {
 
 function getEffectiveShopPrice(item: ShopItem) {
   if (item.effect_code === "HEAL_PERCENT_50") return 35;
+  if (item.effect_code === "HEAL_PERCENT_25") return 20;
   if (item.effect_code === "OUTSOURCE_AGUA") return 180;
   return item.price;
 }
@@ -703,6 +717,10 @@ export const localApi = {
         : 60;
     if (item.effect_code === "HEAL_PERCENT_50") {
       const recoveredHp = Math.max(1, Math.ceil(profile.max_hp * 0.5));
+      profile.hp = Math.min(profile.max_hp, profile.hp + recoveredHp);
+      logMessage = `Usou ${item.name} e recuperou ${recoveredHp} HP`;
+    } else if (item.effect_code === "HEAL_PERCENT_25") {
+      const recoveredHp = Math.max(1, Math.ceil(profile.max_hp * 0.25));
       profile.hp = Math.min(profile.max_hp, profile.hp + recoveredHp);
       logMessage = `Usou ${item.name} e recuperou ${recoveredHp} HP`;
     } else if (item.effect_code === "HEAL_100") {
