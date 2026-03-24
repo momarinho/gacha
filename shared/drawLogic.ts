@@ -135,8 +135,23 @@ const GERAL_HP_LOSS = 5;
 const SOLO_HP_LOSS = 3;
 const SOLO_XP_GAIN = 10;
 const SOLO_COIN_GAIN = 8;
+const SOLO_XP_BONUS = 4;
+const SOLO_COIN_BONUS = 2;
 const LEVEL_UP_COIN_REWARD = 20;
 const WEEKDAY_PASSIVE_RECOVERY_RATIO = 0.1;
+
+function getParticipantCountXpBonus(
+  category: DrawCategory,
+  participantCount: number,
+) {
+  if (category === "solo") return 0;
+
+  const extraParticipants = Math.max(0, participantCount - 2);
+  if (extraParticipants === 0) return 0;
+
+  const cappedExtraParticipants = Math.min(extraParticipants, 6);
+  return cappedExtraParticipants * 3;
+}
 
 function getWinnerBaseReward(category: DrawCategory) {
   switch (category) {
@@ -302,6 +317,10 @@ export function processDrawOutcome({
   const participantSet = new Set<string>(participants);
   const participantProfiles = profiles.filter((profile) =>
     participantSet.has(profile.id),
+  );
+  const participantCountXpBonus = getParticipantCountXpBonus(
+    category,
+    participantProfiles.length,
   );
   const profileMap = new Map<string, DrawProfile>(
     profiles.map((profile) => [profile.id, profile]),
@@ -672,6 +691,12 @@ export function processDrawOutcome({
         if (!isWinner) {
           hpChange = -PAO_HP_LOSS;
           addXp("Base do sorteio (PAO)", 20);
+          if (participantCountXpBonus > 0) {
+            addXp(
+              `Bonus de participantes (${participantProfiles.length})`,
+              participantCountXpBonus,
+            );
+          }
           addCoins("Base do sorteio (PAO)", 10);
           activeBuffs.push({
             type: "RELIEF_LUCK",
@@ -685,6 +710,12 @@ export function processDrawOutcome({
         if (isWinner) {
           if (!furaOlhoAssignments.has(p.id)) {
             addXp("Base do sorteio (AGUA) - sorteado", 8);
+            if (participantCountXpBonus > 0) {
+              addXp(
+                `Bonus de participantes (${participantProfiles.length})`,
+                participantCountXpBonus,
+              );
+            }
             addCoins("Base do sorteio (AGUA) - sorteado", 4);
           }
         } else {
@@ -695,6 +726,12 @@ export function processDrawOutcome({
             addXp("Boia Corporativa", 2);
           }
           addXp("Base do sorteio (AGUA) - participante", 4);
+          if (participantCountXpBonus > 0) {
+            addXp(
+              `Bonus de participantes (${participantProfiles.length})`,
+              participantCountXpBonus,
+            );
+          }
           if (
             resolvedWinnerIds.some(
               (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
@@ -709,6 +746,12 @@ export function processDrawOutcome({
         if (isWinner) {
           if (!furaOlhoAssignments.has(p.id)) {
             addXp("Base do sorteio (BALDE) - sorteado", 30);
+            if (participantCountXpBonus > 0) {
+              addXp(
+                `Bonus de participantes (${participantProfiles.length})`,
+                participantCountXpBonus,
+              );
+            }
             addCoins("Base do sorteio (BALDE) - sorteado", 15);
           }
         } else {
@@ -736,6 +779,12 @@ export function processDrawOutcome({
             hpChange = -BALDE_HP_LOSS;
           }
           addXp("Base do sorteio (BALDE) - participante", 10);
+          if (participantCountXpBonus > 0) {
+            addXp(
+              `Bonus de participantes (${participantProfiles.length})`,
+              participantCountXpBonus,
+            );
+          }
           if (
             resolvedWinnerIds.some(
               (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
@@ -758,6 +807,12 @@ export function processDrawOutcome({
             addCoins("Fura Olho", stolenReward.coins);
           }
         }
+        if (participantCountXpBonus > 0) {
+          addXp(
+            `Bonus de participantes (${participantProfiles.length})`,
+            participantCountXpBonus,
+          );
+        }
         if (!isWinner || !furaOlhoAssignments.has(p.id)) {
           addCoins("Base do sorteio (GERAL)", 5);
         }
@@ -765,6 +820,8 @@ export function processDrawOutcome({
         if (isWinner) {
           addXp("Base do sorteio (SOLO)", SOLO_XP_GAIN);
           addCoins("Base do sorteio (SOLO)", SOLO_COIN_GAIN);
+          addXp("Bonus do modo Solo", SOLO_XP_BONUS);
+          addCoins("Bonus do modo Solo", SOLO_COIN_BONUS);
           const soloXpBonus = getBuffValue(activeBuffs, "SOLO_XP_BONUS");
           const soloCoinBonus = getBuffValue(activeBuffs, "SOLO_COIN_BONUS");
           if (soloXpBonus > 0) {

@@ -180,11 +180,79 @@ test("solo afeta apenas o perfil selecionado", () => {
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(selectedUpdate.hp, 100);
-  assert.equal(selectedUpdate.xp, 11);
-  assert.equal(selectedUpdate.coins, 8);
+  assert.equal(selectedUpdate.xp, 16);
+  assert.equal(selectedUpdate.coins, 10);
   assert.equal(otherUpdate.hp, 100);
   assert.equal(otherUpdate.xp, 0);
   assert.equal(otherUpdate.coins, 0);
+});
+
+test("xp cresce moderadamente com a quantidade de participantes no sorteio", () => {
+  const winnerThree = makeProfile("winner-three");
+  const otherThreeA = makeProfile("other-three-a");
+  const otherThreeB = makeProfile("other-three-b");
+
+  const resultThree = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["winner-three"],
+    participants: ["winner-three", "other-three-a", "other-three-b"],
+    profiles: [winnerThree, otherThreeA, otherThreeB],
+    now: weekdayNow,
+  });
+
+  const winnerFive = makeProfile("winner-five");
+  const otherFiveA = makeProfile("other-five-a");
+  const otherFiveB = makeProfile("other-five-b");
+  const otherFiveC = makeProfile("other-five-c");
+  const otherFiveD = makeProfile("other-five-d");
+
+  const resultFive = processDrawOutcome({
+    category: "agua",
+    winnerIds: ["winner-five"],
+    participants: [
+      "winner-five",
+      "other-five-a",
+      "other-five-b",
+      "other-five-c",
+      "other-five-d",
+    ],
+    profiles: [winnerFive, otherFiveA, otherFiveB, otherFiveC, otherFiveD],
+    now: weekdayNow,
+  });
+
+  const winnerThreeUpdate = getProfile(resultThree.updates, "winner-three");
+  const winnerFiveUpdate = getProfile(resultFive.updates, "winner-five");
+  const otherThreeUpdate = getProfile(resultThree.updates, "other-three-a");
+  const otherFiveUpdate = getProfile(resultFive.updates, "other-five-a");
+
+  assert.equal(winnerThreeUpdate.xp, 13);
+  assert.equal(winnerFiveUpdate.xp, 19);
+  assert.equal(otherThreeUpdate.xp, 8);
+  assert.equal(otherFiveUpdate.xp, 15);
+});
+
+test("geral usa o mesmo bonus de participantes dos outros sorteios coletivos", () => {
+  const winner = makeProfile("winner");
+  const otherA = makeProfile("other-a");
+  const otherB = makeProfile("other-b");
+  const otherC = makeProfile("other-c");
+  const otherD = makeProfile("other-d");
+
+  const result = processDrawOutcome({
+    category: "geral",
+    winnerIds: ["winner"],
+    participants: ["winner", "other-a", "other-b", "other-c", "other-d"],
+    profiles: [winner, otherA, otherB, otherC, otherD],
+    now: weekdayNow,
+  });
+
+  const winnerUpdate = getProfile(result.updates, "winner");
+  const otherUpdate = getProfile(result.updates, "other-a");
+
+  assert.equal(winnerUpdate.xp, 10);
+  assert.equal(otherUpdate.xp, 10);
+  assert.equal(winnerUpdate.coins, 5);
+  assert.equal(otherUpdate.coins, 5);
 });
 
 test("solo nao conta como participacao oficial no desafio diario", () => {
@@ -203,8 +271,8 @@ test("solo nao conta como participacao oficial no desafio diario", () => {
     (reward) => reward.profileId === "selected",
   );
   assert.ok(selectedReward, "selected reward not found");
-  assert.equal(selectedReward.xpGain, 11);
-  assert.equal(selectedReward.coinGain, 8);
+  assert.equal(selectedReward.xpGain, 16);
+  assert.equal(selectedReward.coinGain, 10);
   assert.equal(
     selectedReward.xpBreakdown.some((entry) =>
       entry.label.includes("Desafio Diario: Bater O Ponto"),
