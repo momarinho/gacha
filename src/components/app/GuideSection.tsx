@@ -68,9 +68,9 @@ export function GuideSection() {
               Toda subida de nível também concede +3 pontos de atributo.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Sorteios coletivos escalam XP por participação: acima de 2
-              pessoas, cada participante extra adiciona +4 XP, com teto de +24
-              XP.
+              Sorteios coletivos agora usam XP base padronizado: todo
+              participante recebe +10 XP, mais +4 XP por participante acima de 2
+              pessoas, com teto de +24 XP extras.
             </p>
           </div>
         </section>
@@ -222,8 +222,8 @@ export function GuideSection() {
                 ÁGUA
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +8 XP e +4 $C. Participantes não selecionados: +4 XP e
-                -8 HP.
+                Todos os participantes recebem +10 XP base. Sorteado: +4 $C.
+                Participantes não selecionados: -8 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-white/70">
                 Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
@@ -237,8 +237,8 @@ export function GuideSection() {
                 BALDE
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Sorteado: +30 XP e +15 $C. Participantes nao selecionados: +10
-                XP e -18 HP.
+                Todos os participantes recebem +10 XP base. Sorteado: +15 $C.
+                Participantes nao selecionados: -18 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-white/70">
                 Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
@@ -252,8 +252,9 @@ export function GuideSection() {
                 PÃO DE QUEIJO
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Participantes nao selecionados: +20 XP, +10 $C, -25 HP e sorte
-                temporaria. O sorteado escapa do dano.
+                Todos os participantes recebem +10 XP base. Quem nao for
+                sorteado recebe +10 $C, -25 HP e sorte temporaria. O sorteado
+                escapa do dano.
               </p>
               <p className="retro-copy-sm mt-2 text-white/70">
                 Bônus de escala: +4 XP por participante acima de 2, até +24 XP.
@@ -267,8 +268,8 @@ export function GuideSection() {
                 GERAL
               </div>
               <p className="retro-copy-sm mt-2 text-white/85">
-                Todos ganham +5 $C e também recebem o mesmo bônus de escala de
-                XP. Participantes nao selecionados ainda perdem -5 HP.
+                Todos ganham +10 XP base, +5 $C e também recebem o mesmo bônus
+                de escala. Participantes nao selecionados ainda perdem -5 HP.
               </p>
               <p className="retro-copy-sm mt-2 text-emerald-200/90">
                 O selecionado so recebe a recompensa base.
@@ -310,7 +311,8 @@ export function GuideSection() {
               Ganhos atuais por nivel: +20 $C por level up.
             </p>
             <p className="retro-copy-sm text-white/85">
-              Ganhos base por sorteio: PAO +10 $C para nao sorteados, AGUA +5 $C
+              Ganhos base por sorteio: todos os coletivos entregam +10 XP por
+              participante. Em moedas, PAO +10 $C para nao sorteados, AGUA +4 $C
               para sorteado, BALDE +15 $C para sorteado, GERAL +5 $C para todos
               e SOLO +11 $C para o selecionado.
             </p>
@@ -415,8 +417,9 @@ export function GuideSection() {
               para disputar.
             </p>
             <p className="retro-copy-sm text-white/85">
-              O participante selecionado ganha +12 XP e +8 $C, sem causar dano
-              colateral no resto do grupo.
+              O participante selecionado ganha +16 XP e +11 $C no total (+10 XP
+              e +8 $C de base, mais bonus fixo de +6 XP e +3 $C), sem causar
+              dano colateral no resto do grupo.
             </p>
           </div>
         </section>

@@ -86,10 +86,10 @@ test("pao aplica dano em quem nao foi sorteado e recompensa quem absorveu o even
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(winnerUpdate.hp, 100);
-  assert.equal(winnerUpdate.xp, 0);
+  assert.equal(winnerUpdate.xp, 11);
   assert.equal(winnerUpdate.coins, 0);
   assert.equal(otherUpdate.hp, 75);
-  assert.equal(otherUpdate.xp, 22);
+  assert.equal(otherUpdate.xp, 11);
   assert.equal(otherUpdate.coins, 10);
 });
 
@@ -109,10 +109,10 @@ test("agua aplica dano em quem nao foi sorteado e mantem recompensa no sorteado"
   const otherUpdate = getProfile(result.updates, "other");
 
   assert.equal(winnerUpdate.hp, 100);
-  assert.equal(winnerUpdate.xp, 9);
+  assert.equal(winnerUpdate.xp, 11);
   assert.equal(winnerUpdate.coins, 4);
   assert.equal(otherUpdate.hp, 92);
-  assert.equal(otherUpdate.xp, 5);
+  assert.equal(otherUpdate.xp, 11);
 });
 
 test("boia corporativa reduz o impacto da proxima agua", () => {
@@ -225,10 +225,10 @@ test("xp cresce moderadamente com a quantidade de participantes no sorteio", () 
   const otherThreeUpdate = getProfile(resultThree.updates, "other-three-a");
   const otherFiveUpdate = getProfile(resultFive.updates, "other-five-a");
 
-  assert.equal(winnerThreeUpdate.xp, 14);
-  assert.equal(winnerFiveUpdate.xp, 22);
-  assert.equal(otherThreeUpdate.xp, 9);
-  assert.equal(otherFiveUpdate.xp, 18);
+  assert.equal(winnerThreeUpdate.xp, 16);
+  assert.equal(winnerFiveUpdate.xp, 25);
+  assert.equal(otherThreeUpdate.xp, 16);
+  assert.equal(otherFiveUpdate.xp, 25);
 });
 
 test("geral usa o mesmo bonus de participantes dos outros sorteios coletivos", () => {
@@ -249,8 +249,8 @@ test("geral usa o mesmo bonus de participantes dos outros sorteios coletivos", (
   const winnerUpdate = getProfile(result.updates, "winner");
   const otherUpdate = getProfile(result.updates, "other-a");
 
-  assert.equal(winnerUpdate.xp, 14);
-  assert.equal(otherUpdate.xp, 14);
+  assert.equal(winnerUpdate.xp, 25);
+  assert.equal(otherUpdate.xp, 25);
   assert.equal(winnerUpdate.coins, 5);
   assert.equal(otherUpdate.coins, 5);
 });
@@ -304,11 +304,11 @@ test("historico registra ganhos de xp e moedas por perfil no sorteio", () => {
 
   assert.ok(winnerRewardLog, "winner reward log not found");
   assert.ok(otherRewardLog, "other reward log not found");
-  assert.deepEqual(winnerRewardLog.metadata?.xpGain, 33);
+  assert.deepEqual(winnerRewardLog.metadata?.xpGain, 11);
   assert.deepEqual(winnerRewardLog.metadata?.coinGain, 15);
   assert.match(
     winnerRewardLog.message,
-    /Sorteado para BALDE e recebeu \+33 XP e \+15 \$C/,
+    /Sorteado para BALDE e recebeu \+11 XP e \+15 \$C/,
   );
   assert.deepEqual(otherRewardLog.metadata?.xpGain, 11);
   assert.deepEqual(otherRewardLog.metadata?.coinGain, 0);
@@ -337,9 +337,9 @@ test("fura olho rouba a recompensa base do sorteado no balde", () => {
   const winnerUpdate = getProfile(result.updates, "winner");
   const thiefUpdate = getProfile(result.updates, "thief");
 
-  assert.equal(winnerUpdate.xp, 0);
+  assert.equal(winnerUpdate.xp, 11);
   assert.equal(winnerUpdate.coins, 0);
-  assert.equal(thiefUpdate.xp, 44);
+  assert.equal(thiefUpdate.xp, 22);
   assert.equal(thiefUpdate.coins, 15);
   assert.match(
     result.logs.find(
@@ -375,10 +375,10 @@ test("atributos aplicam foco, networking e malandragem no sorteio", () => {
   const dodgerUpdate = getProfile(result.updates, "dodger");
 
   assert.equal(fallbackUpdate.hp, 100);
-  assert.equal(fallbackUpdate.xp, 11);
+  assert.equal(fallbackUpdate.xp, 14);
   assert.equal(fallbackUpdate.coins, 4);
   assert.equal(dodgerUpdate.hp, 92);
-  assert.equal(dodgerUpdate.xp, 5);
+  assert.equal(dodgerUpdate.xp, 11);
 });
 
 test("status mogado reduz malandragem efetiva e pode impedir esquiva", () => {
@@ -431,7 +431,7 @@ test("guerreiro reduz dano e exaustao reduz moedas", () => {
 
   assert.equal(warriorUpdate.hp, 22);
   assert.equal(warriorUpdate.coins, 7);
-  assert.equal(warriorUpdate.xp, 35);
+  assert.equal(warriorUpdate.xp, 15);
   assert.equal(otherUpdate.hp, 82);
   assert.equal(otherUpdate.xp, 11);
 });

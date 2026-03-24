@@ -133,6 +133,7 @@ const AGUA_HP_LOSS = 8;
 const BALDE_HP_LOSS = 18;
 const GERAL_HP_LOSS = 5;
 const SOLO_HP_LOSS = 3;
+const COLLECTIVE_BASE_XP = 10;
 const SOLO_XP_GAIN = 10;
 const SOLO_COIN_GAIN = 8;
 const SOLO_XP_BONUS = 6;
@@ -156,11 +157,11 @@ function getParticipantCountXpBonus(
 function getWinnerBaseReward(category: DrawCategory) {
   switch (category) {
     case "agua":
-      return { xp: 8, coins: 4 };
+      return { xp: COLLECTIVE_BASE_XP, coins: 4 };
     case "balde":
-      return { xp: 30, coins: 15 };
+      return { xp: COLLECTIVE_BASE_XP, coins: 15 };
     case "geral":
-      return { xp: 0, coins: 5 };
+      return { xp: COLLECTIVE_BASE_XP, coins: 5 };
     case "solo":
       return { xp: SOLO_XP_GAIN, coins: SOLO_COIN_GAIN };
     default:
@@ -692,16 +693,24 @@ export function processDrawOutcome({
     }
 
     if (isParticipant) {
+      const addCollectiveXp = () => {
+        if (category === "solo") return;
+        addXp(
+          `Base do sorteio (${category.toUpperCase()})`,
+          COLLECTIVE_BASE_XP,
+        );
+        if (participantCountXpBonus > 0) {
+          addXp(
+            `Bonus de participantes (${participantProfiles.length})`,
+            participantCountXpBonus,
+          );
+        }
+      };
+
       if (category === "pao") {
+        addCollectiveXp();
         if (!isWinner) {
           hpChange = -PAO_HP_LOSS;
-          addXp("Base do sorteio (PAO)", 20);
-          if (participantCountXpBonus > 0) {
-            addXp(
-              `Bonus de participantes (${participantProfiles.length})`,
-              participantCountXpBonus,
-            );
-          }
           addCoins("Base do sorteio (PAO)", 10);
           activeBuffs.push({
             type: "RELIEF_LUCK",
@@ -712,15 +721,9 @@ export function processDrawOutcome({
           });
         }
       } else if (category === "agua") {
+        addCollectiveXp();
         if (isWinner) {
           if (!furaOlhoAssignments.has(p.id)) {
-            addXp("Base do sorteio (AGUA) - sorteado", 8);
-            if (participantCountXpBonus > 0) {
-              addXp(
-                `Bonus de participantes (${participantProfiles.length})`,
-                participantCountXpBonus,
-              );
-            }
             addCoins("Base do sorteio (AGUA) - sorteado", 4);
           }
         } else {
@@ -729,13 +732,6 @@ export function processDrawOutcome({
           if (aguaShield > 0) {
             consumeBuff(p.id, "AGUA_SHIELD");
             addXp("Boia Corporativa", 2);
-          }
-          addXp("Base do sorteio (AGUA) - participante", 4);
-          if (participantCountXpBonus > 0) {
-            addXp(
-              `Bonus de participantes (${participantProfiles.length})`,
-              participantCountXpBonus,
-            );
           }
           if (
             resolvedWinnerIds.some(
@@ -748,15 +744,9 @@ export function processDrawOutcome({
           }
         }
       } else if (category === "balde") {
+        addCollectiveXp();
         if (isWinner) {
           if (!furaOlhoAssignments.has(p.id)) {
-            addXp("Base do sorteio (BALDE) - sorteado", 30);
-            if (participantCountXpBonus > 0) {
-              addXp(
-                `Bonus de participantes (${participantProfiles.length})`,
-                participantCountXpBonus,
-              );
-            }
             addCoins("Base do sorteio (BALDE) - sorteado", 15);
           }
         } else {
@@ -783,13 +773,6 @@ export function processDrawOutcome({
           } else {
             hpChange = -BALDE_HP_LOSS;
           }
-          addXp("Base do sorteio (BALDE) - participante", 10);
-          if (participantCountXpBonus > 0) {
-            addXp(
-              `Bonus de participantes (${participantProfiles.length})`,
-              participantCountXpBonus,
-            );
-          }
           if (
             resolvedWinnerIds.some(
               (winnerId) => furaOlhoAssignments.get(winnerId) === p.id,
@@ -801,6 +784,7 @@ export function processDrawOutcome({
           }
         }
       } else if (category === "geral") {
+        addCollectiveXp();
         if (!isWinner) {
           hpChange = -GERAL_HP_LOSS;
           if (
@@ -811,12 +795,6 @@ export function processDrawOutcome({
             const stolenReward = getWinnerBaseReward(category);
             addCoins("Fura Olho", stolenReward.coins);
           }
-        }
-        if (participantCountXpBonus > 0) {
-          addXp(
-            `Bonus de participantes (${participantProfiles.length})`,
-            participantCountXpBonus,
-          );
         }
         if (!isWinner || !furaOlhoAssignments.has(p.id)) {
           addCoins("Base do sorteio (GERAL)", 5);
