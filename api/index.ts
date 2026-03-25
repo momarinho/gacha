@@ -2889,6 +2889,23 @@ async function createExpressApp() {
         });
       }
 
+      if (category === "solo") {
+        const soloLogExists = logs.some(
+          (log) =>
+            log.event_type === "daily_challenge" &&
+            /Missão Solo|Desafio Diario/i.test(log.message),
+        );
+
+        if (!soloLogExists) {
+          logs.push({
+            event_type: "daily_challenge",
+            category,
+            message: "Missão Solo processada no sorteio Solo",
+            primary_actor_id: requestedWinnerIds[0] ?? "",
+          });
+        }
+      }
+
       const unresolvedWinnerIds = resolvedWinnerIds.filter(
         (id) => !updates.some((profile) => profile.id === id),
       );

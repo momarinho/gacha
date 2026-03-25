@@ -904,8 +904,11 @@ export function processDrawOutcome({
       if (isParticipant && category !== "solo") {
         dailyChallengeEvents.push({ type: "official_participation" as const });
       }
-      if (category === "solo" && isWinner) {
-        dailyChallengeEvents.push({ type: "solo_completion" as const });
+      if (category === "solo") {
+        dailyChallengeEvents.push({
+          type: "solo_completion" as const,
+          value: isWinner ? 1 : 0,
+        });
       }
       if (coinsChange > 0) {
         dailyChallengeEvents.push({
